@@ -134,9 +134,15 @@ class Panel:
         self.motes = []
         self.make_motes()
         root.bind("<Key>", self.key)
-        root.after(300, root.focus_force)
+        root.after(300, self.take_focus)
         self.draw()
         self.tick()
+
+    def take_focus(self, n=4):
+        self.root.focus_force()
+        run("i3-msg", "-q", '[class="(?i)^golem-panel$"] focus')
+        if n > 0:
+            self.root.after(500, self.take_focus, n - 1)
 
     # ---------------------------------------------------------------- the realm behind
     def make_motes(self):

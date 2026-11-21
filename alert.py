@@ -31,6 +31,7 @@ def show(message):
     key, need = c["alert_key"], int(c["alert_presses"])
     log(f"RED ALERT: {message}")
     root = tk.Tk(className="golem-alert")
+    root.geometry(f"{root.winfo_screenwidth()}x{root.winfo_screenheight()}+0+0")
     root.attributes("-fullscreen", True)
     root.configure(bg="#2a0306")
     h = root.winfo_screenheight()
@@ -55,7 +56,13 @@ def show(message):
             update()
     update()
     root.bind("<Key>", press)
-    root.after(200, root.focus_force)
+
+    def take_focus(n=6):
+        root.focus_force()
+        subprocess.run(["i3-msg", "-q", '[class="(?i)^golem-alert$"] focus'], capture_output=True)
+        if n > 0:
+            root.after(500, take_focus, n - 1)
+    root.after(200, take_focus)
     # (no keyboard grab: the lock screen must always be able to start, even over an alert)
     root.mainloop()
 

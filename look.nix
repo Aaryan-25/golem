@@ -21,7 +21,7 @@ let
 
   alert = pkgs.writeShellApplication {
     name = "golem-alert";
-    runtimeInputs = with pkgs; [ util-linux ];
+    runtimeInputs = with pkgs; [ util-linux i3 ];
     text = ''exec ${tkpy}/bin/python3 ${./alert.py} "$@"'';
   };
 
