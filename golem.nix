@@ -47,13 +47,24 @@ in
   networking.hostName = "golem";
   time.timeZone = s.timeZone;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
+  documentation.enable = false;                       # no manuals: smaller and cleaner
 
   # ---- Starting from the pendrive ----
   # The boot loader lives only on the pendrive and never writes to the laptop's firmware.
   boot.loader.grub = { enable = true; device = "nodev"; efiSupport = true; efiInstallAsRemovable = true; };
   boot.loader.efi.canTouchEfiVariables = false;
   boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usb_storage" "uas" "sd_mod" "sdhci_pci" ];
-  hardware.enableRedistributableFirmware = true;      # Wi-Fi firmware (Intel AC-7265)
+  # Only the firmware this laptop needs (Wi-Fi, Bluetooth, graphics), not the 1 GB+ full set.
+  hardware.firmware = [
+    (pkgs.runCommand "golem-firmware" { } ''
+      f=${pkgs.linux-firmware}/lib/firmware
+      mkdir -p $out/lib/firmware/intel $out/lib/firmware/i915
+      cp -a $f/iwlwifi-7265* $out/lib/firmware/
+      cp -a $f/intel/ibt-hw-37.8* $out/lib/firmware/intel/ 2>/dev/null || true
+      cp -a $f/i915/bxt_* $out/lib/firmware/i915/
+    '')
+    pkgs.wireless-regdb
+  ];
   hardware.cpu.intel.updateMicrocode = true;
 
   # On the first start Golem grows to fill the whole pendrive.

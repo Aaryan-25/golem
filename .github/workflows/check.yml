@@ -15,5 +15,7 @@ jobs:
       - uses: cachix/install-nix-action@v31
       - name: Build the whole Golem system
         run: nix build .#system -L --show-trace
-      - name: Size
-        run: nix path-info -Sh ./result
+      - name: Size, and the 30 biggest pieces
+        run: |
+          nix path-info -Sh ./result
+          nix path-info -rsh ./result | sort -k2 -h | tail -30
