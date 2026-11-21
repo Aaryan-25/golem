@@ -70,16 +70,13 @@ The goal: **private, clean, usable.**
 | Crash reports | Kept on the laptop 7 days, shown in the truth log in plain words, never sent anywhere. |
 | Certificates | A page listing them in plain words (country, organisation); any can be distrusted after my password. |
 
-## The Control Panel (carried over from the Shilp chat)
+## The Control Panel (basic for now; a nicer UI comes later)
 | Topic | Decision |
 |---|---|
-| Feel | A full-screen game pause menu over the drifting veil. Keyboard only. |
-| Layout | Five groups: SYSTEM (status, performance, running, services, save slots), CONTROLS (quick, zones, keys, volume, display, keyboard light, drivers, alert), LOOK (look, loadouts), YOU (character, stats, quests, truth), CODEX. Q / E switch groups, Tab or a number switches pages, F finds anything. |
-| Changes | Made on a copy; A applies with my password once; X throws them away; Esc with changes waiting asks first. Volume, display, quests, quick actions and closing apps happen at once. Admin actions ask the password each time. Everything goes to the truth log. |
-| Look | Lives in a look file and applies at once without a rebuild; the panel previews it live. Realm palettes for both faces (Shadow, Negative). |
-| Effects | Page transitions (pages dissolve into motes that gather into the next), a sigil behind each page, zone icons, soft sounds. Each has an on/off. |
-| Services | Mine first; system ones hidden until I ask; any can be started or stopped after my password; the ones Golem needs are marked in red. |
-| Display | A new screen size asks "keep it?" and goes back by itself after 12 seconds. |
-| Red alert | Has a sound (on/off, volume). |
+| Layout | One full-screen panel, keyboard only. Pages listed on the left, the chosen page on the right. ↑↓ move, Enter opens or changes, Esc goes back or leaves. |
+| Look | Dark background, pale text; the chosen row is highlighted. No animations, no sounds yet. |
+| Changes | Made on a copy. A applies them with my password once, X throws them away, Esc with changes waiting asks first. |
+| At once | Things that can't wait happen at once without Apply: closing an app, volume, brightness. |
+| Admin | Things that need admin rights ask my password each time. |
+| Truth | Every change goes to the truth log. |
 | If it fails | If the panel can't open, a red alert says so and the truth log has the reason. |
-

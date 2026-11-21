@@ -39,7 +39,9 @@ Nothing here gets built until I move it into PLAN.md. New ideas from any chat ge
 - Truth log captures all internet traffic: which app, where to, when, and how much data
 - Drivers panel
 
-## Control Panel as a game menu
+## Control Panel as a game menu (the nicer UI, later)
+- Five groups (SYSTEM, CONTROLS, LOOK, YOU, CODEX) with Q / E, and F to find anything
+- A full-screen pause menu over the drifting veil
 - Page transitions, sigil, zone icons, soft sounds (with on/off)
 - LOOK page: face, colours, realm palettes, veil, wallpaper, lock, effects, fonts, focus line, reset
 - Quick actions, volume/display/performance managers
