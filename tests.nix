@@ -32,7 +32,7 @@ pkgs.testers.runNixOSTest {
 
     def as_me(cmd):
         return machine.succeed(
-            "su - lilgolemwitch -c 'export XDG_RUNTIME_DIR=/run/user/1000 DISPLAY=:0 "
+            "su - lilgolemwitch -c 'export XDG_RUNTIME_DIR=/run/user/1000 "
             "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus; " + cmd + "'"
         ).strip()
 
@@ -52,6 +52,12 @@ pkgs.testers.runNixOSTest {
             print(machine.execute("su - lilgolemwitch -c 'DISPLAY=:0 timeout 5 golem-launch' 2>&1 | tail -20")[1])
             raise Exception("Alt+Space did not open the launcher")
         machine.send_key("esc")
+
+    with subtest("Step 4: a RED app with a window opens (launched from the desktop)"):
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 i3-msg exec \"zone red xterm\"'")
+        if machine.execute("timeout 40 sh -c 'until pgrep -f \"firejail.*xterm\" && [ $(pgrep -u lilgolemwitch -f bin/xterm | wc -l) -ge 2 ]; do sleep 1; done'")[0] != 0:
+            print(machine.execute("journalctl -b --no-pager | grep -iE 'firejail|zone|xauth' | tail -20; ps -u lilgolemwitch -o args")[1])
+            raise Exception("RED xterm did not open")
 
     with subtest("Step 4: my folders exist"):
         for d in ["documents", "projects", "media", "zones"]:
