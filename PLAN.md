@@ -33,11 +33,11 @@ The SSD and Windows are not touched.
 
 ## Step 1: Golem's smallest self, on the pendrive
 **Goal:** my own system boots from the pendrive. It's plain, but it's mine.
-**Made:** the recipe (NixOS flake), the GitHub check, and a GitHub-built installer, reused from the old repo.
+**Made:** the recipe (NixOS flake), the GitHub check, and a pendrive image built by GitHub. You flash it and it's already Golem, with no installer step.
 After boot: a login, a tiling window manager, a terminal, and Wi-Fi I can turn on.
 
-**Done when:** I flash the installer, install Golem onto the pendrive, reboot into it, log in,
-open a terminal, and join Wi-Fi.
+**Done when:** I flash the image, start from the pendrive, log in, open a terminal (Alt+Enter),
+and join Wi-Fi (Super+W).
 
 ## Step 2: Update without a new installer
 **Goal:** after this, changes reach the laptop with one command, not a new pendrive flash.

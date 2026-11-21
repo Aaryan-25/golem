@@ -1,0 +1,19 @@
+# Every change is checked by building the whole Golem system.
+# Red cross = broken; nothing reaches the laptop until it's green.
+name: Check Golem builds
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v31
+      - name: Build the whole Golem system
+        run: nix build .#system -L --show-trace
+      - name: Size
+        run: nix path-info -Sh ./result
