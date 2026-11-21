@@ -41,7 +41,7 @@ in {
   };
   systemd.services."golem-helper@" = {
     description = "Golem: the guard in front of the settings";
-    path = with pkgs; [ networkmanager keysgen ] ++ [ "/run/current-system/sw" ];
+    path = with pkgs; [ networkmanager keysgen chrony util-linux coreutils ] ++ [ "/run/current-system/sw" ];
     environment = { GOLEM_USER = s.user; GOLEM_UID = uid; };
     serviceConfig = { ExecStart = "${helper}/bin/golem-helper"; StandardInput = "socket"; StandardOutput = "journal"; };
   };

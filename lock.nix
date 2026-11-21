@@ -26,7 +26,15 @@ let
       # After 25 minutes locked, sleep (30 minutes idle in all).
       ( sleep 1500; if pgrep -u "$(id -u)" -x i3lock >/dev/null; then systemctl suspend; fi ) &
       timer=$!
-      if i3lock -n -u -e -c '${builtins.substring 1 6 c.void}'; then
+      colour='${builtins.substring 1 6 c.void}'
+      if [ -n "''${XSS_SLEEP_LOCK_FD:-}" ] && [ -e "/dev/fd/$XSS_SLEEP_LOCK_FD" ]; then
+        # Going to sleep: let the laptop sleep only once the lock is really on the screen,
+        # so nothing shows for a moment on waking.
+        i3lock -u -e -c "$colour" {XSS_SLEEP_LOCK_FD}<&- || { logger -t golem "LOCK failed"; kill "$timer"; exit 1; }
+        exec {XSS_SLEEP_LOCK_FD}<&-
+        while pgrep -u "$(id -u)" -x i3lock >/dev/null; do sleep 0.5; done
+        logger -t golem "UNLOCK"
+      elif i3lock -n -u -e -c "$colour"; then
         logger -t golem "UNLOCK"
       else
         logger -t golem "LOCK failed"

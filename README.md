@@ -61,7 +61,7 @@ To turn off the laptop: Super+Escape, or type `poweroff` in a terminal.
 - **Lid:** closing it sleeps. On waking it's locked, unless Caps Lock was ON.
 - **Idle:** the screen dims at 4 minutes, locks at 5 (not while Caps Lock is ON), and the laptop sleeps at 30.
 - **Start-up is silent.** Hold **Shift** while it starts to see the menu with older versions.
-- **The clock never syncs over the internet.** To set it: `sudo timedatectl set-time "2026-11-21 22:30"`
+- **The clock never syncs over the internet by itself.** To set it: Control Panel > NETWORK (once from the internet, or by hand), with your password.
 - In a terminal, `golem-wifi` turns Wi-Fi on or off and says which.
 
 ## Control Panel (Super+Z)

@@ -25,7 +25,7 @@ USB, how fast it feels, and whether it all feels right to you.
 - [ ] `timedatectl` shows "NTP service: inactive" (no clock over the internet)
 
 Hardware (left over from step 0). Some may not work yet, and that's fine:
-- [ ] Sound: `speaker-test -t wav -c 2 -l 1` says "front left, front right"
+- [ ] Sound: `speaker-test -t wav -c 2 -l 1` says "front left, front right" (if not: tell Claude, it's probably a missing firmware file)
 - [ ] Volume keys
 - [ ] Brightness keys
 - [ ] Closing the lid makes it sleep, and opening it wakes it
@@ -99,4 +99,5 @@ Do these, then press **Super+T** and check each shows up in words you understand
 - [ ] KEYS: change a key (Enter, then press the new keys), apply, and the new key works
 - [ ] **X** throws waiting changes away; Esc with changes waiting asks first
 - [ ] NETWORK turns Wi-Fi on/off; SOUND & SCREEN changes volume and brightness at once
+- [ ] NETWORK: "Set the clock from the internet, once" (Wi-Fi on) asks the password and fixes the clock; Super+T shows it
 - [ ] In a terminal, `touch /var/lib/golem/apps/test.conf` is refused (only the panel can change settings)

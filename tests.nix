@@ -18,6 +18,10 @@ pkgs.testers.runNixOSTest {
     virtualisation.qemu.options = [ "-device qemu-xhci,id=xhci" ];   # a USB port to plug things into
     networking.networkmanager.unmanaged = [ "eth1" ];               # the test network stays as the test set it
     environment.systemPackages = [ pkgs.socat ];
+    environment.etc."golem-test-long.sh".text = ''
+      exec 3<>/dev/tcp/web/80
+      sleep 90
+    '';
     environment.etc."golem-test-fetch.sh".text = ''
       exec 3<>/dev/tcp/web/80
       sleep 2
@@ -212,5 +216,37 @@ pkgs.testers.runNixOSTest {
             machine.sleep(1)
         machine.wait_until_fails("pgrep -u lilgolemwitch -f panel.py", timeout=30)
         machine.screenshot("panel_done")
+
+    with subtest("Firefox opens a page inside its YELLOW zone"):
+        assert "is now in YELLOW" in as_me("zone set firefox yellow")
+        as_me("zone firefox --headless --screenshot ~/page.png http://web/ ; true")
+        machine.wait_until_succeeds("test -s /home/lilgolemwitch/zones/firefox/page.png", timeout=120)
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'firefox (YELLOW) talked to'", timeout=60)
+
+    with subtest("Firefox has no secret DNS of its own"):
+        machine.succeed("grep -q '\"DNSOverHTTPS\"' /etc/firefox/policies/policies.json")
+
+    with subtest("Truth log: a connection open for over a minute is written down while still open"):
+        as_me("zone set bash yellow 2>/dev/null; true")
+        apps, keys = current()
+        apps["bash"]["zone"] = "yellow"
+        apps["bash"]["internet"] = "allowed"
+        assert ask_guard({"do": "apply", "password": "golem", "apps": apps, "keys": []}) == "OK"
+        machine.succeed("su - lilgolemwitch -c 'zone bash /etc/golem-test-long.sh' >/dev/null 2>&1 &")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'has been talking to .* (still open)'", timeout=120)
+
+    with subtest("The clock can be set by hand from the Control Panel, with the password, and it is logged"):
+        assert "wrong password" in ask_guard({"do": "clock-set", "time": "2026-12-25 10:00", "password": "nope"})
+        assert ask_guard({"do": "clock-set", "time": "2026-12-25 10:00", "password": "golem"}) == "OK"
+        assert machine.succeed("date +%Y-%m-%d").strip() == "2026-12-25"
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Clock set by hand'")
+
+    with subtest("Going to sleep: the lock is on the screen before the laptop sleeps"):
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 XSS_SLEEP_LOCK_FD=9 golem-lock --auto 9</dev/null' >/dev/null 2>&1 &")
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -x i3lock", timeout=30)
+        machine.sleep(3)
+        machine.send_chars("golem\n")
+        machine.wait_until_fails("pgrep -u lilgolemwitch -x i3lock", timeout=30)
+        machine.wait_until_succeeds("journalctl -b | grep -c 'golem.*UNLOCK' | grep -qv '^[0-2]$'")
   '';
 }

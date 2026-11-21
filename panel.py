@@ -83,9 +83,11 @@ class Panel:
 
         root.configure(bg=T["void"])
         root.attributes("-fullscreen", True)
-        big = ("DejaVu Sans", 13)
+        size = max(11, min(20, root.winfo_screenheight() // 58))      # 13 on the Dell's 768-pixel-high screen
+        small = max(10, size - 2)
+        big = ("DejaVu Sans", size)
         self.title = tk.Label(root, text="GOLEM  /  CONTROL PANEL", fg=T["mist"], bg=T["void"],
-                              font=("DejaVu Sans", 11), anchor="w")
+                              font=("DejaVu Sans", small), anchor="w")
         self.title.pack(fill="x", padx=40, pady=(30, 20))
         body = tk.Frame(root, bg=T["void"])
         body.pack(fill="both", expand=True, padx=40)
@@ -95,10 +97,10 @@ class Panel:
         self.left.pack(side="left", fill="y")
         self.right = tk.Listbox(body, exportselection=False, **opts)
         self.right.pack(side="left", fill="both", expand=True, padx=(40, 0))
-        self.help = tk.Label(root, text="", fg=T["mist"], bg=T["void"], font=("DejaVu Sans", 11), anchor="w",
+        self.help = tk.Label(root, text="", fg=T["mist"], bg=T["void"], font=("DejaVu Sans", small), anchor="w",
                              justify="left")
         self.help.pack(fill="x", padx=40, pady=(10, 4))
-        self.foot = tk.Label(root, text="", fg=T["pale"], bg=T["void"], font=("DejaVu Sans", 11), anchor="w")
+        self.foot = tk.Label(root, text="", fg=T["pale"], bg=T["void"], font=("DejaVu Sans", small), anchor="w")
         self.foot.pack(fill="x", padx=40, pady=(0, 30))
         self.entry = tk.Entry(root, bg=T["shade"], fg=T["pale"], insertbackground=T["pale"],
                               relief="flat", font=big)
@@ -185,7 +187,12 @@ class Panel:
 
     def p_network(self):
         on = run("nmcli", "radio", "wifi").strip() or "unknown (Super+N)"
-        return [("Wi-Fi", on, ("wifi",), "Enter: turn Wi-Fi on or off (happens at once).")]
+        now = run("date", "+%d %b %Y  %H:%M").strip()
+        return [("Wi-Fi", on, ("wifi",), "Enter: turn Wi-Fi on or off (happens at once)."),
+                ("Clock", now, None, "The clock never sets itself over the internet."),
+                ("Set the clock from the internet, once", None, ("clock-once",),
+                 "Enter: asks your password, asks a time server once (Wi-Fi must be on), and writes it in the truth log."),
+                ("Set the clock by hand", None, ("clock-set",), "Enter: type the time like 2026-11-22 02:30, then your password.")]
 
     def p_sound(self):
         vol = run("wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@").strip()
@@ -256,10 +263,27 @@ class Panel:
             self.open_page("NETWORK", keep=True)
             self.status(None if r == "OK" else r)
             return
+        elif kind == "clock-once":
+            self.ask_text("Your password, to set the clock from the internet once:", "",
+                          lambda pw: self.clock({"do": "clock-once", "password": pw}), secret=True)
+            return
+        elif kind == "clock-set":
+            self.ask_text("The time, like 2026-11-22 02:30:", run("date", "+%Y-%m-%d %H:%M").strip(),
+                          lambda t: self.root.after(50, lambda: self.ask_text(
+                              "Your password, to set the clock:", "",
+                              lambda pw: self.clock({"do": "clock-set", "time": t.strip(), "password": pw}), secret=True)))
+            return
         elif kind == "do":
             run(*a[1])
             self.open_page(self.page, keep=True)
         self.status()
+
+    def clock(self, req):
+        self.status("Setting the clock…")
+        self.root.update()
+        r = helper(req)
+        self.open_page("NETWORK", keep=True)
+        self.status("Clock set. It's in the truth log." if r == "OK" else r.replace("ERROR ", "Not set: "))
 
     def confirm(self, text, then):
         self.mode = "confirm"

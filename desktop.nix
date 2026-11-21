@@ -166,7 +166,7 @@ let
     # Login = lock screen; idle: dim at 4 min, lock at 5; lid: lock before sleep (lock.nix)
     exec --no-startup-id golem-lock --start
     exec --no-startup-id xset s 240 60
-    exec --no-startup-id xss-lock -n /etc/golem/dim -- golem-lock --auto
+    exec --no-startup-id xss-lock -n /etc/golem/dim --transfer-sleep-lock -- golem-lock --auto
     include /var/lib/golem/keys.i3
     # Golem's own panel is the one window that takes focus when it opens (DECISIONS: panels do)
     for_window [class="(?i)^golem-panel$"] fullscreen enable, focus

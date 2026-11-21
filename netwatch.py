@@ -9,7 +9,7 @@ import threading
 import time
 
 names = {}   # IP address -> site name, learned from the DNS answers the laptop gets
-conns = {}   # connection id -> (app, start time)
+conns = {}   # connection id -> [app, start time, place, already announced]
 lock = threading.Lock()
 syslog.openlog("golem-net")
 
@@ -60,13 +60,27 @@ def size(n):
         n /= 1024
 
 
+def announce_long():
+    """Connections open for more than a minute are written down while still open."""
+    while True:
+        time.sleep(20)
+        now = time.time()
+        for cid, c in list(conns.items()):
+            if not c[3] and now - c[1] > 60:
+                c[3] = True
+                with lock:
+                    site = names.get(c[2][0])
+                where = f"{site} ({c[2][0]}, port {c[2][1]})" if site else f"{c[2][0]}, port {c[2][1]}"
+                syslog.syslog(f"{c[0] or 'an unknown app'} has been talking to {where} for over a minute (still open)")
+
+
 def local(ip):
     return ip.startswith("127.") or ip == "::1" or ip.startswith("fe80")
 
 
 def main():
-    t = threading.Thread(target=follow_dns, daemon=True)
-    t.start()
+    threading.Thread(target=follow_dns, daemon=True).start()
+    threading.Thread(target=announce_long, daemon=True).start()
     # stdbuf: hand over each event at once (otherwise they arrive in late batches)
     p = subprocess.Popen(["stdbuf", "-oL", "conntrack", "-E", "-e", "NEW,DESTROY", "-o", "id"],
                          stdout=subprocess.PIPE, text=True)
@@ -86,15 +100,15 @@ def main():
         if not cid or local(dst):
             continue
         if kind == "NEW":
-            conns[cid] = (find_app(proto, sport), time.time())
+            conns[cid] = [find_app(proto, sport), time.time(), (dst, first.get("dport", "?")), False]
             continue
-        app, start = conns.pop(cid, (None, None))
+        app, start, _, _ = conns.pop(cid, (None, None, None, None))
         sent = [int(v) for k, v in pairs if k == "bytes"]
         out_b, in_b = (sent + [0, 0])[:2]
         with lock:
             site = names.get(dst)
         where = f"{site} ({dst}, port {first.get('dport', '?')})" if site else f"{dst}, port {first.get('dport', '?')}"
-        took = f" for {int(time.time() - start)} s" if start else ""
+        took = f" for {max(1, int(time.time() - start) - 10)} s" if start else ""   # minus the 10 s it waits after closing
         syslog.syslog(f"{app or 'an unknown app'} talked to {where}{took}: "
                       f"{size(out_b)} out, {size(in_b)} in")
 

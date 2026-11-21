@@ -30,7 +30,7 @@ The goal: **private, clean, usable.**
 | Account | User name `lilgolemwitch`. It's never shown or typed at login. |
 | Zones | RED: nothing, disposable, wiped on close. OFFLINE: no internet, own folder. YELLOW: internet, and only its own folder (e.g. a browser's downloads), never my files. GREEN: trusted. BLUE (my AI) comes later. |
 | Permissions | Each app's settings decide (allowed or never). Nothing is asked at launch. An app with no settings asks for its zone once. |
-| Network | Wi-Fi off at every start. No time sync over the internet. |
+| Network | Wi-Fi off at every start. No time sync over the internet; the Control Panel can set the clock once from the internet, or by hand, with my password. |
 | Windows | Tiling with an existing engine. No gaps, titles or borders, only a 1 px line on the focused window. Focus moves by keys only. |
 | Close | Closing a window asks for confirmation. This is the one allowed popup. |
 | Notifications | None. Only a full-screen red alert, dismissed by pressing a key several times. |
@@ -50,7 +50,7 @@ The goal: **private, clean, usable.**
 | NVIDIA (Asus) | Hybrid: the built-in GPU runs the desktop, NVIDIA wakes only for apps I mark (games, AI training). No switch for it; keep it safe and untouched. |
 | Keyboard light (Asus) | Follows the LOOK palette's light colour, pulses red with the red alert, off at start. Probably one colour zone (to be checked on the laptop): whole-keyboard colour, 4 brightness levels, a few effects, no per-key designs. Any key can be bound to a light change. |
 | Battery | Stop charging at 80% where the laptop allows it (Asus: yes; Dell: Linux if supported, else the BIOS setting, which Golem explains). |
-| Idle | Dim at 4 min, lock at 5, sleep at 30, and after 3 h asleep on battery save to disk and power off. All timings changeable in the Control Panel. Caps Lock ON still stops locking. |
+| Idle | Dim at 4 min, lock at 5, sleep at 30. All timings changeable in the Control Panel. Caps Lock ON still stops locking. (Hibernate after 3 h asleep on battery is removed for now, to come back with the SSD install: see IDEAS.md.) |
 | Internet traffic | Per app: which site (by name), when, and how much data in and out. Kept 30 days like the truth log. |
 | Sites | Each app with internet has its own allowed-sites list (a browser can have "everything"). A new site is blocked, shown in the truth log, and I can add it. |
 | Trackers and ads | A well-known block list (e.g. OISD or StevenBlack), built in, updated only when I say. |

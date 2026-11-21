@@ -120,7 +120,18 @@ let
   '';
 in {
   programs.firejail.enable = true;
-  environment.systemPackages = [ zone nettest pkgs.xauth pkgs.firefox pkgs.alsa-utils ];
+  environment.systemPackages = [ zone nettest pkgs.xauth pkgs.alsa-utils ];
+
+  # Firefox: no telemetry, and no secret DNS of its own (so the truth log can name the sites it visits).
+  programs.firefox = {
+    enable = true;
+    policies = {
+      DNSOverHTTPS = { Enabled = false; Locked = true; };
+      DisableTelemetry = true;
+      DisableFirefoxStudies = true;
+      DisablePocket = true;
+    };
+  };
 
   # My folders (DECISIONS.md): documents, projects, media, zones.
   systemd.tmpfiles.rules = map (d: "d /home/${s.user}/${d} 0700 ${s.user} users -")

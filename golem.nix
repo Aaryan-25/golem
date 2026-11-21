@@ -25,16 +25,17 @@ in
   boot.kernelParams = [ "console=ttyS0,115200" "console=tty1" ];
   boot.loader.grub.extraConfig = "serial --unit=0 --speed=115200; terminal_input serial console; terminal_output serial console";
   boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usb_storage" "uas" "sd_mod" "sdhci_pci" "virtio_pci" "virtio_blk" ];
-  # Only the firmware this laptop needs (Wi-Fi, Bluetooth, graphics), not the 1 GB+ full set.
+  # Only the firmware this laptop needs (Wi-Fi, Bluetooth, graphics, sound), not the 1 GB+ full set.
   hardware.firmware = [
     (pkgs.runCommand "golem-firmware" { } ''
       f=${pkgs.linux-firmware}/lib/firmware
       mkdir -p $out/lib/firmware/intel $out/lib/firmware/i915
       cp -aL $f/iwlwifi-7265* $out/lib/firmware/
-      cp -aL $f/intel/ibt-hw-37.8* $out/lib/firmware/intel/ 2>/dev/null || true
+      cp -aL $f/intel/ibt-* $out/lib/firmware/intel/ 2>/dev/null || true
       cp -aL $f/i915/bxt_* $out/lib/firmware/i915/
     '')
     pkgs.wireless-regdb
+    pkgs.sof-firmware          # sound on this processor family (Apollo Lake) may need it
   ];
   hardware.cpu.intel.updateMicrocode = true;
 

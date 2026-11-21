@@ -75,7 +75,7 @@ that always opens apps through their zone, a window switcher, close confirmation
 **Goal:** a simple lock with no username and no box. I just type my password.
 **Made:** login = lock screen (starts locked, no username, no box), Super+L, the lid rule (Caps Lock ON means no lock
 on wake), idle: dim at 4 min, lock at 5, sleep at 30. Plain dark lock now; the veil animation comes later.
-Not yet: hibernate after 3 h asleep on battery (needs swap space, comes with the SSD install).
+Hibernate after 3 h asleep is removed for now (back with the SSD install, see IDEAS.md).
 
 **Done when:** locking, a wrong password, the right password, and the lid with Caps on and off all behave as decided.
 

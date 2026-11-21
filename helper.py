@@ -126,6 +126,27 @@ def handle(req):
         subprocess.run(["nmcli", "radio", "wifi", "on" if on else "off"], check=False)
         syslog.syslog(f"Wi-Fi turned {'ON' if on else 'OFF'}")
         return "OK"
+    if do in ("clock-once", "clock-set"):      # admin: the password every time
+        if not pam.authenticate(USER, req.get("password", ""), service="golem-panel"):
+            syslog.syslog("Wrong password in the Control Panel; nothing was changed")
+            return "ERROR wrong password, nothing was changed"
+        before = subprocess.run(["date", "+%d %b %H:%M:%S"], capture_output=True, text=True).stdout.strip()
+        if do == "clock-once":
+            r = subprocess.run(["chronyd", "-q", "-t", "25", "server pool.ntp.org iburst"], capture_output=True, text=True)
+            if r.returncode != 0:
+                syslog.syslog("Tried to set the clock from the internet once, but it failed (is Wi-Fi on?)")
+                return "ERROR could not reach a time server (is Wi-Fi on?)"
+        else:
+            when = req.get("time", "")
+            if not re.fullmatch(r"20[0-9]{2}-[01][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]", when):
+                return "ERROR write the time like 2026-11-22 02:30"
+            if subprocess.run(["date", "-s", when], capture_output=True).returncode != 0:
+                return "ERROR that time could not be set"
+        subprocess.run(["hwclock", "--systohc"], capture_output=True)
+        after = subprocess.run(["date", "+%d %b %H:%M:%S"], capture_output=True, text=True).stdout.strip()
+        how = "from the internet, once" if do == "clock-once" else "by hand"
+        syslog.syslog(f"Clock set {how}: it said {before}, now {after}")
+        return "OK"
     if do == "apply":
         if not pam.authenticate(USER, req.get("password", ""), service="golem-panel"):
             syslog.syslog("Wrong password in the Control Panel; nothing was changed")
