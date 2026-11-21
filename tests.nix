@@ -28,6 +28,7 @@ pkgs.testers.runNixOSTest {
     boot.growPartition = lib.mkForce false;
   };
 
+  enableOCR = true;      # lets the test read the screen when something goes wrong
   testScript = ''
     web.start()
     machine.wait_for_unit("multi-user.target")
@@ -202,7 +203,10 @@ pkgs.testers.runNixOSTest {
         machine.send_key("a")
         machine.sleep(1)
         machine.send_chars("golem\n")
-        machine.wait_until_succeeds("grep -q zone=yellow /var/lib/golem/apps/bash.conf", timeout=30)
+        if machine.execute("timeout 30 sh -c 'until grep -q zone=yellow /var/lib/golem/apps/bash.conf; do sleep 1; done'")[0] != 0:
+            print("SCREEN:", machine.get_screen_text())
+            print(machine.execute("cat /var/lib/golem/apps/bash.conf; golem-truth --text | tail -5")[1])
+            raise Exception("the panel did not apply the change")
         for key in ["esc", "esc", "esc"]:
             machine.send_key(key)
             machine.sleep(1)

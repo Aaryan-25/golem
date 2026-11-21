@@ -168,7 +168,8 @@ let
     exec --no-startup-id xset s 240 60
     exec --no-startup-id xss-lock -n /etc/golem/dim -- golem-lock --auto
     include /var/lib/golem/keys.i3
-    for_window [class="^golem-panel$"] fullscreen enable
+    # Golem's own panel is the one window that takes focus when it opens (DECISIONS: panels do)
+    for_window [class="(?i)^golem-panel$"] fullscreen enable, focus
   '';
 in {
   services.xserver.windowManager.i3.configFile = lib.mkForce i3config;

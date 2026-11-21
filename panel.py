@@ -102,11 +102,15 @@ class Panel:
         self.foot.pack(fill="x", padx=40, pady=(0, 30))
         self.entry = tk.Entry(root, bg=T["shade"], fg=T["pale"], insertbackground=T["pale"],
                               relief="flat", font=big)
+        # Only our own key handling moves the lists (otherwise each arrow press would move twice).
+        for box in (self.left, self.right):
+            box.bindtags((str(box), str(root), "all"))
         for p in self.PAGES:
             self.left.insert("end", "  " + p)
         self.left.selection_set(0)
         root.bind("<Key>", self.key)
         self.left.focus_set()
+        root.after(300, root.focus_force)
         self.status()
 
     # ---- helpers ----
