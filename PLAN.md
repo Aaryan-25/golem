@@ -92,6 +92,12 @@ but only my password can change (the panel's Apply, or sudo).
 
 **Done when:** I change an app's zone and a key from the panel, and both work after Apply.
 
+## Later step: Screen and clipboard separation
+**Why:** today any app with a window can see other windows and key presses, whatever its zone.
+**Made:** each zone's windows in their own nested screen, so they can't see each other; this also gives
+the clipboard rules in DECISIONS.md (GREEN shares one, the others keep their own) and the screen rule (no app
+sees the screen unless allowed).
+
 ## Step 9: Control Panel (game style)
 **Goal:** the same panel becomes the game menu (no second panel).
 **Made:** decided at the time, in small pieces, from IDEAS.md.

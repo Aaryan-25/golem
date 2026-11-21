@@ -31,7 +31,7 @@ Turn Wi-Fi on first (Super+N). In a normal terminal, `golem-net-test` should say
 Then run each line below. A new terminal window opens inside the zone. Type the commands
 in **that new window**, then close it with Alt+Q.
 
-**RED:** `zone red xterm`
+**RED:** `zone red xterm`  (known gap: windows in any zone can still see other windows; that comes later)
 - [ ] `ls ~` shows nothing (none of your folders)
 - [ ] `golem-net-test` says OFFLINE (turn Wi-Fi on first, so this really tests the zone)
 - [ ] `touch ~/x`, close the window, open RED again, and `ls ~` is empty again (wiped on close)

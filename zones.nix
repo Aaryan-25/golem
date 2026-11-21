@@ -6,6 +6,10 @@
 #   zone show <app>          what the app may do
 #
 # Settings: ~/zones/settings/<app>.conf  (the Control Panel will edit these in step 8)
+#
+# KNOWN GAP: on this desktop (X11) any app with a window can see other windows and key presses,
+# whatever its zone. Zones lock files, internet, camera, sound and USB. Real screen separation
+# needs each zone in its own nested screen; see PLAN.md (Screen and clipboard separation).
 { pkgs, ... }:
 let
   s = import ./settings.nix;
@@ -87,11 +91,9 @@ let
           *) echo "zone: the folder must be inside your home" >&2; exit 1 ;; esac
       fi
 
-      export XAUTHORITY="''${XAUTHORITY:-$HOME/.Xauthority}"   # the sandbox needs it to make a RED window key
       opts=(--noprofile --quiet --caps.drop=all --nonewprivs --seccomp --dbus-system=none)
       case "$Z" in
-        red)     opts+=(--private --private-tmp --private-dev --nogroups --no3d --dbus-user=none --machine-id)
-                 if [ -n "''${DISPLAY:-}" ]; then opts+=(--x11=xorg); fi ;;
+        red)     opts+=(--private --private-tmp --private-dev --nogroups --no3d --dbus-user=none --machine-id) ;;
         offline) mkdir -p "$dir"; opts+=(--private="$dir" --private-tmp --private-dev --nogroups --dbus-user=none) ;;
         yellow)  mkdir -p "$dir"; opts+=(--private="$dir" --private-tmp --private-dev --nogroups) ;;
         green)   ;;
@@ -122,7 +124,5 @@ in {
   # My folders (DECISIONS.md): documents, projects, media, zones.
   systemd.tmpfiles.rules = map (d: "d /home/${s.user}/${d} 0700 ${s.user} users -")
     [ "documents" "projects" "media" "zones" "zones/settings" ]
-    ++ [ "f /home/${s.user}/zones/settings/i3-placements 0600 ${s.user} users -"
-         # the RED sandbox looks for xauth here (to give RED windows their own screen key)
-         "L+ /usr/bin/xauth - - - - ${pkgs.xauth}/bin/xauth" ];
+    ++ [ "f /home/${s.user}/zones/settings/i3-placements 0600 ${s.user} users -" ];
 }
