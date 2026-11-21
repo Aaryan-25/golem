@@ -58,8 +58,10 @@ in
   # The boot loader lives only on the pendrive and never writes to the laptop's firmware.
   boot.loader.grub = { enable = true; device = "nodev"; efiSupport = true; efiInstallAsRemovable = true; };
   boot.loader.efi.canTouchEfiVariables = false;
-  boot.kernelParams = [ "console=ttyS0,115200" "console=tty1" ];   # lets GitHub's boot test read the screen
-  boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usb_storage" "uas" "sd_mod" "sdhci_pci" ];
+  # Lets GitHub's boot test read the screen (start-up menu and messages also go to a serial line).
+  boot.kernelParams = [ "console=ttyS0,115200" "console=tty1" ];
+  boot.loader.grub.extraConfig = "serial --unit=0 --speed=115200; terminal_input serial console; terminal_output serial console";
+  boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usb_storage" "uas" "sd_mod" "sdhci_pci" "virtio_pci" "virtio_blk" ];
   # Only the firmware this laptop needs (Wi-Fi, Bluetooth, graphics), not the 1 GB+ full set.
   hardware.firmware = [
     (pkgs.runCommand "golem-firmware" { } ''
