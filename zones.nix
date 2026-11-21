@@ -121,5 +121,7 @@ in {
   # My folders (DECISIONS.md): documents, projects, media, zones.
   systemd.tmpfiles.rules = map (d: "d /home/${s.user}/${d} 0700 ${s.user} users -")
     [ "documents" "projects" "media" "zones" "zones/settings" ]
-    ++ [ "f /home/${s.user}/zones/settings/i3-placements 0600 ${s.user} users -" ];
+    ++ [ "f /home/${s.user}/zones/settings/i3-placements 0600 ${s.user} users -"
+         # the RED sandbox looks for xauth here (to give RED windows their own screen key)
+         "L+ /usr/bin/xauth - - - - ${pkgs.xauth}/bin/xauth" ];
 }
