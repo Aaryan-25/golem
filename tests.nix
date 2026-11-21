@@ -4,14 +4,27 @@
 pkgs.testers.runNixOSTest {
   name = "golem";
   node.specialArgs = { inherit golemRev; };
+  # A small web server on the test network, for the internet part of the truth log.
+  nodes.web = { ... }: {
+    services.nginx.enable = true;
+    networking.firewall.allowedTCPPorts = [ 80 ];
+  };
   nodes.machine = { lib, ... }: {
     imports = modules;
     virtualisation.memorySize = 2048;
+    virtualisation.qemu.options = [ "-device qemu-xhci,id=xhci" ];   # a USB port to plug things into
+    networking.networkmanager.unmanaged = [ "eth1" ];               # the test network stays as the test set it
+    environment.etc."golem-test-fetch.sh".text = ''
+      exec 3<>/dev/tcp/web/80
+      printf 'GET / HTTP/1.0\r\nHost: web\r\n\r\n' >&3
+      cat <&3 >/dev/null
+    '';
     boot.loader.grub.enable = lib.mkForce false;     # the test machine starts the kernel directly
     boot.growPartition = lib.mkForce false;
   };
 
   testScript = ''
+    web.start()
     machine.wait_for_unit("multi-user.target")
 
     with subtest("Step 3: Wi-Fi off at start, no internet clock, nothing comes in"):
@@ -109,5 +122,18 @@ pkgs.testers.runNixOSTest {
         as_me("zone set bash yellow")  # (zones run without the screen here)
         assert "YELLOW" in as_me("zone show bash")
         assert as_me("zone bash -c \"ls ~ | grep -c documents || true\"") == "0"
+
+    with subtest("Step 7: the truth log tells what happened, in plain words"):
+        web.wait_for_unit("nginx.service")
+        machine.wait_for_unit("golem-netwatch.service")
+        as_me("zone bash /etc/golem-test-fetch.sh")        # bash is YELLOW (internet allowed) by now
+        machine.send_monitor_command("device_add usb-tablet,bus=xhci.0,id=t1")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'bash (YELLOW) talked to'", timeout=90)
+        log = machine.succeed("golem-truth --text")
+        print(log)
+        for words in ["Opened xterm in RED", "Wrong password at the lock screen", "Screen locked",
+                      "Screen unlocked", "Settings: bash now opens in YELLOW", "USB plugged in",
+                      "bash (YELLOW) talked to", "out,"]:
+            assert words in log, f"missing from the truth log: {words}"
   '';
 }

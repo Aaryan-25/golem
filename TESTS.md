@@ -70,3 +70,16 @@ in **that new window**, then close it with Alt+Q.
 - [ ] Closing the lid (Caps Lock OFF) sleeps; opening it shows the lock
 - [ ] Closing the lid with Caps Lock ON: on opening, no lock
 - [ ] Left alone, the screen dims at 4 minutes and locks at 5 (not while Caps Lock is ON)
+
+## Step 7: truth log
+Do these, then press **Super+T** and check each shows up in words you understand:
+- [ ] Open Firefox (YELLOW) and visit a website: "firefox (YELLOW) talked to <site>: … out, … in"
+- [ ] `zone red xterm`, then close it: "Opened xterm in RED …" and "Closed xterm (RED)"
+- [ ] A wrong password at the lock screen: "Wrong password at the lock screen"
+- [ ] Super+L, then unlock: "Screen locked", "Screen unlocked"
+- [ ] Plug in and pull out a USB stick: "USB plugged in: …", "USB unplugged: …"
+- [ ] `sudo ls`: "Admin rights used for: …"
+- [ ] Super+N twice: "Wi-Fi turned OFF/ON"
+- [ ] Join a network: "Connected to the network '…'"
+- [ ] `zone set xterm offline`: "Settings: xterm now opens in OFFLINE"
+- [ ] Send a window to workspace 2: "WINDOW … now opens on workspace 2"

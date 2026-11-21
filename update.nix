@@ -6,7 +6,7 @@ let
 
   update = pkgs.writeShellApplication {
     name = "golem-update";
-    runtimeInputs = with pkgs; [ git coreutils less ];
+    runtimeInputs = with pkgs; [ git coreutils less util-linux ];
     text = ''
       repo="$HOME/golem"
       log="$HOME/golem-updates.txt"
@@ -61,6 +61,7 @@ let
       say "Building the new version. This can take a while. Nothing changes until it finishes."
       if nixos-rebuild switch --flake "$repo#golem" --sudo; then
         { echo "$(date '+%F %R')  ''${now:0:7} -> ''${new:0:7}"; echo "$changes"; echo; } >> "$log"
+        logger -t golem "Golem updated from version ''${now:0:7} to ''${new:0:7}"
         say "Done. Golem is now version ''${new:0:7}."
         echo "The old version stays in the boot menu, in case you need it."
         echo "Every update is listed in ~/golem-updates.txt"

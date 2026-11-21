@@ -81,7 +81,9 @@ Not yet: hibernate after 3 h asleep on battery (needs swap space, comes with the
 
 ## Step 7: Truth log
 **Goal:** I can see what happened, in plain words.
-**Made:** a log of apps opened and closed (with zone), internet connections, USB, admin use and wrong passwords. Kept 30 days.
+**Made:** Super+T / `golem-truth`: apps opened and closed (with zone), every internet connection (which app, which site,
+how long, data in and out), USB, admin use, wrong passwords, lock, Wi-Fi, networks joined, settings, updates. Kept 30 days.
+Not yet: file changes inside sandboxes; a browser using its own encrypted DNS hides site names (IP shown instead).
 
 **Done when:** I do ten things and all ten show up in the log in words I understand.
 

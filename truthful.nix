@@ -5,10 +5,10 @@ let
   # Super+N: Wi-Fi on or off.
   wifi = pkgs.writeShellApplication {
     name = "golem-wifi";
-    runtimeInputs = [ pkgs.networkmanager ];
+    runtimeInputs = [ pkgs.networkmanager pkgs.util-linux ];
     text = ''
-      if [ "$(nmcli radio wifi)" = enabled ]; then nmcli radio wifi off; echo "Wi-Fi is now OFF"
-      else nmcli radio wifi on; echo "Wi-Fi is now ON"; fi
+      if [ "$(nmcli radio wifi)" = enabled ]; then nmcli radio wifi off; echo "Wi-Fi is now OFF"; logger -t golem "Wi-Fi turned OFF"
+      else nmcli radio wifi on; echo "Wi-Fi is now ON"; logger -t golem "Wi-Fi turned ON"; fi
     '';
   };
 in {

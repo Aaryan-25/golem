@@ -47,6 +47,7 @@ Super = the Windows key. **Super+H** shows the full list on screen.
 | Super+1…4 / Super+Shift+1…4 | go to a workspace / send the window there (its app opens there from now on) |
 | Super+L | lock the screen |
 | Super+Escape | power: lock, sleep, restart, shut down, log out |
+| Super+T | truth log: what the system did |
 | Super+N / Super+W | Wi-Fi on/off / choose a network |
 | Super+R | reload keys and windows |
 | Volume, mute, mic, brightness keys | what they say |
@@ -61,6 +62,12 @@ To turn off the laptop: Super+Escape, or type `poweroff` in a terminal.
 - **Start-up is silent.** Hold **Shift** while it starts to see the menu with older versions.
 - **The clock never syncs over the internet.** To set it: `sudo timedatectl set-time "2026-11-21 22:30"`
 - In a terminal, `golem-wifi` turns Wi-Fi on or off and says which.
+
+## Truth log
+**Super+T** (or `golem-truth` in a terminal) shows what the system did, in plain words, newest at the bottom,
+kept 30 days: apps opened and closed (with zone and permissions), every internet connection (which app, which
+site, how long, data in and out; written when the connection ends), USB plugged in and out, admin rights used,
+wrong passwords, lock and unlock, Wi-Fi on and off, networks joined, zone and window changes, updates.
 
 ## Zones
 `zone red|offline|yellow|green <app>` runs an app in a zone. `zone set <app> <zone>` saves its zone,

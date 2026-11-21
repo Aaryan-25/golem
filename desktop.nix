@@ -132,6 +132,7 @@ let
     [ "Super+l"           "Lock the screen"                            "exec golem-lock" ]
     [ "Super+Escape"      "Power: lock, sleep, restart, shut down, log out" "exec golem-win power" ]
     [ "Super+Shift+q"     "Log out (asks first)"                       "exec golem-win logout" ]
+    [ "Super+t"           "Truth log: what the system did"             "exec ${term} -e golem-truth" ]
     [ "Super+n"           "Wi-Fi on/off"                               "exec golem-wifi" ]
     [ "Super+w"           "Choose a Wi-Fi network"                     "exec ${term} -e nmtui" ]
     [ "Super+r"           "Reload keys and windows"                    "restart" ]
