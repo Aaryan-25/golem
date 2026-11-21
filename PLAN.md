@@ -1,6 +1,6 @@
 # Plan
 
-**NOW: Step 2** (waiting for the first real update to finish on the laptop)
+**NOW: Step 3** (built, waiting for my test on the laptop). Step 2 is waiting for its test too.
 
 Done: Step 1 (21 Nov 2026). Step 0 was skipped; its hardware checks moved into Step 3's test.
 

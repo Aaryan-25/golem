@@ -29,12 +29,13 @@ This is a fresh start. The old attempt lives in `Aaryan-25/shilp`, and it's kept
 
 The laptop's SSD and Windows are never touched.
 
-## Keys (step 1)
+## Keys
 Super = the Windows key.
 
 | Key | Does |
 |---|---|
 | Alt+Enter | terminal |
+| Super+N | Wi-Fi on / off (it's off at every start) |
 | Super+W | Wi-Fi: choose and join a network |
 | Alt+Tab / Alt+Shift+Tab | next / previous window |
 | Alt+F | fullscreen |
@@ -44,6 +45,10 @@ Super = the Windows key.
 | Super+Shift+E | log out |
 
 To turn off the laptop, type `poweroff` in the terminal.
+
+- **Start-up is silent.** Hold **Shift** while it starts to see the menu with older versions.
+- **The clock never syncs over the internet.** To set it: `sudo timedatectl set-time "2026-11-21 22:30"`
+- In a terminal, `golem-wifi` turns Wi-Fi on or off and says which.
 
 ## Updating (no reinstalling)
 Turn Wi-Fi on, open a terminal and type `golem-update`.

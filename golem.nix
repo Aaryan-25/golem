@@ -27,6 +27,7 @@ let
     # Keys (Super = the Windows key)
     bindsym Mod1+Return exec ${term}
     bindsym Mod4+w      exec ${term} -e nmtui
+    bindsym Mod4+n      exec golem-wifi
     bindsym Mod1+Tab    focus right
     bindsym Mod1+Shift+Tab focus left
     bindsym Mod1+f      fullscreen toggle
