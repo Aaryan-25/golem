@@ -132,7 +132,9 @@ pkgs.testers.runNixOSTest {
         machine.wait_for_unit("golem-netwatch.service")
         as_me("zone bash /etc/golem-test-fetch.sh")        # bash is YELLOW (internet allowed) by now
         machine.send_monitor_command("device_add usb-tablet,bus=xhci.0,id=t1")
-        machine.wait_until_succeeds("golem-truth --text | grep -q 'bash (YELLOW) talked to'", timeout=90)
+        if machine.execute("timeout 60 sh -c 'until golem-truth --text | grep -q \"bash (YELLOW) talked to\"; do sleep 2; done'")[0] != 0:
+            print(machine.execute("journalctl -u golem-netwatch --no-pager | tail -30; golem-truth --text | tail -8; sysctl net.netfilter.nf_conntrack_acct; conntrack -L 2>&1 | tail -5; timeout 8 conntrack -E -o id 2>&1 & sleep 1; zone_dummy=1; su - lilgolemwitch -c 'zone bash /etc/golem-test-fetch.sh'; sleep 7")[1])
+            raise Exception("the internet connection was not written down")
         truth = machine.succeed("golem-truth --text")
         print(truth)
         for words in ["Opened xterm in RED", "Wrong password at the lock screen", "Screen locked",

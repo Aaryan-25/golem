@@ -11,7 +11,7 @@ let
   truth = py "golem-truth" ./truth.py;
   logger = "${pkgs.util-linux}/bin/logger";
 in {
-  environment.systemPackages = [ truth ];
+  environment.systemPackages = [ truth pkgs.conntrack-tools ];
   services.journald.extraConfig = "MaxRetentionSec=30day";
 
   # Internet: a small watcher notes each connection when it ends. Site names come from the
