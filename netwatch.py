@@ -67,7 +67,8 @@ def local(ip):
 def main():
     t = threading.Thread(target=follow_dns, daemon=True)
     t.start()
-    p = subprocess.Popen(["conntrack", "-E", "-e", "NEW,DESTROY", "-o", "id"],
+    # stdbuf: hand over each event at once (otherwise they arrive in late batches)
+    p = subprocess.Popen(["stdbuf", "-oL", "conntrack", "-E", "-e", "NEW,DESTROY", "-o", "id"],
                          stdout=subprocess.PIPE, text=True)
     for line in p.stdout:
         kind = "NEW" if "[NEW]" in line else "DESTROY" if "[DESTROY]" in line else None

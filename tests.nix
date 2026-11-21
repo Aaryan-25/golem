@@ -19,6 +19,7 @@ pkgs.testers.runNixOSTest {
     networking.networkmanager.unmanaged = [ "eth1" ];               # the test network stays as the test set it
     environment.etc."golem-test-fetch.sh".text = ''
       exec 3<>/dev/tcp/web/80
+      sleep 2
       printf 'GET / HTTP/1.0\r\nHost: web\r\n\r\n' >&3
       cat <&3 >/dev/null
     '';

@@ -22,7 +22,7 @@ in {
     description = "Golem: write every internet connection into the truth log";
     wantedBy = [ "multi-user.target" ];
     after = [ "network-pre.target" ];
-    path = with pkgs; [ conntrack-tools iproute2 systemd kmod procps ];
+    path = with pkgs; [ conntrack-tools iproute2 systemd kmod procps coreutils ];
     serviceConfig = {
       ExecStartPre = [
         "${pkgs.kmod}/bin/modprobe -a nf_conntrack nf_conntrack_netlink"
