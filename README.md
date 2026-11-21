@@ -44,3 +44,11 @@ Super = the Windows key.
 | Super+Shift+E | log out |
 
 To turn off the laptop, type `poweroff` in the terminal.
+
+## Updating (no reinstalling)
+Turn Wi-Fi on, open a terminal and type `golem-update`.
+- It shows **what changed** and which files. Press `d` to see every changed line.
+- It changes nothing until you press `y`.
+- Every update is listed in `~/golem-updates.txt`.
+- The recipe itself is in `~/golem`, readable any time.
+- If an update ever breaks something, restart and pick the older version from the boot menu.

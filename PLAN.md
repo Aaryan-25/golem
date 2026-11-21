@@ -39,9 +39,10 @@ After boot: a login, a tiling window manager, a terminal, and Wi-Fi I can turn o
 **Done when:** I flash the image, start from the pendrive, log in, open a terminal (Alt+Enter),
 and join Wi-Fi (Super+W).
 
-## Step 2: Update without a new installer
+## Step 2: Update without a new installer (built together with Step 1)
 **Goal:** after this, changes reach the laptop with one command, not a new pendrive flash.
-**Made:** `golem-update`. It shows what changed on GitHub, asks first, then applies it. Old versions stay in the boot menu.
+**Made:** `golem-update`. It shows what changed on GitHub (and every changed line, if I ask), asks first, then applies it.
+Old versions stay in the boot menu, and every update is listed in `~/golem-updates.txt`.
 
 **Done when:** a small visible change made on GitHub (for example, the terminal colour) reaches the laptop through `golem-update`,
 and picking the older version from the boot menu still works.

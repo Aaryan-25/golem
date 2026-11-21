@@ -22,6 +22,21 @@ jobs:
           extra_nix_config: system-features = nixos-test benchmark big-parallel kvm
       - name: Build the pendrive image
         run: nix build .#image -L --show-trace
+      - name: Boot test (start the image in a virtual laptop and wait for the login)
+        run: |
+          set -euo pipefail
+          ovmf=$(nix build --inputs-from . nixpkgs#OVMF.fd --no-link --print-out-paths)/FV/OVMF.fd
+          qemu=$(nix build --inputs-from . nixpkgs#qemu_kvm --no-link --print-out-paths)/bin/qemu-system-x86_64
+          cp result/nixos.img test.img && chmod +w test.img && truncate -s +2G test.img
+          $qemu -enable-kvm -m 2048 -smp 2 -bios "$ovmf" -drive file=test.img,format=raw,if=virtio \
+            -display none -serial file:serial.log -no-reboot &
+          for i in $(seq 1 120); do
+            if grep -q "golem login:" serial.log 2>/dev/null; then echo "BOOTED: reached the login"; break; fi
+            sleep 5
+          done
+          kill %1 || true
+          grep -q "golem login:" serial.log || { tail -60 serial.log; echo "::error::Golem did not reach the login"; exit 1; }
+          grep -iE "resiz|grow" serial.log | tail -5 || true
       - name: Publish as a release
         env:
           GH_TOKEN: ${{ github.token }}

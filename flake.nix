@@ -8,7 +8,8 @@
     let
       golem = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        modules = [ ./golem.nix ];
+        specialArgs.golemRev = self.rev or "unknown";   # which GitHub version this is
+        modules = [ ./golem.nix ./update.nix ];
       };
     in {
       nixosConfigurations.golem = golem;
