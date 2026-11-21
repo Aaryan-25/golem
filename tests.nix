@@ -17,7 +17,7 @@ pkgs.testers.runNixOSTest {
     with subtest("Step 3: Wi-Fi off at start, no internet clock, nothing comes in"):
         machine.succeed("grep -q WirelessEnabled=false /var/lib/NetworkManager/NetworkManager.state")
         machine.fail("systemctl is-active systemd-timesyncd")
-        machine.succeed("nft list ruleset | grep -q drop || iptables -S | grep -q DROP")
+        machine.succeed("iptables -S | grep -q DROP")
 
     with subtest("Step 5: the key and window settings are valid"):
         machine.succeed("i3 -C -c /etc/i3/config")
@@ -41,17 +41,24 @@ pkgs.testers.runNixOSTest {
         machine.send_key("alt-ret")
         machine.wait_until_succeeds("pgrep -u lilgolemwitch -f bin/xterm", timeout=60)
 
+    def close_menu():
+        for _ in range(10):
+            machine.sleep(2)
+            if machine.execute("pgrep -u lilgolemwitch rofi")[0] != 0:
+                return
+            machine.send_key("esc")
+        raise Exception("Esc did not close the menu")
+
     with subtest("Step 5: Super+H shows the key list, Alt+Space the launcher"):
         machine.send_key("meta_l-h")
         machine.wait_until_succeeds("pgrep -u lilgolemwitch -f 'rofi.*KEYS'", timeout=60)
-        machine.send_key("esc")
-        machine.wait_until_fails("pgrep -u lilgolemwitch rofi", timeout=30)
+        close_menu()
         machine.send_key("alt-spc")
         if machine.execute("timeout 30 sh -c 'until pgrep -u lilgolemwitch -f rofi.*drun; do sleep 1; done'")[0] != 0:
             print(machine.execute("ps -u lilgolemwitch -o pid,args; journalctl -b --no-pager | grep -iE 'rofi|golem-launch|i3' | tail -30")[1])
             print(machine.execute("su - lilgolemwitch -c 'DISPLAY=:0 timeout 5 golem-launch' 2>&1 | tail -20")[1])
             raise Exception("Alt+Space did not open the launcher")
-        machine.send_key("esc")
+        close_menu()
 
     with subtest("Step 4: a RED app with a window opens (launched from the desktop)"):
         machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 i3-msg exec \"zone red xterm\"'")
