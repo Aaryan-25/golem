@@ -59,9 +59,9 @@ in
     (pkgs.runCommand "golem-firmware" { } ''
       f=${pkgs.linux-firmware}/lib/firmware
       mkdir -p $out/lib/firmware/intel $out/lib/firmware/i915
-      cp -a $f/iwlwifi-7265* $out/lib/firmware/
-      cp -a $f/intel/ibt-hw-37.8* $out/lib/firmware/intel/ 2>/dev/null || true
-      cp -a $f/i915/bxt_* $out/lib/firmware/i915/
+      cp -aL $f/iwlwifi-7265* $out/lib/firmware/
+      cp -aL $f/intel/ibt-hw-37.8* $out/lib/firmware/intel/ 2>/dev/null || true
+      cp -aL $f/i915/bxt_* $out/lib/firmware/i915/
     '')
     pkgs.wireless-regdb
   ];
