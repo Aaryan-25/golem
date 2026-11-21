@@ -87,6 +87,7 @@ let
           *) echo "zone: the folder must be inside your home" >&2; exit 1 ;; esac
       fi
 
+      export XAUTHORITY="''${XAUTHORITY:-$HOME/.Xauthority}"   # the sandbox needs it to make a RED window key
       opts=(--noprofile --quiet --caps.drop=all --nonewprivs --seccomp --dbus-system=none)
       case "$Z" in
         red)     opts+=(--private --private-tmp --private-dev --nogroups --no3d --dbus-user=none --machine-id)
