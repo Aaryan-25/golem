@@ -18,6 +18,8 @@ pkgs.testers.runNixOSTest {
     virtualisation.qemu.options = [ "-device qemu-xhci,id=xhci" ];   # a USB port to plug things into
     networking.networkmanager.unmanaged = [ "eth1" ];               # the test network stays as the test set it
     environment.systemPackages = [ pkgs.socat ];
+    # the test laptop's small disk is always nearly full: no drive alert here
+    systemd.tmpfiles.rules = [ "f /var/lib/golem/settings.conf 0644 root root - alert_disk=off" ];
     environment.etc."golem-test-long.sh".text = ''
       exec 3<>/dev/tcp/web/80
       sleep 90

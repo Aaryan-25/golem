@@ -56,13 +56,7 @@ def show(message):
     update()
     root.bind("<Key>", press)
     root.after(200, root.focus_force)
-
-    def grab():
-        try:
-            root.grab_set_global()
-        except tk.TclError:
-            pass
-    root.after(300, grab)
+    # (no keyboard grab: the lock screen must always be able to start, even over an alert)
     root.mainloop()
 
 
