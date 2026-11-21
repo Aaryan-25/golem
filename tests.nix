@@ -245,7 +245,7 @@ pkgs.testers.runNixOSTest {
 
     with subtest("Settings: the system side runs at start; trackers are blocked by default"):
         machine.succeed("systemctl show -p Result --value golem-settings | grep -q success")
-        machine.succeed("readlink /var/lib/golem/blocklist.hosts | grep -q blocklist")
+        machine.succeed("test $(grep -c ^0.0.0.0 /var/lib/golem/blocklist.hosts) -gt 50000")
         machine.succeed("grep -q addn-hosts /etc/NetworkManager/dnsmasq.d/golem-block.conf")
 
     with subtest("DRIVERS: switching the camera off means its driver can't load at all"):
