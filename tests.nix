@@ -6,7 +6,10 @@ pkgs.testers.runNixOSTest {
   node.specialArgs = { inherit golemRev; };
   # A small web server on the test network, for the internet part of the truth log.
   nodes.web = { ... }: {
-    services.nginx.enable = true;
+    services.nginx = {
+      enable = true;
+      virtualHosts.web = { default = true; locations."/".return = "200 hello"; };
+    };
     networking.firewall.allowedTCPPorts = [ 80 ];
   };
   nodes.machine = { lib, ... }: {
@@ -125,6 +128,7 @@ pkgs.testers.runNixOSTest {
 
     with subtest("Step 7: the truth log tells what happened, in plain words"):
         web.wait_for_unit("nginx.service")
+        web.wait_for_open_port(80)
         machine.wait_for_unit("golem-netwatch.service")
         as_me("zone bash /etc/golem-test-fetch.sh")        # bash is YELLOW (internet allowed) by now
         machine.send_monitor_command("device_add usb-tablet,bus=xhci.0,id=t1")
