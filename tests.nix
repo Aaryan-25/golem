@@ -280,7 +280,11 @@ pkgs.testers.runNixOSTest {
         machine.send_key("spc")
         machine.sleep(1)
         machine.send_key("spc")
-        machine.wait_until_fails("pgrep -u lilgolemwitch -f alert.py", timeout=30)
+        if machine.execute("timeout 20 sh -c 'while pgrep -u lilgolemwitch -f alert.py; do sleep 1; done'")[0] != 0:
+            print("FOCUS:", machine.execute("su - lilgolemwitch -c 'DISPLAY=:0 xdotool getwindowfocus getwindowname; DISPLAY=:0 xprop -id $(DISPLAY=:0 xdotool getwindowfocus) WM_CLASS' 2>&1")[1])
+            print(machine.execute("journalctl -b --no-pager | grep -iE 'alert|golem\\[' | tail -15")[1])
+            print("SCREEN:", machine.get_screen_text())
+            raise Exception("the red alert did not go away after 3 presses")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'RED ALERT dismissed'")
 
     with subtest("Backups and save slots work through the guard"):
