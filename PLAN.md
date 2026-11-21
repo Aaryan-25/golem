@@ -1,6 +1,7 @@
 # Plan
 
-**NOW: Step 3** (built, waiting for my test on the laptop). Step 2 is waiting for its test too.
+**NOW: testing Steps 2, 3 and 4 together** (all built). The checklist is in [TESTS.md](TESTS.md).
+Nothing new gets built until these pass.
 
 Done: Step 1 (21 Nov 2026). Step 0 was skipped; its hardware checks moved into Step 3's test.
 
