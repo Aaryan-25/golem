@@ -1,7 +1,7 @@
 # Plan
 
-**NOW: testing Steps 2, 3 and 4 together** (all built). The checklist is in [TESTS.md](TESTS.md).
-Nothing new gets built until these pass.
+**NOW: building Steps 5 to 8** (my choice: a working Control Panel first, then I test Steps 2 to 8 together
+using [TESTS.md](TESTS.md)). Each step is tested automatically on GitHub in a virtual laptop meanwhile.
 
 Done: Step 1 (21 Nov 2026). Step 0 was skipped; its hardware checks moved into Step 3's test.
 
