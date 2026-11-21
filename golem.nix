@@ -67,7 +67,16 @@ in
   };
   services.libinput.enable = true;                    # touchpad
   environment.loginShellInit = ''
-    if [ "$(tty)" = /dev/tty1 ] && [ -z "''${DISPLAY:-}" ]; then exec startx >/dev/null 2>&1; fi
+    # The windows start after login on the first screen. If the display doesn't come up the first time
+    # (graphics still waking up), try again a few times before falling back to the text login.
+    if [ "$(tty)" = /dev/tty1 ] && [ -z "''${DISPLAY:-}" ]; then
+      for golem_try in 1 2 3 4; do
+        startx >/dev/null 2>&1 && exit 0
+        logger -t golem "The display did not start (try $golem_try)"
+        sleep 3
+      done
+      exit 1
+    fi
   '';
   environment.systemPackages = with pkgs; [ xterm xsetroot git ];
 

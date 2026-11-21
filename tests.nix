@@ -49,7 +49,7 @@ pkgs.testers.runNixOSTest {
 
     with subtest("Step 6: Golem starts straight into the lock screen"):
         if machine.execute("timeout 180 sh -c 'until pgrep -u lilgolemwitch -x i3lock; do sleep 1; done'")[0] != 0:
-            print(machine.execute("journalctl -b --no-pager | grep -iE 'golem|i3lock|xinit|Xorg|i3\\[' | tail -40")[1])
+            print(machine.execute("journalctl -b --no-pager -t golem -t login -t systemd-logind | tail -30; tail -30 /home/lilgolemwitch/.local/share/xorg/Xorg.0.log; ps aux | grep -E 'X|i3|startx' | grep -v grep")[1])
             raise Exception("the lock screen did not start")
         machine.wait_for_x()
         machine.wait_until_succeeds("pgrep -x i3")
