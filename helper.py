@@ -21,7 +21,7 @@ syslog.openlog("golem")
 
 FIELDS = {
     "zone": lambda v: v in ZONES,
-    "ram": lambda v: re.fullmatch(r"[0-9]{2,5}[MG]", v),
+    "ram": lambda v: re.fullmatch(r"[0-9]{1,5}[MG]", v),
     "cpu": lambda v: re.fullmatch(r"[0-9]{1,3}%", v) and 10 <= int(v[:-1]) <= 200,
     "internet": lambda v: v in ("allowed", "never"),
     "camera": lambda v: v in ("allowed", "never"),
