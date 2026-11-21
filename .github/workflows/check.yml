@@ -18,4 +18,4 @@ jobs:
       - name: Size, and the 30 biggest pieces
         run: |
           nix path-info -Sh ./result
-          nix path-info -rsh ./result | sort -k2 -h | tail -30
+          nix path-info -rs ./result | sort -k2 -n | tail -40 | awk "{printf \"%6d MB  %s\\n\", \$2/1048576, \$1}"
