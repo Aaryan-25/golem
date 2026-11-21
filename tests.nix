@@ -32,19 +32,22 @@ pkgs.testers.runNixOSTest {
 
     def as_me(cmd):
         return machine.succeed(
-            "su - lilgolemwitch -c 'export XDG_RUNTIME_DIR=/run/user/1000 "
+            "su - lilgolemwitch -c 'export XDG_RUNTIME_DIR=/run/user/1000 DISPLAY=:0 "
             "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus; " + cmd + "'"
         ).strip()
 
     with subtest("Step 5: Alt+Enter opens a terminal"):
         machine.sleep(5)                              # let the window manager settle
         for _ in range(6):
-            machine.send_key("alt-ret")
+            machine.execute("su - lilgolemwitch -c 'DISPLAY=:0 xdotool key alt+Return'")
             machine.sleep(5)
             if machine.execute("pgrep -u lilgolemwitch -x xterm")[0] == 0:
                 break
         else:
-            print(machine.succeed("journalctl -b --no-pager | tail -60"))
+            print(machine.execute("su - lilgolemwitch -c 'DISPLAY=:0 xdotool key alt+Return; DISPLAY=:0 i3-msg exec xterm' 2>&1")[1])
+            machine.sleep(5)
+            print(machine.execute("ps aux | grep -E \"xterm|i3|Xorg\" | grep -v grep")[1])
+            print(machine.execute("ls -la /home/lilgolemwitch; cat /home/lilgolemwitch/.local/share/xorg/Xorg.0.log | tail -30")[1])
             raise Exception("Alt+Enter did not open a terminal")
 
     with subtest("Step 4: my folders exist"):
@@ -66,7 +69,7 @@ pkgs.testers.runNixOSTest {
         assert as_me("zone green bash -c \"ip -o link | wc -l\"") == "1"
 
     with subtest("Step 4: saved zones are used"):
-        as_me("zone set bash yellow")
+        as_me("zone set bash yellow")  # (zones run without the screen here)
         assert "YELLOW" in as_me("zone show bash")
         assert as_me("zone bash -c \"ls ~ | grep -c documents || true\"") == "0"
   '';
