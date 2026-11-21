@@ -6,11 +6,14 @@
 
   outputs = { self, nixpkgs, ... }:
     let
+      golemRev = self.rev or "unknown";                 # which GitHub version this is
+      modules = [ ./golem.nix ./update.nix ./truthful.nix ./zones.nix ./desktop.nix ];
       golem = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs.golemRev = self.rev or "unknown";   # which GitHub version this is
-        modules = [ ./golem.nix ./update.nix ./truthful.nix ./zones.nix ];
+        specialArgs = { inherit golemRev; };
+        inherit modules;
       };
+      pkgs = nixpkgs.legacyPackages.x86_64-linux;
     in {
       nixosConfigurations.golem = golem;
       packages.x86_64-linux = {
@@ -18,5 +21,6 @@
         image  = golem.config.system.build.golemImage;        # the pendrive image
         default = self.packages.x86_64-linux.system;
       };
+      checks.x86_64-linux.vm = import ./tests.nix { inherit pkgs modules golemRev; };   # the virtual laptop test
     };
 }

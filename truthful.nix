@@ -1,6 +1,6 @@
 # Golem, step 3: the system does nothing I didn't ask for.
 # Wi-Fi off at every start, no internet clock, silent start, the boot menu says Golem.
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 let
   # Super+N: Wi-Fi on or off.
   wifi = pkgs.writeShellApplication {
@@ -39,7 +39,7 @@ in {
   # No menu and no text. Hold Shift (or press Esc) at power-on for the menu of older versions.
   boot.loader.timeout = 1;
   boot.loader.grub.timeoutStyle = "hidden";
-  boot.consoleLogLevel = 0;
+  boot.consoleLogLevel = lib.mkDefault 0;
   boot.initrd.verbose = false;
   boot.kernelParams = [
     "quiet" "loglevel=3" "systemd.show_status=false" "rd.systemd.show_status=false"

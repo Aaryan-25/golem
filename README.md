@@ -31,21 +31,27 @@ This is a fresh start. The old attempt lives in `Aaryan-25/shilp`, and it's kept
 The laptop's SSD and Windows are never touched.
 
 ## Keys
-Super = the Windows key.
+Super = the Windows key. **Super+H** shows the full list on screen.
 
 | Key | Does |
 |---|---|
+| Alt+Space | open an app (asks its zone the first time, then always opens in that zone) |
 | Alt+Enter | terminal |
-| Super+N | Wi-Fi on / off (it's off at every start) |
-| Super+W | Wi-Fi: choose and join a network |
-| Alt+Tab / Alt+Shift+Tab | next / previous window |
+| Alt+Tab | switch window (list of names) |
+| Alt+Q | close window (asks first) |
 | Alt+F | fullscreen |
-| Alt+Q | close window |
-| Super+1…4 | go to workspace 1–4 |
-| Super+Shift+1…4 | move the window to workspace 1–4 |
-| Super+Shift+E | log out |
+| Super+arrows / Super+Shift+arrows | focus / move windows |
+| Super+= / Super+- | bigger / smaller |
+| Super+F1 / F2 / F3 | next window beside / below / turn the split around |
+| Super+1…4 / Super+Shift+1…4 | go to a workspace / send the window there (its app opens there from now on) |
+| Super+Escape | power: sleep, restart, shut down, log out |
+| Super+N / Super+W | Wi-Fi on/off / choose a network |
+| Super+R | reload keys and windows |
+| Volume, mute, mic, brightness keys | what they say |
 
-To turn off the laptop, type `poweroff` in the terminal.
+New windows don't take focus: move to them with Alt+Tab or Super+arrows.
+
+To turn off the laptop: Super+Escape, or type `poweroff` in a terminal.
 
 - **Start-up is silent.** Hold **Shift** while it starts to see the menu with older versions.
 - **The clock never syncs over the internet.** To set it: `sudo timedatectl set-time "2026-11-21 22:30"`

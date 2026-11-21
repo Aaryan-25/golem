@@ -66,7 +66,8 @@ YELLOW (internet, no files), GREEN (trusted). RAM and CPU limits per zone.
 
 ## Step 5: My keys and my windows
 **Goal:** the desktop works the way I want: keyboard first, no bars, no popups.
-**Made:** my key list, tiling with no gaps, titles or borders (only a thin focus line), and a launcher.
+**Made:** my key list (from Shilp), tiling with no gaps, titles or borders (only a thin focus line), a launcher
+that always opens apps through their zone, a window switcher, close confirmation, remembered workspaces, power menu.
 
 **Done when:** I use the laptop for a day with only the keyboard and nothing annoys me. Anything that does goes back into this step.
 
