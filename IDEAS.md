@@ -29,6 +29,10 @@ Nothing here gets built until I move it into PLAN.md. New ideas from any chat ge
 - Rituals, the Spell voice, the true side, ancestors (older versions), fog of the unexplored, earned techniques
 - Lock screen extras: unlock by a hidden mechanism or by the AI, live space footage, welcome message, boot animation
 
+## Control Panel contents
+- Truth log captures all internet traffic: which app, where to, when, and how much data
+- Drivers panel
+
 ## Control Panel as a game menu
 - Page transitions, sigil, zone icons, soft sounds (with on/off)
 - LOOK page: face, colours, realm palettes, veil, wallpaper, lock, effects, fonts, focus line, reset

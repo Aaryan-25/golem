@@ -8,6 +8,11 @@ Intel AC-7265 Wi-Fi. It runs Windows 10 for now, and a full backup image plus a 
 I have one 64 GB pendrive. Golem runs from it until I decide to install to the SSD.
 
 ## Principles
+The goal: **private, clean, usable.**
+- **Private:** no app touches a file or permission I didn't give it. Nothing updates itself. All internet traffic is visible. Every app tells me what it may do and what it did.
+- **Clean:** no bloat, no feature I didn't ask for, no process I can't kill, structured the way I want, and game-clean to look at.
+- **Usable:** designed around my needs.
+- **The Control Panel is the heart of the system.**
 - **Truthful:** it does only what I say, shows what it did, and does nothing in the background.
 - **Default = deny:** apps get nothing unless their zone and settings allow it.
 - **Keyboard first:** no taskbar, no Start menu, no bars, no desktop popups.
@@ -18,7 +23,7 @@ I have one 64 GB pendrive. Golem runs from it until I decide to install to the S
 | Topic | Decision |
 |---|---|
 | Base | NixOS, built from this repo. GitHub checks every change and builds the installer. |
-| Account | User name `shilpkaar`. It's never shown or typed at login. |
+| Account | User name `lilgolemwitch`. It's never shown or typed at login. |
 | Zones | RED: nothing, disposable, wiped on close. OFFLINE: no internet, own folder. YELLOW: internet, no files. GREEN: trusted. BLUE (my AI) comes later. |
 | Permissions | Each app's settings decide (allowed or never). Nothing is asked at launch. An app with no settings asks for its zone once. |
 | Network | Wi-Fi off at every start. No time sync over the internet. |

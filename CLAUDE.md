@@ -1,6 +1,6 @@
 # Rules for Claude in this repo
 
-The owner (shilpkaar) can't read code. He steers by plain-language explanations and by testing on his laptop.
+The owner (lilgolemwitch) can't read code. He steers by plain-language explanations and by testing on his laptop.
 
 1. **Read PLAN.md first.** Only work on the step marked NOW. Don't start later steps "while you're at it".
 2. **Ask before any long coding session, and before any installer build.** First say in plain words what will change and why, then wait for a yes.
