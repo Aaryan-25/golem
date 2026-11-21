@@ -280,7 +280,7 @@ pkgs.testers.runNixOSTest {
         machine.send_key("spc")
         machine.sleep(1)
         machine.send_key("spc")
-        if machine.execute("timeout 20 sh -c 'while pgrep -u lilgolemwitch -f \\"alert.py Test\\"; do sleep 1; done'")[0] != 0:
+        if machine.execute("timeout 20 sh -c 'while pgrep -u lilgolemwitch -f \"alert.py Test\"; do sleep 1; done'")[0] != 0:
             print("FOCUS:", machine.execute("su - lilgolemwitch -c 'DISPLAY=:0 xdotool getwindowfocus getwindowname; DISPLAY=:0 xprop -id $(DISPLAY=:0 xdotool getwindowfocus) WM_CLASS' 2>&1")[1])
             print(machine.execute("journalctl -b --no-pager | grep -iE 'alert|golem\\[' | tail -15")[1])
             print("SCREEN:", machine.get_screen_text())
