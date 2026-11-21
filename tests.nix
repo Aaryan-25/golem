@@ -241,7 +241,7 @@ pkgs.testers.runNixOSTest {
         machine.sleep(3)
         machine.send_chars("golem\n")
         machine.wait_until_fails("pgrep -u lilgolemwitch -x i3lock", timeout=30)
-        machine.wait_until_succeeds("journalctl -b | grep -c 'golem.*UNLOCK' | grep -qv '^[0-2]$'")
+        machine.wait_until_succeeds("journalctl -b -t golem -o cat | grep -E '^(LOCK|UNLOCK)$' | tail -n1 | grep -qx UNLOCK", timeout=60)
 
     with subtest("Settings: the system side runs at start; trackers are blocked by default"):
         machine.succeed("systemctl show -p Result --value golem-settings | grep -q success")
