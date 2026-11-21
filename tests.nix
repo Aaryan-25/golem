@@ -219,8 +219,10 @@ pkgs.testers.runNixOSTest {
 
     with subtest("Firefox opens a page inside its YELLOW zone"):
         assert "is now in YELLOW" in as_me("zone set firefox yellow")
-        as_me("zone firefox --headless --screenshot ~/page.png http://web/ ; true")
-        machine.wait_until_succeeds("test -s /home/lilgolemwitch/zones/firefox/page.png", timeout=120)
+        machine.execute("su - lilgolemwitch -c 'timeout 150 zone firefox --headless --screenshot ~/page.png http://web/' >/dev/null 2>&1 &")
+        if machine.execute("timeout 160 sh -c 'until test -s /home/lilgolemwitch/zones/firefox/page.png; do sleep 2; done'")[0] != 0:
+            print(machine.execute("journalctl -b --no-pager | grep -iE 'firefox|firejail|oom|zone' | tail -25; ls -la /home/lilgolemwitch/zones/firefox")[1])
+            raise Exception("Firefox did not open the page in its zone")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'firefox (YELLOW) talked to'", timeout=60)
 
     with subtest("Firefox has no secret DNS of its own"):
