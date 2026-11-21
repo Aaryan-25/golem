@@ -28,7 +28,7 @@ The goal: **private, clean, usable.**
 |---|---|
 | Base | NixOS, built from this repo. GitHub checks every change and builds the installer. |
 | Account | User name `lilgolemwitch`. It's never shown or typed at login. |
-| Zones | RED: nothing, disposable, wiped on close. OFFLINE: no internet, own folder. YELLOW: internet, no files. GREEN: trusted. BLUE (my AI) comes later. |
+| Zones | RED: nothing, disposable, wiped on close. OFFLINE: no internet, own folder. YELLOW: internet, and only its own folder (e.g. a browser's downloads), never my files. GREEN: trusted. BLUE (my AI) comes later. |
 | Permissions | Each app's settings decide (allowed or never). Nothing is asked at launch. An app with no settings asks for its zone once. |
 | Network | Wi-Fi off at every start. No time sync over the internet. |
 | Windows | Tiling with an existing engine. No gaps, titles or borders, only a 1 px line on the focused window. Focus moves by keys only. |
@@ -61,7 +61,7 @@ The goal: **private, clean, usable.**
 | History | None: no recent files, no searches remembered. |
 | Language | English only for now. |
 | Guest | No guest user. |
-| Folders | `documents`, `projects`, `media`, `downloads` (where YELLOW apps save), `zones` (each sandbox's own folder). |
+| Folders | `documents`, `projects`, `media`, `zones` (each app's own folder; a YELLOW browser's downloads land in its folder there, and I move files out on purpose). |
 | Software source | The app list on GitHub (nixpkgs), downloaded ready-built from cache.nixos.org with signatures checked. Only when I press update. |
 | Updates | Only when I press update, after showing what will change. |
 | Camera / mic in use | Truth log only for now (no on-screen sign). |
