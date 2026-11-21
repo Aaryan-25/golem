@@ -73,7 +73,8 @@ let
           fi ;;
         switch) exec ${rofi} -show window -window-format '{c}  {t}' -p SWITCH -theme-str '${centre}' ;;
         power)
-          case "$(golem-ask POWER sleep restart "shut down" "log out" cancel)" in
+          case "$(golem-ask POWER lock sleep restart "shut down" "log out" cancel)" in
+            lock) golem-lock ;;
             sleep) systemctl suspend ;;
             restart) systemctl reboot ;;
             "shut down") systemctl poweroff ;;
@@ -128,7 +129,8 @@ let
     [ "Super+Shift+2"     "Send window to 2 (remembered)"              "exec golem-win send 2" ]
     [ "Super+Shift+3"     "Send window to 3 (remembered)"              "exec golem-win send 3" ]
     [ "Super+Shift+4"     "Send window to 4 (remembered)"              "exec golem-win send 4" ]
-    [ "Super+Escape"      "Power: sleep, restart, shut down, log out"  "exec golem-win power" ]
+    [ "Super+l"           "Lock the screen"                            "exec golem-lock" ]
+    [ "Super+Escape"      "Power: lock, sleep, restart, shut down, log out" "exec golem-win power" ]
     [ "Super+Shift+q"     "Log out (asks first)"                       "exec golem-win logout" ]
     [ "Super+n"           "Wi-Fi on/off"                               "exec golem-wifi" ]
     [ "Super+w"           "Choose a Wi-Fi network"                     "exec ${term} -e nmtui" ]
@@ -160,6 +162,10 @@ let
     client.background       ${c.void}
     exec --no-startup-id xsetroot -solid "${c.void}"
     include ~/zones/settings/i3-placements
+    # Login = lock screen; idle: dim at 4 min, lock at 5; lid: lock before sleep (lock.nix)
+    exec --no-startup-id golem-lock --start
+    exec --no-startup-id xset s 240 60
+    exec --no-startup-id xss-lock -n /etc/golem/dim -- golem-lock --auto
     ${bindings}
   '';
 in {

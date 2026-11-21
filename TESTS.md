@@ -62,3 +62,11 @@ in **that new window**, then close it with Alt+Q.
 - [ ] **Super+Shift+2** on Firefox sends it to workspace 2, and next time Firefox opens there by itself
 - [ ] **Super+Escape** shows the power menu
 - [ ] Volume, mute and brightness keys work
+
+## Step 6: lock screen and lid
+- [ ] Golem starts into a dark screen with no name and no box; typing the password and Enter unlocks it
+- [ ] A wrong password keeps it locked
+- [ ] **Super+L** locks
+- [ ] Closing the lid (Caps Lock OFF) sleeps; opening it shows the lock
+- [ ] Closing the lid with Caps Lock ON: on opening, no lock
+- [ ] Left alone, the screen dims at 4 minutes and locks at 5 (not while Caps Lock is ON)

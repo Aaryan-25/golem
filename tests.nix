@@ -22,13 +22,22 @@ pkgs.testers.runNixOSTest {
     with subtest("Step 5: the key and window settings are valid"):
         machine.succeed("i3 -C -c /etc/i3/config")
 
-    with subtest("Login on the text screen starts the windows"):
-        machine.wait_until_tty_matches("1", "login: ")
-        machine.send_chars("lilgolemwitch\n")
-        machine.wait_until_tty_matches("1", "Password: ")
-        machine.send_chars("golem\n")
+    with subtest("Step 6: Golem starts straight into the lock screen"):
         machine.wait_for_x()
         machine.wait_until_succeeds("pgrep -x i3")
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -x i3lock")
+        machine.sleep(3)
+
+    with subtest("Step 6: a wrong password keeps it locked and is logged"):
+        machine.send_chars("wrongpassword\n")
+        machine.sleep(5)
+        machine.succeed("pgrep -u lilgolemwitch -x i3lock")
+        machine.wait_until_succeeds("journalctl -b | grep -iE 'i3lock.*(authentication failure|auth could not)'", timeout=30)
+
+    with subtest("Step 6: the right password unlocks"):
+        machine.send_chars("golem\n")
+        machine.wait_until_fails("pgrep -u lilgolemwitch -x i3lock", timeout=30)
+        machine.succeed("journalctl -b | grep -q 'golem.*UNLOCK'")
 
     def as_me(cmd):
         return machine.succeed(
@@ -65,6 +74,18 @@ pkgs.testers.runNixOSTest {
         if machine.execute("timeout 40 sh -c 'until pgrep -f \"firejail.*xterm\" && [ $(pgrep -u lilgolemwitch -f bin/xterm | wc -l) -ge 2 ]; do sleep 1; done'")[0] != 0:
             print(machine.execute("journalctl -b --no-pager | grep -iE 'firejail|zone|xauth' | tail -20; ps -u lilgolemwitch -o args")[1])
             raise Exception("RED xterm did not open")
+
+    with subtest("Step 6: Super+L locks; Caps Lock ON stops the automatic lock"):
+        machine.send_key("meta_l-l")
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -x i3lock", timeout=30)
+        machine.sleep(3)
+        machine.send_chars("golem\n")
+        machine.wait_until_fails("pgrep -u lilgolemwitch -x i3lock", timeout=30)
+        machine.send_key("caps_lock")
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 golem-lock --auto'")
+        machine.succeed("journalctl -b | grep -q 'LOCK skipped: Caps Lock is ON'")
+        machine.fail("pgrep -u lilgolemwitch -x i3lock")
+        machine.send_key("caps_lock")
 
     with subtest("Step 4: my folders exist"):
         for d in ["documents", "projects", "media", "zones"]:

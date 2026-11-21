@@ -26,7 +26,8 @@ This is a fresh start. The old attempt lives in `Aaryan-25/shilp`, and it's kept
 2. Unplug every USB drive except the pendrive. In Rufus, pick the pendrive (check it says about 64 GB),
    press SELECT, choose `golem.img.xz`, then Start. If Rufus asks, choose "DD image".
 3. Restart the laptop, press **F12** at the Dell logo, and pick the pendrive.
-4. Log in as `lilgolemwitch` with the password `golem`. Then type `passwd` to set your own password.
+4. Golem starts into a dark lock screen: type the password `golem` and press Enter. Then open a terminal
+   (Alt+Enter) and type `passwd` to set your own password.
 
 The laptop's SSD and Windows are never touched.
 
@@ -44,7 +45,8 @@ Super = the Windows key. **Super+H** shows the full list on screen.
 | Super+= / Super+- | bigger / smaller |
 | Super+F1 / F2 / F3 | next window beside / below / turn the split around |
 | Super+1…4 / Super+Shift+1…4 | go to a workspace / send the window there (its app opens there from now on) |
-| Super+Escape | power: sleep, restart, shut down, log out |
+| Super+L | lock the screen |
+| Super+Escape | power: lock, sleep, restart, shut down, log out |
 | Super+N / Super+W | Wi-Fi on/off / choose a network |
 | Super+R | reload keys and windows |
 | Volume, mute, mic, brightness keys | what they say |
@@ -53,6 +55,9 @@ New windows don't take focus: move to them with Alt+Tab or Super+arrows.
 
 To turn off the laptop: Super+Escape, or type `poweroff` in a terminal.
 
+- **Golem starts straight into the lock screen:** a dark screen with no name and no box. Type your password and press Enter.
+- **Lid:** closing it sleeps. On waking it's locked, unless Caps Lock was ON.
+- **Idle:** the screen dims at 4 minutes, locks at 5 (not while Caps Lock is ON), and the laptop sleeps at 30.
 - **Start-up is silent.** Hold **Shift** while it starts to see the menu with older versions.
 - **The clock never syncs over the internet.** To set it: `sudo timedatectl set-time "2026-11-21 22:30"`
 - In a terminal, `golem-wifi` turns Wi-Fi on or off and says which.
