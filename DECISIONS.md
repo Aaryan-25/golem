@@ -2,6 +2,10 @@
 
 These are already decided. They carry over from the old Shilp repo. Change one only when I say so.
 
+## The machines
+Golem runs on the Dell now and on my **Asus TUF F15 (FX506LH, GTX 1650)** later, from one setup
+that detects which laptop it is on. The pendrive should also boot on any ordinary PC.
+
 ## The laptop
 Dell Latitude 3180: Celeron N3350 (2 cores), 4 GB RAM, Intel HD 500, 128 GB M.2 SATA SSD (GPT),
 Intel AC-7265 Wi-Fi. It runs Windows 10 for now, and a full backup image plus a rescue ISO are on an external drive.
@@ -37,3 +41,45 @@ The goal: **private, clean, usable.**
 | Terminal | A light terminal now, Cool Retro Term later. |
 | BIOS password | No. A PC password, maybe later. |
 | Windows OS | Gets wiped, but only at the very end, after Golem works fully from the pendrive. |
+| Save slots | Two things: SAVE SLOTS are older versions of the whole system (go back if an update breaks; the last 5 kept, the newest 3 never deletable from the panel), BACKUPS are my settings (keys, zones, look, quests) saved and loaded by name. |
+
+## Decided on 21 Nov 2026 (question round)
+| Topic | Decision |
+|---|---|
+| Drivers | A driver finder that asks: it detects the hardware, says in plain words what's missing and why, downloads only after I say yes, and logs it. |
+| NVIDIA (Asus) | Hybrid: the built-in GPU runs the desktop, NVIDIA wakes only for apps I mark (games, AI training). No switch for it; keep it safe and untouched. |
+| Keyboard light (Asus) | Follows the LOOK palette's light colour, pulses red with the red alert, off at start. Probably one colour zone (to be checked on the laptop): whole-keyboard colour, 4 brightness levels, a few effects, no per-key designs. Any key can be bound to a light change. |
+| Battery | Stop charging at 80% where the laptop allows it (Asus: yes; Dell: Linux if supported, else the BIOS setting, which Golem explains). |
+| Idle | Dim at 4 min, lock at 5, sleep at 30, and after 3 h asleep on battery save to disk and power off. All timings changeable in the Control Panel. Caps Lock ON still stops locking. |
+| Internet traffic | Per app: which site (by name), when, and how much data in and out. Kept 30 days like the truth log. |
+| Sites | Each app with internet has its own allowed-sites list (a browser can have "everything"). A new site is blocked, shown in the truth log, and I can add it. |
+| Trackers and ads | A well-known block list (e.g. OISD or StevenBlack), built in, updated only when I say. |
+| Clipboard | GREEN apps share one clipboard; RED, OFFLINE and YELLOW each keep their own. Only the last item, in memory, never on disk (a short history is an idea for later). |
+| Screen | No app may see the screen (screenshots, recording, sharing) unless that app is allowed, like the camera. Golem's own screenshot key always works. |
+| Driver switches | On/off (driver not loaded at all) for: camera + microphone, Bluetooth + Wi-Fi, USB ports + card reader, touchpad. |
+| Zone limits | Shilp's limits on the Dell (RED 1G RAM / half a core, OFFLINE 1.5G / 1 core, YELLOW 2G / 1.5 cores, GREEN 2.5G / almost 2 cores), scaled up on the Asus. |
+| History | None: no recent files, no searches remembered. |
+| Language | English only for now. |
+| Guest | No guest user. |
+| Folders | `documents`, `projects`, `media`, `downloads` (where YELLOW apps save), `zones` (each sandbox's own folder). |
+| Software source | The app list on GitHub (nixpkgs), downloaded ready-built from cache.nixos.org with signatures checked. Only when I press update. |
+| Updates | Only when I press update, after showing what will change. |
+| Camera / mic in use | Truth log only for now (no on-screen sign). |
+| Storage | A view of what uses space; it cleans only what I pick. |
+| Startup list | Everything that starts at boot or on a timer, in plain words. Mine can be switched off; system ones only after my password, with a warning. |
+| Crash reports | Kept on the laptop 7 days, shown in the truth log in plain words, never sent anywhere. |
+| Certificates | A page listing them in plain words (country, organisation); any can be distrusted after my password. |
+
+## The Control Panel (carried over from the Shilp chat)
+| Topic | Decision |
+|---|---|
+| Feel | A full-screen game pause menu over the drifting veil. Keyboard only. |
+| Layout | Five groups: SYSTEM (status, performance, running, services, save slots), CONTROLS (quick, zones, keys, volume, display, keyboard light, drivers, alert), LOOK (look, loadouts), YOU (character, stats, quests, truth), CODEX. Q / E switch groups, Tab or a number switches pages, F finds anything. |
+| Changes | Made on a copy; A applies with my password once; X throws them away; Esc with changes waiting asks first. Volume, display, quests, quick actions and closing apps happen at once. Admin actions ask the password each time. Everything goes to the truth log. |
+| Look | Lives in a look file and applies at once without a rebuild; the panel previews it live. Realm palettes for both faces (Shadow, Negative). |
+| Effects | Page transitions (pages dissolve into motes that gather into the next), a sigil behind each page, zone icons, soft sounds. Each has an on/off. |
+| Services | Mine first; system ones hidden until I ask; any can be started or stopped after my password; the ones Golem needs are marked in red. |
+| Display | A new screen size asks "keep it?" and goes back by itself after 12 seconds. |
+| Red alert | Has a sound (on/off, volume). |
+| If it fails | If the panel can't open, a red alert says so and the truth log has the reason. |
+
