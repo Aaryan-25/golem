@@ -38,17 +38,16 @@ pkgs.testers.runNixOSTest {
 
     with subtest("Step 5: Alt+Enter opens a terminal"):
         machine.sleep(5)                              # let the window manager settle
-        for _ in range(6):
-            machine.execute("su - lilgolemwitch -c 'DISPLAY=:0 xdotool key alt+Return'")
-            machine.sleep(5)
-            if machine.execute("pgrep -u lilgolemwitch -x xterm")[0] == 0:
-                break
-        else:
-            print(machine.execute("su - lilgolemwitch -c 'DISPLAY=:0 xdotool key alt+Return; DISPLAY=:0 i3-msg exec xterm' 2>&1")[1])
-            machine.sleep(5)
-            print(machine.execute("ps aux | grep -E \"xterm|i3|Xorg\" | grep -v grep")[1])
-            print(machine.execute("ls -la /home/lilgolemwitch; cat /home/lilgolemwitch/.local/share/xorg/Xorg.0.log | tail -30")[1])
-            raise Exception("Alt+Enter did not open a terminal")
+        machine.send_key("alt-ret")
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -f bin/xterm", timeout=60)
+
+    with subtest("Step 5: Super+H shows the key list, Alt+Space the launcher"):
+        machine.send_key("meta_l-h")
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -f 'rofi.*KEYS'", timeout=60)
+        machine.send_key("esc")
+        machine.send_key("alt-spc")
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -f 'rofi.*drun'", timeout=60)
+        machine.send_key("esc")
 
     with subtest("Step 4: my folders exist"):
         for d in ["documents", "projects", "media", "zones"]:
