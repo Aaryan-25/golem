@@ -90,7 +90,7 @@ let
       opts=(--noprofile --quiet --caps.drop=all --nonewprivs --seccomp --dbus-system=none)
       case "$Z" in
         red)     opts+=(--private --private-tmp --private-dev --nogroups --no3d --dbus-user=none --machine-id)
-                 if [ -n "${DISPLAY:-}" ]; then opts+=(--x11=xorg); fi ;;
+                 if [ -n "''${DISPLAY:-}" ]; then opts+=(--x11=xorg); fi ;;
         offline) mkdir -p "$dir"; opts+=(--private="$dir" --private-tmp --private-dev --nogroups --dbus-user=none) ;;
         yellow)  mkdir -p "$dir"; opts+=(--private="$dir" --private-tmp --private-dev --nogroups) ;;
         green)   ;;
