@@ -12,11 +12,12 @@ pkgs.testers.runNixOSTest {
     };
     networking.firewall.allowedTCPPorts = [ 80 ];
   };
-  nodes.machine = { lib, ... }: {
+  nodes.machine = { lib, pkgs, ... }: {
     imports = modules;
     virtualisation.memorySize = 2048;
     virtualisation.qemu.options = [ "-device qemu-xhci,id=xhci" ];   # a USB port to plug things into
     networking.networkmanager.unmanaged = [ "eth1" ];               # the test network stays as the test set it
+    environment.systemPackages = [ pkgs.socat ];
     environment.etc."golem-test-fetch.sh".text = ''
       exec 3<>/dev/tcp/web/80
       sleep 2
@@ -139,8 +140,70 @@ pkgs.testers.runNixOSTest {
         truth = machine.succeed("golem-truth --text")
         print(truth)
         for words in ["Opened xterm in RED", "Wrong password at the lock screen", "Screen locked",
-                      "Screen unlocked", "Settings: bash now opens in YELLOW", "USB plugged in",
+                      "Screen unlocked", "Settings: bash: zone YELLOW", "USB plugged in",
                       "bash (YELLOW) talked to", "out,"]:
             assert words in truth, f"missing from the truth log: {words}"
+
+    import json
+
+    def ask_guard(req):
+        machine.succeed("cat > /tmp/req.json << 'EOF'\n" + json.dumps(req) + "\nEOF")
+        return as_me("socat -t 10 - UNIX-CONNECT:/run/golem-helper.sock < /tmp/req.json")
+
+    def current():
+        apps = {}
+        for f in machine.succeed("ls /var/lib/golem/apps").split():
+            text = machine.succeed(f"cat /var/lib/golem/apps/{f}")
+            apps[f[:-5]] = dict(line.split("=", 1) for line in text.splitlines() if "=" in line)
+        keys = [[p.strip() for p in line.split("|", 2)] for line in
+                machine.succeed("grep -v '^#' /var/lib/golem/keys.conf").splitlines()]
+        return apps, keys
+
+    with subtest("Step 8: settings can't be changed behind the Control Panel's back"):
+        machine.fail("su - lilgolemwitch -c 'touch /var/lib/golem/apps/sneaky.conf'")
+        machine.fail("su - lilgolemwitch -c 'echo zone=green >> /var/lib/golem/apps/bash.conf'")
+        assert "already has settings" in as_me("zone set bash green 2>&1 || true")
+
+    with subtest("Step 8: a wrong password changes nothing"):
+        apps, keys = current()
+        apps["bash"]["zone"] = "green"
+        assert "wrong password" in ask_guard({"do": "apply", "password": "nope", "apps": apps, "keys": []})
+        machine.succeed("grep -q zone=yellow /var/lib/golem/apps/bash.conf")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Wrong password in the Control Panel'")
+
+    with subtest("Step 8: with the password, an app's zone and a key change, and both are logged"):
+        apps, keys = current()
+        apps["bash"]["zone"] = "offline"
+        apps["bash"]["internet"] = "never"
+        for k in keys:
+            if k[2].endswith("golem-truth"):
+                k[0] = "Super+y"
+        assert ask_guard({"do": "apply", "password": "golem", "apps": apps, "keys": keys}) == "OK"
+        machine.succeed("grep -q zone=offline /var/lib/golem/apps/bash.conf")
+        machine.succeed("grep -q 'bindsym Mod4+y .*golem-truth' /var/lib/golem/keys.i3")
+        truth = machine.succeed("golem-truth --text")
+        assert "Settings: bash: zone offline, internet never" in truth, truth
+        assert "Keys: Super+y now does: Truth log" in truth, truth
+        assert as_me("zone bash -c \"ip -o link | wc -l\"") == "1"     # OFFLINE now: no internet
+
+    with subtest("Step 8: the Control Panel opens with Super+Z and changes a zone with the keyboard"):
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 i3-msg -q reload'")
+        machine.sleep(2)
+        machine.send_key("meta_l-z")
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -f panel.py", timeout=60)
+        machine.wait_until_succeeds("journalctl -b | grep -q 'Opened golem-panel in GREEN'", timeout=30)
+        machine.sleep(4)
+        for key in ["down", "ret", "ret", "down", "ret"]:     # APPS > bash > zone > next zone
+            machine.send_key(key)
+            machine.sleep(1)
+        machine.send_key("a")
+        machine.sleep(1)
+        machine.send_chars("golem\n")
+        machine.wait_until_succeeds("grep -q zone=yellow /var/lib/golem/apps/bash.conf", timeout=30)
+        for key in ["esc", "esc", "esc"]:
+            machine.send_key(key)
+            machine.sleep(1)
+        machine.wait_until_fails("pgrep -u lilgolemwitch -f panel.py", timeout=30)
+        machine.screenshot("panel_done")
   '';
 }

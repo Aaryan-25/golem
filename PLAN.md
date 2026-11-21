@@ -91,8 +91,9 @@ Not yet: file changes inside sandboxes; a browser using its own encrypted DNS hi
 **Goal:** change zones and keys without touching files.
 **Made:** the basic full-screen panel from DECISIONS.md (pages on the left, the page on the right, no effects) in the GREEN zone. Apply asks my password once. No text panel is made.
 
-**Also:** app settings move from `~/zones/settings` (editable by any GREEN app today) to a place I can read
-but only my password can change (the panel's Apply, or sudo).
+**Also:** app settings and keys moved to `/var/lib/golem`: I can read them, only the panel (after my password) changes them.
+Pages: RUNNING, APPS, KEYS, NETWORK, SOUND & SCREEN, TRUTH LOG, ABOUT. Not yet: the red alert when it can't open
+(a plain message for now), drivers, storage, startup list and the other PANEL.md items.
 
 **Done when:** I change an app's zone and a key from the panel, and both work after Apply.
 

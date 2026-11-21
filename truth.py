@@ -24,6 +24,12 @@ def sentence(ident, msg):
             return f"Settings: {m.group(1)} now opens in {m.group(2)}"
         return msg
     if ident == "golem":
+        m = re.match(r"SETTINGS (\S+): (.*)$", msg)
+        if m:
+            return f"Settings: {m.group(1)}: {m.group(2)}"
+        m = re.match(r"KEY (\S+) now: (.*)$", msg)
+        if m:
+            return f"Keys: {m.group(1)} now does: {m.group(2)}"
         return {"LOCK": "Screen locked", "UNLOCK": "Screen unlocked",
                 "LOCK failed": "The lock screen failed to start"}.get(msg, msg)
     if ident == "golem-net":

@@ -44,7 +44,7 @@ let
           -run-command 'golem-launch {cmd}'
       fi
       app=$(basename "$1")
-      if [ ! -f "$HOME/zones/settings/$app.conf" ]; then
+      if [ ! -f "/var/lib/golem/apps/$app.conf" ]; then
         z=$(golem-ask "ZONE FOR $app (asked once)" red offline yellow green) || exit 0
         zone set "$app" "$z" >/dev/null
       fi
@@ -56,7 +56,7 @@ let
     name = "golem-win";
     runtimeInputs = with pkgs; [ i3 rofi xdotool xprop gnused gawk gnugrep coreutils util-linux ask ];
     text = ''
-      PLACES="$HOME/zones/settings/placements.conf"     # app -> workspace
+      PLACES="$HOME/zones/settings/placements.txt"      # app -> workspace
       INCL="$HOME/zones/settings/i3-placements"
       cls() { xprop -id "$(xdotool getactivewindow)" WM_CLASS 2>/dev/null | sed -n 's/.*", "\(.*\)"/\1/p'; }
       case "''${1:-}" in
@@ -81,7 +81,7 @@ let
             "log out") i3-msg -q exit ;;
           esac ;;
         logout) if [ "$(golem-ask "LOG OUT?" no yes)" = yes ]; then i3-msg -q exit; fi ;;
-        keys) column -t -s '|' /etc/golem/keys.txt | ${rofi} -dmenu -i -p KEYS -no-custom \
+        keys) column -t -s '|' /var/lib/golem/keys.txt | ${rofi} -dmenu -i -p KEYS -no-custom \
                 -theme-str 'window { location: center; anchor: center; x-offset: 0; y-offset: 0; width: 760px; } listview { lines: 20; }' >/dev/null || true ;;
       esac
     '';
@@ -100,13 +100,15 @@ let
     '';
   };
 
-  # ---- my keys: key | what it does | i3 command ----
+  # ---- my keys (the starting list): key | what it does | i3 command ----
+  # My own list lives in /var/lib/golem/keys.conf and is changed in the Control Panel.
   keys = [
     [ "Alt+space"         "Open an app (asks its zone the first time)" "exec golem-launch" ]
     [ "Alt+Return"        "Terminal"                                   "exec ${term}" ]
     [ "Alt+Tab"           "Switch window (list of names)"              "exec golem-win switch" ]
     [ "Alt+q"             "Close window (asks first)"                  "exec golem-win close" ]
     [ "Alt+f"             "Fullscreen on/off"                          "fullscreen toggle" ]
+    [ "Super+z"           "Control Panel"                              "exec golem-panel-start" ]
     [ "Super+h"           "Show this key list"                         "exec golem-win keys" ]
     [ "Super+Left"        "Focus left"                                 "focus left" ]
     [ "Super+Right"       "Focus right"                                "focus right" ]
@@ -143,9 +145,7 @@ let
     [ "XF86MonBrightnessUp"   "Brighter"                               "exec brightnessctl set +10%" ]
     [ "XF86MonBrightnessDown" "Dimmer"                                 "exec brightnessctl set 10%-" ]
   ];
-  i3key = k: builtins.replaceStrings [ "Super+" "Alt+" ] [ "Mod4+" "Mod1+" ] k;
-  bindings = lib.concatMapStrings (k: "bindsym ${i3key (builtins.elemAt k 0)} ${builtins.elemAt k 2}\n") keys;
-  keyList = lib.concatMapStrings (k: "${builtins.elemAt k 0} | ${builtins.elemAt k 1}\n") keys;
+  keyList = lib.concatMapStrings (k: "${builtins.elemAt k 0} | ${builtins.elemAt k 1} | ${builtins.elemAt k 2}\n") keys;
 
   i3config = pkgs.writeText "golem-i3" ''
     font pango:DejaVu Sans Mono 10
@@ -167,11 +167,12 @@ let
     exec --no-startup-id golem-lock --start
     exec --no-startup-id xset s 240 60
     exec --no-startup-id xss-lock -n /etc/golem/dim -- golem-lock --auto
-    ${bindings}
+    include /var/lib/golem/keys.i3
+    for_window [class="^golem-panel$"] fullscreen enable
   '';
 in {
   services.xserver.windowManager.i3.configFile = lib.mkForce i3config;
-  environment.etc."golem/keys.txt".text = keyList;
+  environment.etc."golem/keys.default".text = keyList;
   environment.systemPackages = [ ask launch win sound pkgs.rofi pkgs.brightnessctl pkgs.xdotool pkgs.xprop ];
   services.udev.packages = [ pkgs.brightnessctl ];   # brightness without admin rights
 }

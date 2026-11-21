@@ -2,10 +2,11 @@
 #
 #   zone <app>               the app's saved settings (RED if it has none)
 #   zone red|offline|yellow|green <app>   run it in that zone this time
-#   zone set <app> <zone>    save the app's zone (with that zone's default settings)
+#   zone set <app> <zone>    a new app's first zone (after that, only the Control Panel changes it)
 #   zone show <app>          what the app may do
 #
-# Settings: ~/zones/settings/<app>.conf  (the Control Panel will edit these in step 8)
+# Settings: /var/lib/golem/apps/<app>.conf. I can read them; only the Control Panel changes them,
+# after my password (the Control Panel reigns supreme).
 #
 # KNOWN GAP: on this desktop (X11) any app with a window can see other windows and key presses,
 # whatever its zone. Zones lock files, internet, camera, sound and USB. Real screen separation
@@ -17,15 +18,15 @@ let
 
   zone = pkgs.writeShellApplication {
     name = "zone";
-    runtimeInputs = with pkgs; [ systemd coreutils util-linux gnused ];
+    runtimeInputs = with pkgs; [ systemd coreutils util-linux gnused socat ];
     text = ''
-      SET="$HOME/zones/settings"
+      SET=/var/lib/golem/apps
       FJ=/run/wrappers/bin/firejail
       is_zone() { case "$1" in red|offline|yellow|green) return 0 ;; esac; return 1; }
       usage() {
         echo "zone <app>                          run with the app's settings (RED if none)"
         echo "zone red|offline|yellow|green <app> run in that zone this time"
-        echo "zone set <app> <zone>               save the app's zone"
+        echo "zone set <app> <zone>               a new app's first zone (then: Control Panel, Super+Z)"
         echo "zone show <app>                     what the app may do"
         exit 2
       }
@@ -58,17 +59,17 @@ let
           esac
         done < "$f"
       }
-      save() {
-        mkdir -p "$SET"
-        printf '%s\n' "zone=$Z" "ram=$RAM" "cpu=$CPU" "internet=$NET" "camera=$CAM" \
-          "usb=$USB" "sound=$SND" "folder=$FOLDER" > "$SET/$1.conf"
-      }
 
       [ $# -ge 1 ] || usage
       case "$1" in
+        defaults) is_zone "''${2:-}" || usage; defaults "$2"
+              printf '%s\n' "zone=$Z" "ram=$RAM" "cpu=$CPU" "internet=$NET" "camera=$CAM" "usb=$USB" "sound=$SND" "folder="
+              exit 0 ;;
         set)  if [ $# -ne 3 ] || ! is_zone "$3"; then usage; fi
-              defaults "$3"; save "$(basename "$2")"
-              logger -t zone "SETTINGS $2: zone ''${3^^}"; echo "$2 is now in ''${3^^}"; exit 0 ;;
+              r=$(printf '{"do":"first-zone","app":"%s","zone":"%s"}\n' "$(basename "$2")" "$3" \
+                  | socat -t 10 - UNIX-CONNECT:/run/golem-helper.sock)
+              if [ "$r" = OK ]; then echo "$2 is now in ''${3^^}"; exit 0; fi
+              echo "zone: ''${r#ERROR }" >&2; exit 1 ;;
         show) [ $# -eq 2 ] || usage; load "$(basename "$2")"
               echo "$2: ''${Z^^}  internet:$NET camera:$CAM sound:$SND usb:$USB  RAM<=$RAM CPU<=$CPU  folder:''${FOLDER:-default}"
               exit 0 ;;

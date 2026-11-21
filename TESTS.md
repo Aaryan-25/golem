@@ -40,7 +40,7 @@ in **that new window**, then close it with Alt+Q.
 - [ ] `ls ~` is empty, then `touch ~/hello`, close, and `ls ~/zones/xterm` (in a normal terminal) shows `hello`
 - [ ] `golem-net-test` says OFFLINE
 
-**YELLOW:** `zone set firefox yellow`, then `zone firefox` (turn Wi-Fi on first)
+**YELLOW:** open Firefox with Alt+Space and choose YELLOW when it asks (turn Wi-Fi on first)
 - [ ] Firefox opens websites
 - [ ] Firefox's download folder is inside `~/zones/firefox` and it can't open your `documents`
 
@@ -81,5 +81,16 @@ Do these, then press **Super+T** and check each shows up in words you understand
 - [ ] `sudo ls`: "Admin rights used for: …"
 - [ ] Super+N twice: "Wi-Fi turned OFF/ON"
 - [ ] Join a network: "Connected to the network '…'"
-- [ ] `zone set xterm offline`: "Settings: xterm now opens in OFFLINE"
+- [ ] Change an app's zone in the Control Panel: "Settings: <app>: zone …"
 - [ ] Send a window to workspace 2: "WINDOW … now opens on workspace 2"
+
+## Step 8: Control Panel
+- [ ] **Super+Z** opens it full screen, dark, pages on the left
+- [ ] RUNNING lists open apps with their zone and memory; Enter closes one after asking
+- [ ] APPS: change Firefox's zone; the bottom line says changes are waiting; **A** asks the password once
+- [ ] After applying, Firefox opens in the new zone, and Super+T shows "Settings: firefox: …"
+- [ ] A wrong password applies nothing, and the truth log says so
+- [ ] KEYS: change a key (Enter, then press the new keys), apply, and the new key works
+- [ ] **X** throws waiting changes away; Esc with changes waiting asks first
+- [ ] NETWORK turns Wi-Fi on/off; SOUND & SCREEN changes volume and brightness at once
+- [ ] In a terminal, `touch /var/lib/golem/apps/test.conf` is refused (only the panel can change settings)

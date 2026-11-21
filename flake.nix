@@ -7,7 +7,7 @@
   outputs = { self, nixpkgs, ... }:
     let
       golemRev = self.rev or "unknown";                 # which GitHub version this is
-      modules = [ ./golem.nix ./update.nix ./truthful.nix ./zones.nix ./desktop.nix ./lock.nix ./truth.nix ];
+      modules = [ ./golem.nix ./update.nix ./truthful.nix ./zones.nix ./desktop.nix ./lock.nix ./truth.nix ./panel.nix ];
       golem = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { inherit golemRev; };
