@@ -40,11 +40,20 @@ let
         exec {XSS_SLEEP_LOCK_FD}<&-
         while pgrep -u "$(id -u)" -x i3lock >/dev/null; do sleep 0.5; done
         logger -t golem "UNLOCK"
-      elif i3lock -n -u -e -c "$colour"; then
-        logger -t golem "UNLOCK"
       else
-        logger -t golem "LOCK failed"
-        if [ "$mode" = --start ]; then i3-msg -q exit; fi      # never leave a start unlocked
+        # At the very start something else may still hold the keyboard for a moment: try a few times.
+        ok=no
+        for try in 1 2 3 4 5 6 7 8; do
+          if err=$(i3lock -n -u -e -c "$colour" 2>&1); then ok=yes; break; fi
+          logger -t golem "LOCK try $try did not start: $err"
+          sleep 1
+        done
+        if [ "$ok" = yes ]; then
+          logger -t golem "UNLOCK"
+        else
+          logger -t golem "LOCK failed"
+          if [ "$mode" = --start ]; then i3-msg -q exit; fi      # never leave a start unlocked
+        fi
       fi
       kill "$timer" 2>/dev/null || true
     '';
