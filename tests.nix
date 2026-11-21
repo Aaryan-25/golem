@@ -37,8 +37,15 @@ pkgs.testers.runNixOSTest {
         ).strip()
 
     with subtest("Step 5: Alt+Enter opens a terminal"):
-        machine.send_key("alt-ret")
-        machine.wait_until_succeeds("pgrep -u lilgolemwitch -x xterm")
+        machine.sleep(5)                              # let the window manager settle
+        for _ in range(6):
+            machine.send_key("alt-ret")
+            machine.sleep(5)
+            if machine.execute("pgrep -u lilgolemwitch -x xterm")[0] == 0:
+                break
+        else:
+            print(machine.succeed("journalctl -b --no-pager | tail -60"))
+            raise Exception("Alt+Enter did not open a terminal")
 
     with subtest("Step 4: my folders exist"):
         for d in ["documents", "projects", "media", "zones"]:
