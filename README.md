@@ -47,6 +47,7 @@ Super = the Windows key. **Super+H** shows the full list on screen. Every key ca
 | Super+F1 / F2 / F3 | next window beside / below / turn the split around |
 | Super+1…4 / Super+Shift+1…4 | go to a workspace / send the window there (its app opens there from now on) |
 | Super+L | lock the screen |
+| Super+I | face: Shadow / Negative |
 | Super+Escape | power: lock, sleep, restart, shut down, log out |
 | Super+T | truth log: what the system did |
 | Super+N / Super+W | Wi-Fi on/off / choose a network |
@@ -65,17 +66,31 @@ To turn off the laptop: Super+Escape, or type `poweroff` in a terminal.
 - In a terminal, `golem-wifi` turns Wi-Fi on or off and says which.
 
 ## Control Panel (Super+Z)
-Full screen, keyboard only: pages on the left, the chosen page on the right. ↑↓ move, Enter opens or changes,
-Esc goes back or leaves. It runs in the GREEN zone.
-- **RUNNING:** every app in a zone and the memory it uses; Enter closes one (asks first).
-- **APPS:** what each app may do: zone, internet, camera, sound, USB, RAM, processor, folder.
-- **KEYS:** Enter on a key, then press the new keys.
-- **NETWORK, SOUND & SCREEN:** Wi-Fi, volume, brightness (these happen at once).
-- **TRUTH LOG, ABOUT.**
+A game menu for the whole system, keyboard only. Behind it, motes of light drift in the dark; between pages the
+old page melts into falling particles and the new one gathers in, with faint tracker lines. **Super+I** (or
+LOOK > FACE) turns the realm inside out: **Shadow** (pale light on black) ⇄ **Negative** (ink on white), for the
+whole desktop.
 
-Changes wait on a copy: **A** applies them (your password, once), **X** throws them away. Every applied change
-goes to the truth log. Settings live in `/var/lib/golem`: you can read them, but only the Control Panel
-(with your password) can change them. If the panel can't open, a message says so and the truth log says why.
+**Q / E** switch groups · **↑↓** move · **Enter** open / change · **Esc** back · **F** find anything · **I** face
+
+| Group | Pages |
+|---|---|
+| SYSTEM | RUNNING (apps in zones, memory, close) · STARTUP (everything running, stop with password, core ones warned) · STORAGE (space used, clean unused pieces) · SAVE SLOTS (older versions; the newest 3 always kept) · ABOUT |
+| CONTROLS | APPS (each app's zone and permissions) · KEYS (press new keys) · DRIVERS (camera, microphone, Bluetooth, Wi-Fi card, USB drives, card reader, touchpad: off = not loaded at all; and parts with no driver) · NETWORK (Wi-Fi, Bluetooth, clock once from the internet or by hand) · SOUND & SCREEN (volume, mic, brightness, night light) · POWER (battery, health, dim/lock/sleep times, processor mode, charge limit) · KEYBOARD (repeat, touchpad speed) |
+| LOOK | FACE (Shadow/Negative, effects, motes) · ALERTS (red alert key and presses, battery and drive alerts, test) |
+| YOU | TRUTH LOG (filter: apps, internet, devices, passwords, settings, system) · PRIVACY (tracker and ad blocking, telemetry, sharing, history, hidden name and MAC, certificates) · BACKUPS (save and load your settings by name) |
+| CODEX | ZONES · ALL KEYS · GOLEM (the principles) |
+
+Changes wait on a copy: **A** applies them (your password, once), **X** throws them away, Esc with changes
+waiting asks first. At once, without the password: closing an app, volume, brightness, Wi-Fi, Bluetooth, the look.
+Admin actions (stopping a service, the clock, cleaning, save slots, backups) ask the password each time.
+Settings live in `/var/lib/golem`: you can read them, only the panel (with your password) changes them.
+Every change goes to the truth log.
+
+## Red alert
+The only thing that ever covers the screen by itself: a full red screen, dismissed by pressing the chosen key
+several times (LOOK > ALERTS). It comes when the battery runs low and isn't charging, when the drive is almost
+full, or when the Control Panel can't open.
 
 ## Truth log
 **Super+T** (or `golem-truth` in a terminal) shows what the system did, in plain words, newest at the bottom,

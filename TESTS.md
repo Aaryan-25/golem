@@ -46,17 +46,15 @@ in **that new window**, then close it with Alt+Q.
 - [ ] `ls ~` is empty, then `touch ~/hello`, close, and `ls ~/zones/xterm` (in a normal terminal) shows `hello`
 - [ ] `golem-net-test` says OFFLINE
 
-**YELLOW:** open Firefox with Alt+Space and choose YELLOW when it asks (turn Wi-Fi on first)
-- [ ] Firefox opens websites
-- [ ] Firefox's download folder is inside `~/zones/firefox` and it can't open your `documents`
+**YELLOW:** `zone yellow xterm` (turn Wi-Fi on first)
+- [ ] `golem-net-test` says ONLINE, and `ls ~` shows nothing of your folders
 
 **GREEN:** `zone green xterm`
 - [ ] `ls ~` shows your folders: documents, projects, media, zones
 - [ ] `golem-net-test` says OFFLINE (GREEN gets internet only if allowed)
 
 **Settings:**
-- [ ] `zone show firefox` says YELLOW, internet allowed
-- [ ] `zone red firefox` opens Firefox with no internet and no access to your files
+- [ ] Open xterm with Alt+Space, choose a zone when asked; `zone show xterm` says that zone
 
 ## Step 5: keys and windows
 - [ ] **Super+H** shows the key list
@@ -79,7 +77,7 @@ in **that new window**, then close it with Alt+Q.
 
 ## Step 7: truth log
 Do these, then press **Super+T** and check each shows up in words you understand:
-- [ ] Open Firefox (YELLOW) and visit a website: "firefox (YELLOW) talked to <site>: … out, … in"
+- [ ] In `zone yellow xterm`, run `golem-net-test`: "xterm (YELLOW) talked to 1.1.1.1 …"
 - [ ] `zone red xterm`, then close it: "Opened xterm in RED …" and "Closed xterm (RED)"
 - [ ] A wrong password at the lock screen: "Wrong password at the lock screen"
 - [ ] Super+L, then unlock: "Screen locked", "Screen unlocked"
@@ -91,13 +89,18 @@ Do these, then press **Super+T** and check each shows up in words you understand
 - [ ] Send a window to workspace 2: "WINDOW … now opens on workspace 2"
 
 ## Step 8: Control Panel
-- [ ] **Super+Z** opens it full screen, dark, pages on the left
-- [ ] RUNNING lists open apps with their zone and memory; Enter closes one after asking
-- [ ] APPS: change Firefox's zone; the bottom line says changes are waiting; **A** asks the password once
-- [ ] After applying, Firefox opens in the new zone, and Super+T shows "Settings: firefox: …"
+- [ ] **Super+Z** opens it full screen: dark realm, drifting motes, groups at the top (Q / E switch)
+- [ ] Opening a page: the old page melts, the new one gathers in
+- [ ] **I** (or Super+I anywhere): the screen turns inside out to Negative (ink on white), and back
+- [ ] CONTROLS > APPS: change an app's zone; "changes waiting"; **A** asks the password once; Super+T shows it
 - [ ] A wrong password applies nothing, and the truth log says so
 - [ ] KEYS: change a key (Enter, then press the new keys), apply, and the new key works
-- [ ] **X** throws waiting changes away; Esc with changes waiting asks first
-- [ ] NETWORK turns Wi-Fi on/off; SOUND & SCREEN changes volume and brightness at once
-- [ ] NETWORK: "Set the clock from the internet, once" (Wi-Fi on) asks the password and fixes the clock; Super+T shows it
+- [ ] DRIVERS: camera OFF, apply; the camera can't be used (and ON again)
+- [ ] NETWORK: Wi-Fi and Bluetooth on/off; "Set the clock from the internet, once" fixes the clock
+- [ ] SOUND & SCREEN: volume, brightness, night light change at once
+- [ ] POWER: change "Lock after", apply; it locks after the new time
+- [ ] STARTUP lists what runs; SAVE SLOTS lists versions; STORAGE shows space
+- [ ] YOU > PRIVACY: trackers ON (a known ad site doesn't load); BACKUPS: save one, load it
+- [ ] LOOK > ALERTS: "Show a test alert": red screen, gone after pressing Space 3 times
+- [ ] **F** finds things (try "battery")
 - [ ] In a terminal, `touch /var/lib/golem/apps/test.conf` is refused (only the panel can change settings)

@@ -1,6 +1,6 @@
 # Plan
 
-**NOW: testing Steps 2 to 8 on the laptop** with [TESTS.md](TESTS.md). All are built and pass GitHub's
+**NOW: testing Steps 2 to 9 on the laptop** with [TESTS.md](TESTS.md). All are built and pass GitHub's
 automated virtual-laptop test (22 Nov 2026). Nothing new gets built until the laptop test is done.
 
 Done: Step 1 (21 Nov 2026). Step 0 was skipped; its hardware checks moved into Step 3's test.
@@ -103,9 +103,11 @@ Pages: RUNNING, APPS, KEYS, NETWORK, SOUND & SCREEN, TRUTH LOG, ABOUT. Not yet: 
 the clipboard rules in DECISIONS.md (GREEN shares one, the others keep their own) and the screen rule (no app
 sees the screen unless allowed).
 
-## Step 9: Control Panel (game style)
-**Goal:** the same panel becomes the game menu (no second panel).
-**Made:** decided at the time, in small pieces, from IDEAS.md.
+## Step 9: Control Panel (game style) — built
+**Made:** the same panel as a game menu: groups (SYSTEM, CONTROLS, LOOK, YOU, CODEX), drifting motes, pages that
+melt and gather, Shadow/Negative turning inside out, find (F), and every page from PANEL.md that doesn't need
+Wayland. Not yet: per-app site lists, distrusting certificates, clipboard and screen rules (these need the
+Wayland step).
 
 ---
 
