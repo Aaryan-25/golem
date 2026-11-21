@@ -1,7 +1,7 @@
 # Plan
 
-**NOW: building Steps 5 to 8** (my choice: a working Control Panel first, then I test Steps 2 to 8 together
-using [TESTS.md](TESTS.md)). Each step is tested automatically on GitHub in a virtual laptop meanwhile.
+**NOW: testing Steps 2 to 8 on the laptop** with [TESTS.md](TESTS.md). All are built and pass GitHub's
+automated virtual-laptop test (22 Nov 2026). Nothing new gets built until the laptop test is done.
 
 Done: Step 1 (21 Nov 2026). Step 0 was skipped; its hardware checks moved into Step 3's test.
 
