@@ -129,11 +129,11 @@ pkgs.testers.runNixOSTest {
         as_me("zone bash /etc/golem-test-fetch.sh")        # bash is YELLOW (internet allowed) by now
         machine.send_monitor_command("device_add usb-tablet,bus=xhci.0,id=t1")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'bash (YELLOW) talked to'", timeout=90)
-        log = machine.succeed("golem-truth --text")
-        print(log)
+        truth = machine.succeed("golem-truth --text")
+        print(truth)
         for words in ["Opened xterm in RED", "Wrong password at the lock screen", "Screen locked",
                       "Screen unlocked", "Settings: bash now opens in YELLOW", "USB plugged in",
                       "bash (YELLOW) talked to", "out,"]:
-            assert words in log, f"missing from the truth log: {words}"
+            assert words in truth, f"missing from the truth log: {words}"
   '';
 }
