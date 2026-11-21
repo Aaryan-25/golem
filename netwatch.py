@@ -81,7 +81,7 @@ def main():
                 break
             first[k] = v
         cid = dict(pairs).get("id")
-        src, dst, sport = first.get("src", ""), first.get("dst", ""), first.get("sport", "")
+        dst, sport = first.get("dst", ""), first.get("sport", "")
         if not cid or local(dst):
             continue
         if kind == "NEW":
