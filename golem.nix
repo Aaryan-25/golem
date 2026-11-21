@@ -48,6 +48,11 @@ in
   time.timeZone = s.timeZone;
   nix.settings.experimental-features = [ "nix-command" "flakes" ];
   documentation.enable = false;                       # no manuals: smaller and cleaner
+  services.speechd.enable = false;                    # no text-to-speech (650 MB of voices)
+  networking.modemmanager.enable = false;             # no mobile-modem support (no SIM in this laptop)
+  networking.networkmanager.plugins = lib.mkForce [ ];   # no VPN plugins for now
+  fonts.enableDefaultPackages = false;                # only the fonts Golem uses
+  fonts.packages = [ pkgs.dejavu_fonts ];
 
   # ---- Starting from the pendrive ----
   # The boot loader lives only on the pendrive and never writes to the laptop's firmware.
