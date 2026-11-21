@@ -226,7 +226,7 @@ pkgs.testers.runNixOSTest {
         apps["bash"]["zone"] = "yellow"
         apps["bash"]["internet"] = "allowed"
         assert ask_guard({"do": "apply", "password": "golem", "apps": apps, "keys": []}) == "OK"
-        machine.succeed("su - lilgolemwitch -c 'zone bash /etc/golem-test-long.sh' >/dev/null 2>&1 &")
+        machine.succeed("su - lilgolemwitch -c 'export XDG_RUNTIME_DIR=/run/user/1000 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus; zone bash /etc/golem-test-long.sh' >/dev/null 2>&1 &")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'has been talking to .* (still open)'", timeout=120)
 
     with subtest("The clock can be set by hand from the Control Panel, with the password, and it is logged"):
