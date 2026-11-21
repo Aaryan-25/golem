@@ -40,11 +40,11 @@ let
         echo "$changes"
         say "FILES CHANGED:"
         git -C "$repo" diff --stat "$now" "$new" | sed 's/^/  /'
-        range="$now $new"
+        from=$now
       else
         changes=$(git -C "$repo" log --format='  * %s  (%ar)' -n 15 "$new")
         echo "$changes"
-        range="$new~1 $new"
+        from="$new~1"
       fi
 
       while true; do
@@ -52,8 +52,7 @@ let
         read -rp "Apply? y = yes, d = show every changed line, n = no: " a
         case "$a" in
           y|Y) break ;;
-          # shellcheck disable=SC2086
-          d|D) git -C "$repo" diff --color=always $range | less -R ;;
+          d|D) git -C "$repo" diff --color=always "$from" "$new" | less -R ;;
           *) say "Stopped. Nothing changed."; exit 0 ;;
         esac
       done
