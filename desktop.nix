@@ -177,6 +177,7 @@ let
     include /var/lib/golem/keys.i3
     # Golem's own panel is the one window that takes focus when it opens (DECISIONS: panels do)
     for_window [class="(?i)^golem-panel$"] fullscreen enable, focus
+    for_window [class="(?i)^golem-alert$"] fullscreen enable, focus
   '';
 in {
   services.xserver.windowManager.i3.configFile = lib.mkForce i3config;
