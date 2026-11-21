@@ -6,23 +6,26 @@
 let
   s = import ./settings.nix;
   c = s.theme;
-  term = "xterm -bg '${c.void}' -fg '${c.text}' -cr '${c.pale}' -fa 'DejaVu Sans Mono' -fs 11 -b 12";
+  term = "golem-term";
 
   rasi = pkgs.writeText "golem.rasi" ''
-    * { background-color: transparent; text-color: ${c.text}; font: "DejaVu Sans 12"; }
-    window { background-color: ${c.void}; border: 1px; border-color: ${c.shade}; padding: 16px 18px;
+    * { void: ${c.void}; shade: ${c.shade}; mist: ${c.mist}; text: ${c.text}; pale: ${c.pale}; }
+    @import "/home/${s.user}/zones/settings/face.rasi"
+    * { background-color: transparent; text-color: @text; font: "DejaVu Sans 12"; }
+    window { background-color: @void; border: 1px; border-color: @shade; padding: 16px 18px;
              width: 440px; location: south west; anchor: south west; x-offset: 22px; y-offset: -22px; }
     mainbox  { children: [ inputbar, message, listview ]; spacing: 12px; }
     inputbar { children: [ prompt, entry ]; spacing: 14px; }
-    prompt   { text-color: ${c.mist}; }
-    entry    { text-color: ${c.pale}; placeholder: ""; }
-    textbox  { text-color: ${c.mist}; }
+    prompt   { text-color: @mist; }
+    entry    { text-color: @pale; placeholder: ""; }
+    textbox  { text-color: @mist; }
     listview { lines: 8; fixed-height: false; scrollbar: false; spacing: 2px; }
-    element  { padding: 5px 8px; text-color: ${c.mist}; }
-    element selected { background-color: ${c.shade}; text-color: ${c.pale}; }
+    element  { padding: 5px 8px; text-color: @mist; }
+    element selected { background-color: @shade; text-color: @pale; }
     element-text { text-color: inherit; highlight: bold; }
     element-icon { size: 0; }
   '';
+
   centre = "window { location: center; anchor: center; x-offset: 0; y-offset: 0; width: 360px; }";
   rofi = "rofi -theme ${rasi}";
 
@@ -132,6 +135,7 @@ let
     [ "Super+Shift+3"     "Send window to 3 (remembered)"              "exec golem-win send 3" ]
     [ "Super+Shift+4"     "Send window to 4 (remembered)"              "exec golem-win send 4" ]
     [ "Super+l"           "Lock the screen"                            "exec golem-lock" ]
+    [ "Super+i"           "Face: Shadow / Negative"                    "exec golem-face" ]
     [ "Super+Escape"      "Power: lock, sleep, restart, shut down, log out" "exec golem-win power" ]
     [ "Super+Shift+q"     "Log out (asks first)"                       "exec golem-win logout" ]
     [ "Super+t"           "Truth log: what the system did"             "exec ${term} -e golem-truth" ]
@@ -162,6 +166,9 @@ let
     client.unfocused        ${c.void} ${c.void} ${c.mist} ${c.void} ${c.void}
     client.background       ${c.void}
     exec --no-startup-id xsetroot -solid "${c.void}"
+    include ~/zones/settings/face.i3
+    exec --no-startup-id golem-session-apply
+    exec --no-startup-id golem-alert --watch
     include ~/zones/settings/i3-placements
     # Login = lock screen; idle: dim at 4 min, lock at 5; lid: lock before sleep (lock.nix)
     exec --no-startup-id golem-lock --start

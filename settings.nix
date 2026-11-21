@@ -18,5 +18,13 @@
     text  = "#c8ccd8";   # normal text
     pale  = "#e6e9f2";   # bright text, focus line
   };
+  # Negative: ink on pale paper (Super+I, or Control Panel > LOOK > FACE).
+  themeNegative = {
+    void  = "#eceae4";
+    shade = "#d6d3ca";
+    mist  = "#7a776f";
+    text  = "#26252a";
+    pale  = "#0b0b0d";
+  };
   githubRepo = "Aaryan-25/golem";   # where golem-update gets new versions
 }

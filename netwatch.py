@@ -74,6 +74,32 @@ def announce_long():
                 syslog.syslog(f"{c[0] or 'an unknown app'} has been talking to {where} for over a minute (still open)")
 
 
+def watch_devices():
+    """Camera and microphone: written down when they start and stop being used (decided: truth log only)."""
+    import glob
+    cam_users, mic_on = set(), False
+    while True:
+        time.sleep(3)
+        users = set()
+        for dev in glob.glob("/dev/video*"):
+            out = subprocess.run(["fuser", dev], capture_output=True, text=True).stdout.split()
+            users |= {a for a in (app_of(p) for p in out) if a}
+        for a in users - cam_users:
+            syslog.syslog(f"Camera turned on by {a}")
+        for a in cam_users - users:
+            syslog.syslog(f"Camera turned off ({a} stopped using it)")
+        cam_users = users
+        on = False
+        for st in glob.glob("/proc/asound/card*/pcm*c/sub*/status"):
+            try:
+                on = on or "RUNNING" in open(st).read()
+            except OSError:
+                pass
+        if on != mic_on:
+            syslog.syslog("Microphone in use" if on else "Microphone no longer in use")
+            mic_on = on
+
+
 def local(ip):
     return ip.startswith("127.") or ip == "::1" or ip.startswith("fe80")
 
@@ -81,6 +107,7 @@ def local(ip):
 def main():
     threading.Thread(target=follow_dns, daemon=True).start()
     threading.Thread(target=announce_long, daemon=True).start()
+    threading.Thread(target=watch_devices, daemon=True).start()
     # stdbuf: hand over each event at once (otherwise they arrive in late batches)
     p = subprocess.Popen(["stdbuf", "-oL", "conntrack", "-E", "-e", "NEW,DESTROY", "-o", "id"],
                          stdout=subprocess.PIPE, text=True)

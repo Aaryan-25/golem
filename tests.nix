@@ -201,7 +201,8 @@ pkgs.testers.runNixOSTest {
         machine.wait_until_succeeds("pgrep -u lilgolemwitch -f panel.py", timeout=60)
         machine.wait_until_succeeds("golem-truth --text | grep -q 'Opened golem-panel in GREEN'", timeout=30)
         machine.sleep(4)
-        for key in ["down", "ret", "ret", "down", "ret"]:     # APPS > bash > zone > next zone
+        machine.screenshot("panel_open")
+        for key in ["e", "ret", "ret", "down", "ret"]:        # CONTROLS > APPS > bash > zone > next zone
             machine.send_key(key)
             machine.sleep(1)
         machine.send_key("a")
@@ -216,17 +217,6 @@ pkgs.testers.runNixOSTest {
             machine.sleep(1)
         machine.wait_until_fails("pgrep -u lilgolemwitch -f panel.py", timeout=30)
         machine.screenshot("panel_done")
-
-    with subtest("Firefox opens a page inside its YELLOW zone"):
-        assert "is now in YELLOW" in as_me("zone set firefox yellow")
-        machine.execute("su - lilgolemwitch -c 'timeout 150 zone firefox --headless --screenshot ~/page.png http://web/' >/dev/null 2>&1 &")
-        if machine.execute("timeout 160 sh -c 'until test -s /home/lilgolemwitch/zones/firefox/page.png; do sleep 2; done'")[0] != 0:
-            print(machine.execute("journalctl -b --no-pager | grep -iE 'firefox|firejail|oom|zone' | tail -25; ls -la /home/lilgolemwitch/zones/firefox")[1])
-            raise Exception("Firefox did not open the page in its zone")
-        machine.wait_until_succeeds("golem-truth --text | grep -q 'firefox (YELLOW) talked to'", timeout=60)
-
-    with subtest("Firefox has no secret DNS of its own"):
-        machine.succeed("grep -q '\"DNSOverHTTPS\"' /etc/firefox/policies/policies.json")
 
     with subtest("Truth log: a connection open for over a minute is written down while still open"):
         as_me("zone set bash yellow 2>/dev/null; true")
@@ -250,5 +240,48 @@ pkgs.testers.runNixOSTest {
         machine.send_chars("golem\n")
         machine.wait_until_fails("pgrep -u lilgolemwitch -x i3lock", timeout=30)
         machine.wait_until_succeeds("journalctl -b | grep -c 'golem.*UNLOCK' | grep -qv '^[0-2]$'")
+
+    with subtest("Settings: the system side runs at start; trackers are blocked by default"):
+        machine.succeed("systemctl show -p Result --value golem-settings | grep -q success")
+        machine.succeed("readlink /var/lib/golem/blocklist.hosts | grep -q blocklist")
+        machine.succeed("grep -q addn-hosts /etc/NetworkManager/dnsmasq.d/golem-block.conf")
+
+    with subtest("DRIVERS: switching the camera off means its driver can't load at all"):
+        machine.succeed("modprobe uvcvideo && modprobe -r uvcvideo")
+        assert ask_guard({"do": "apply", "password": "golem", "apps": current()[0], "keys": [],
+                          "settings": {"camera": "off"}}) == "OK"
+        machine.fail("modprobe uvcvideo")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Settings: Camera: off'")
+        assert ask_guard({"do": "apply", "password": "golem", "apps": current()[0], "keys": [],
+                          "settings": {"camera": "on"}}) == "OK"
+        machine.succeed("modprobe uvcvideo")
+
+    with subtest("LOOK: Super+I turns the face to Negative everywhere, at once"):
+        machine.send_key("meta_l-i")
+        machine.wait_until_succeeds("grep -q face=negative /var/lib/golem/settings.conf", timeout=30)
+        machine.wait_until_succeeds("grep -q '${(import ./settings.nix).themeNegative.void}' /home/lilgolemwitch/zones/settings/face.i3", timeout=30)
+        machine.screenshot("negative")
+        machine.send_key("meta_l-i")
+        machine.wait_until_succeeds("grep -q face=shadow /var/lib/golem/settings.conf", timeout=30)
+
+    with subtest("The red alert covers the screen and goes away only after 3 presses"):
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 golem-alert Test alert' >/dev/null 2>&1 &")
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -f alert.py", timeout=30)
+        machine.sleep(3)
+        machine.screenshot("red_alert")
+        machine.send_key("spc")
+        machine.sleep(1)
+        machine.succeed("pgrep -u lilgolemwitch -f alert.py")
+        machine.send_key("spc")
+        machine.sleep(1)
+        machine.send_key("spc")
+        machine.wait_until_fails("pgrep -u lilgolemwitch -f alert.py", timeout=30)
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'RED ALERT dismissed'")
+
+    with subtest("Backups and save slots work through the guard"):
+        assert ask_guard({"do": "backup-save", "name": "test1", "password": "golem"}) == "OK"
+        machine.succeed("test -s /var/lib/golem/backups/test1.tar")
+        assert ask_guard({"do": "backup-load", "name": "test1", "password": "golem"}) == "OK"
+        assert "newest 3" in ask_guard({"do": "delete-version", "version": "1", "password": "golem"})
   '';
 }

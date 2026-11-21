@@ -1,0 +1,32 @@
+{
+  "idle_dim":       {"page": "POWER", "label": "Dim the screen after", "unit": "min", "values": ["1", "2", "3", "4", "5", "10", "15", "never"], "default": "4", "scope": "user", "help": "Minutes without a key press before the screen dims."},
+  "idle_lock":      {"page": "POWER", "label": "Lock after", "unit": "min", "values": ["2", "3", "5", "10", "15", "30", "never"], "default": "5", "scope": "user", "help": "Minutes without a key press before it locks (not while Caps Lock is ON)."},
+  "idle_sleep":     {"page": "POWER", "label": "Sleep after", "unit": "min", "values": ["10", "15", "30", "60", "never"], "default": "30", "scope": "user", "help": "Minutes without a key press before the laptop sleeps."},
+  "power_mode":     {"page": "POWER", "label": "Processor", "values": ["saver", "balanced", "full"], "default": "balanced", "scope": "system", "help": "saver: cooler and longer battery. full: fastest, warmer."},
+  "charge_limit":   {"page": "POWER", "label": "Stop charging at", "unit": "%", "values": ["60", "70", "80", "90", "100"], "default": "80", "scope": "system", "help": "Keeps the battery healthy. If the laptop doesn't allow it from Golem, set it in the BIOS (F2 > Power Management > Primary Battery Charge Configuration > Custom)."},
+
+  "camera":         {"page": "DRIVERS", "label": "Camera", "values": ["on", "off"], "default": "on", "scope": "system", "help": "OFF: the camera's driver isn't loaded at all, so nothing can use it."},
+  "microphone":     {"page": "DRIVERS", "label": "Microphone", "values": ["on", "off"], "default": "on", "scope": "system", "help": "OFF: the sound card's recording side is switched off for everything."},
+  "bluetooth_driver": {"page": "DRIVERS", "label": "Bluetooth", "values": ["on", "off"], "default": "off", "scope": "system", "help": "OFF: the Bluetooth driver isn't loaded at all."},
+  "wifi_driver":    {"page": "DRIVERS", "label": "Wi-Fi card", "values": ["on", "off"], "default": "on", "scope": "system", "help": "OFF: the Wi-Fi driver isn't loaded at all (stronger than Super+N)."},
+  "usb_storage":    {"page": "DRIVERS", "label": "USB drives", "values": ["on", "off"], "default": "on", "scope": "system", "help": "OFF: USB sticks and disks aren't read at all. Not possible while Golem itself runs from a USB drive."},
+  "card_reader":    {"page": "DRIVERS", "label": "Card reader", "values": ["on", "off"], "default": "on", "scope": "system", "help": "OFF: the SD card reader's driver isn't loaded."},
+  "touchpad":       {"page": "DRIVERS", "label": "Touchpad", "values": ["on", "off"], "default": "on", "scope": "user", "help": "OFF: the touchpad does nothing."},
+
+  "trackers":       {"page": "PRIVACY", "label": "Block trackers and ads", "values": ["on", "off"], "default": "on", "scope": "system", "help": "A built-in list (StevenBlack, about 76,000 sites) blocks them for every app. It changes only when you update Golem."},
+
+  "kbd_delay":      {"page": "KEYBOARD", "label": "Key repeat starts after", "unit": "ms", "values": ["200", "250", "300", "400", "500", "660"], "default": "300", "scope": "user", "help": "How long you hold a key before it repeats."},
+  "kbd_rate":       {"page": "KEYBOARD", "label": "Key repeat speed", "unit": "per second", "values": ["15", "20", "25", "30", "40", "50"], "default": "30", "scope": "user", "help": "How fast a held key repeats."},
+  "touchpad_speed": {"page": "KEYBOARD", "label": "Touchpad speed", "values": ["-0.5", "-0.25", "0", "0.25", "0.5", "0.75"], "default": "0", "scope": "user", "help": "0 is normal."},
+
+  "night_light":    {"page": "SCREEN", "label": "Night light", "values": ["off", "warm", "warmer"], "default": "off", "scope": "user", "help": "Warmer colours for the evening."},
+
+  "face":           {"page": "FACE", "label": "Face", "values": ["shadow", "negative"], "default": "shadow", "scope": "user", "help": "SHADOW: pale light on black. NEGATIVE: ink on white. (Super+I switches it anywhere.)"},
+  "effects":        {"page": "FACE", "label": "Effects", "values": ["on", "off"], "default": "on", "scope": "user", "help": "Drifting motes and the gather and melt between pages. OFF is calmer and lighter."},
+  "motes":          {"page": "FACE", "label": "Motes", "values": ["sparse", "normal", "dense"], "default": "normal", "scope": "user", "help": "How many motes drift behind the panel."},
+
+  "alert_key":      {"page": "ALERTS", "label": "Dismiss the red alert with", "values": ["space", "Return", "Escape", "x"], "default": "space", "scope": "user", "help": "The key you press to dismiss a red alert."},
+  "alert_presses":  {"page": "ALERTS", "label": "Presses to dismiss", "values": ["1", "2", "3", "5", "7"], "default": "3", "scope": "user", "help": "So an alert is never dismissed by accident."},
+  "alert_battery":  {"page": "ALERTS", "label": "Alert when the battery is at", "unit": "%", "values": ["off", "5", "10", "15", "20"], "default": "10", "scope": "user", "help": "A red alert when the battery runs this low and isn't charging."},
+  "alert_disk":     {"page": "ALERTS", "label": "Alert when the pendrive is full to", "unit": "%", "values": ["off", "80", "90", "95"], "default": "90", "scope": "user", "help": "A red alert when Golem's drive is this full."}
+}

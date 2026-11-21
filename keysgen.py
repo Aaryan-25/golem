@@ -26,10 +26,18 @@ def i3(combo):
 def main():
     os.makedirs("/var/lib/golem/apps", exist_ok=True)
     mine = read(KEYS)
+    defaults = read(DEFAULT)
+    # a key whose label I know keeps my keys but gets Golem's newest command for it
+    newest = {label: cmd for _, label, cmd in defaults}
+    changed = False
+    for k in mine:
+        if k[1] in newest and k[2] != newest[k[1]]:
+            k[2] = newest[k[1]]
+            changed = True
     have = {cmd for _, _, cmd in mine}
-    added = [k for k in read(DEFAULT) if k[2] not in have]
+    added = [k for k in defaults if k[2] not in have]
     keys = mine + added
-    if added or not os.path.exists(KEYS):
+    if added or changed or not os.path.exists(KEYS):
         with open(KEYS + ".tmp", "w") as f:
             f.write("# My keys: key | what it does | command. Change them in the Control Panel (Super+Z).\n")
             for k in keys:

@@ -4,6 +4,7 @@
 import json
 import os
 import re
+import shutil
 import socket
 import struct
 import subprocess
@@ -16,6 +17,12 @@ USER = os.environ["GOLEM_USER"]
 UID = int(os.environ["GOLEM_UID"])
 APPS = "/var/lib/golem/apps"
 KEYS = "/var/lib/golem/keys.conf"
+SETTINGS = "/var/lib/golem/settings.conf"
+BACKUPS = "/var/lib/golem/backups"
+SCHEMA = json.load(open("/etc/golem/settings-schema.json"))
+LOOK = ("face", "effects", "motes", "night_light")      # these change at once, without the password
+CORE = ("dbus", "dbus-broker", "systemd-journald", "systemd-logind", "systemd-udevd", "NetworkManager",
+        "polkit", "nix-daemon", "getty@tty1", "golem-netwatch", "systemd-timesyncd")
 ZONES = ("red", "offline", "yellow", "green")
 syslog.openlog("golem")
 
@@ -59,8 +66,39 @@ def defaults(zone):
     return dict(line.split("=", 1) for line in r.splitlines() if "=" in line)
 
 
+def read_settings():
+    conf = {k: v["default"] for k, v in SCHEMA.items()}
+    conf.update({k: v for k, v in read_conf(SETTINGS).items() if k in SCHEMA and v in SCHEMA[k]["values"]})
+    return conf
+
+
+def write_settings(new):
+    old = read_settings()
+    for k, v in new.items():
+        if k not in SCHEMA or v not in SCHEMA[k]["values"]:
+            return f"ERROR bad setting {k}={v}"
+    merged = dict(old, **new)
+    with open(SETTINGS + ".tmp", "w") as f:
+        for k in SCHEMA:
+            f.write(f"{k}={merged[k]}\n")
+    os.chmod(SETTINGS + ".tmp", 0o644)
+    os.replace(SETTINGS + ".tmp", SETTINGS)
+    for k in SCHEMA:
+        if old[k] != merged[k]:
+            unit = SCHEMA[k].get("unit", "")
+            v = merged[k] + (f" {unit}" if unit and merged[k] not in ("off", "never") else "")
+            syslog.syslog(f"SETTINGS {SCHEMA[k]['label']}: {v}")
+    if any(old[k] != merged[k] and SCHEMA[k]["scope"] == "system" for k in SCHEMA):
+        subprocess.run(["golem-settings-apply"], check=False)
+    return "OK"
+
+
 def apply(req):
     apps, keys = req.get("apps", {}), req.get("keys", [])
+    if req.get("settings"):
+        r = write_settings(req["settings"])
+        if r != "OK":
+            return r
     for name, conf in apps.items():
         if not NAME.fullmatch(name) or set(conf) - set(FIELDS):
             return f"ERROR bad settings for {name}"
@@ -110,6 +148,57 @@ def read_keys():
     return out
 
 
+def admin(do, req):
+    if do == "service":
+        unit, op = req.get("unit", ""), req.get("op", "")
+        if not re.fullmatch(r"[A-Za-z0-9@._-]+\.(service|timer|socket)", unit) or op not in ("stop", "start", "disable", "enable"):
+            return "ERROR bad request"
+        r = subprocess.run(["systemctl", op, unit], capture_output=True, text=True)
+        if r.returncode != 0:
+            return "ERROR " + (r.stderr.strip().splitlines() or ["it did not work"])[-1]
+        done = {"stop": "stopped", "start": "started", "disable": "switched off at startup", "enable": "switched on at startup"}[op]
+        syslog.syslog(f"Startup: {unit} {done}")
+        return "OK"
+    if do == "delete-version":
+        gens = versions()
+        n = str(req.get("version", ""))
+        if n not in gens[3:]:
+            return "ERROR the newest 3 versions can't be deleted (and that one doesn't exist)"
+        subprocess.run(["nix-env", "-p", "/nix/var/nix/profiles/system", "--delete-generations", n], check=False)
+        subprocess.run(["/run/current-system/bin/switch-to-configuration", "boot"], capture_output=True, check=False)
+        syslog.syslog(f"Save slot {n} (an older version of Golem) deleted")
+        return "OK"
+    if do == "clean":
+        before = shutil.disk_usage("/").free
+        subprocess.run(["nix-store", "--gc"], capture_output=True, check=False)
+        freed = (shutil.disk_usage("/").free - before) // 1048576
+        syslog.syslog(f"Storage cleaned: {freed} MB freed (pieces no version of Golem uses)")
+        return f"OK {freed}"
+    name = req.get("name", "")
+    if not NAME.fullmatch(name):
+        return "ERROR use a simple name: letters, numbers, - or _"
+    os.makedirs(BACKUPS, exist_ok=True)
+    path = f"{BACKUPS}/{name}.tar"
+    if do == "backup-save":
+        subprocess.run(["tar", "-cf", path, "-C", "/var/lib/golem", "apps", "keys.conf", "settings.conf"],
+                       capture_output=True, check=False)
+        syslog.syslog(f"Backup '{name}' saved (app settings, keys, look and other settings)")
+        return "OK"
+    if not os.path.exists(path):
+        return "ERROR no backup with that name"
+    subprocess.run(["tar", "-xf", path, "-C", "/var/lib/golem"], capture_output=True, check=False)
+    subprocess.run(["golem-keys-gen"], check=False)
+    subprocess.run(["golem-settings-apply"], check=False)
+    syslog.syslog(f"Backup '{name}' loaded")
+    return "OK"
+
+
+def versions():
+    out = subprocess.run(["nix-env", "-p", "/nix/var/nix/profiles/system", "--list-generations"],
+                         capture_output=True, text=True).stdout
+    return [line.split()[0] for line in reversed(out.splitlines()) if line.split()]
+
+
 def handle(req):
     do = req.get("do")
     if do == "first-zone":          # a new app's zone, chosen once at its first start
@@ -121,6 +210,19 @@ def handle(req):
         write_conf(name, defaults(zone))
         syslog.syslog(f"SETTINGS {name}: zone {zone.upper()} (first start)")
         return "OK"
+    if do == "look":                # face, effects, motes, night light: at once, no password
+        new = {k: v for k, v in req.get("settings", {}).items() if k in LOOK}
+        return write_settings(new) if new else "ERROR nothing to change"
+    if do == "bluetooth":
+        on = bool(req.get("on"))
+        subprocess.run(["bluetoothctl", "power", "on" if on else "off"], capture_output=True, check=False)
+        syslog.syslog(f"Bluetooth turned {'ON' if on else 'OFF'}")
+        return "OK"
+    if do in ("service", "delete-version", "clean", "backup-save", "backup-load"):
+        if not pam.authenticate(USER, req.get("password", ""), service="golem-panel"):
+            syslog.syslog("Wrong password in the Control Panel; nothing was changed")
+            return "ERROR wrong password, nothing was changed"
+        return admin(do, req)
     if do == "wifi":
         on = bool(req.get("on"))
         subprocess.run(["nmcli", "radio", "wifi", "on" if on else "off"], check=False)

@@ -75,5 +75,5 @@ let
 in {
   environment.etc."golem/version".text = golemRev;
   environment.systemPackages = [ update ];
-  boot.loader.grub.configurationLimit = 10;   # keep the last 10 versions in the boot menu
+  boot.loader.grub.configurationLimit = 5;    # save slots: the last 5 versions stay in the boot menu
 }

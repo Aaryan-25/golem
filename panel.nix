@@ -12,9 +12,9 @@ let
   panelPy = (pkgs.python3.withPackages (ps: [ ps.tkinter ]));
   panel = pkgs.writeShellApplication {
     name = "golem-panel";
-    runtimeInputs = with pkgs; [ systemd networkmanager wireplumber brightnessctl procps util-linux i3 ];
+    runtimeInputs = with pkgs; [ systemd networkmanager wireplumber brightnessctl procps util-linux i3 pciutils bluez coreutils gawk gnugrep nix ];
     text = ''
-      export GOLEM_THEME='${builtins.toJSON s.theme}'
+      export GOLEM_THEMES='${builtins.toJSON { shadow = s.theme; negative = s.themeNegative; }}'
       exec ${panelPy}/bin/python3 ${./panel.py} "$@"
     '';
   };
@@ -25,7 +25,7 @@ let
     text = ''
       if ! out=$(zone green golem-panel 2>&1); then
         logger -t golem "The Control Panel could not open: $(echo "$out" | tail -n 3 | tr '\n' ' ')"
-        golem-ask "CONTROL PANEL COULD NOT OPEN (reason in the truth log, Super+T)" OK >/dev/null || true
+        golem-alert "The Control Panel could not open. The reason is in the truth log (Super+T)." || true
       fi
     '';
   };
@@ -41,7 +41,7 @@ in {
   };
   systemd.services."golem-helper@" = {
     description = "Golem: the guard in front of the settings";
-    path = with pkgs; [ networkmanager keysgen chrony util-linux coreutils ] ++ [ "/run/current-system/sw" ];
+    path = with pkgs; [ networkmanager keysgen chrony util-linux coreutils bluez gnutar nix systemd ] ++ [ "/run/current-system/sw" ];
     environment = { GOLEM_USER = s.user; GOLEM_UID = uid; };
     serviceConfig = { ExecStart = "${helper}/bin/golem-helper"; StandardInput = "socket"; StandardOutput = "journal"; };
   };

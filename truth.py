@@ -1,13 +1,14 @@
 # golem-truth: what the system did, in plain words, newest at the bottom (kept 30 days).
 #   golem-truth          the whole log, in a scrollable view
 #   golem-truth --text   print it (for the Control Panel)
+#   --kind apps|internet|devices|passwords|settings|system   only that kind
 import json
 import re
 import subprocess
 import sys
 import time
 
-SOURCES = ["zone", "golem", "golem-net", "golem-usb", "sudo", "i3lock", "login", "su", "NetworkManager"]
+SOURCES = ["zone", "golem", "golem-net", "golem-usb", "sudo", "i3lock", "login", "su", "NetworkManager", "systemd-coredump"]
 
 
 def sentence(ident, msg):
@@ -24,7 +25,7 @@ def sentence(ident, msg):
             return f"Settings: {m.group(1)} now opens in {m.group(2)}"
         return msg
     if ident == "golem":
-        m = re.match(r"SETTINGS (\S+): (.*)$", msg)
+        m = re.match(r"SETTINGS (.+?): (.*)$", msg)
         if m:
             return f"Settings: {m.group(1)}: {m.group(2)}"
         m = re.match(r"KEY (\S+) now: (.*)$", msg)
@@ -33,7 +34,12 @@ def sentence(ident, msg):
         return {"LOCK": "Screen locked", "UNLOCK": "Screen unlocked",
                 "LOCK failed": "The lock screen failed to start"}.get(msg, msg)
     if ident == "golem-net":
+        if msg.startswith(("Camera", "Microphone")):
+            return msg
         return "Internet: " + msg
+    if ident == "systemd-coredump":
+        m = re.search(r"Process \d+ \((.+?)\) of user", msg)
+        return f"{m.group(1)} crashed (the crash report is kept 7 days, never sent anywhere)" if m else None
     if ident == "golem-usb":
         return msg
     if ident == "sudo":
@@ -57,7 +63,21 @@ def sentence(ident, msg):
     return None
 
 
-def lines():
+def kind(ident, text):
+    if ident == "golem-net" and not text.startswith(("Camera", "Microphone")):
+        return "internet"
+    if ident == "zone" and text.startswith(("Opened", "Closed")):
+        return "apps"
+    if "password" in text.lower():
+        return "passwords"
+    if text.startswith(("Settings", "Keys", "Startup", "Backup", "Save slot", "Storage", "Clock", "Golem updated")):
+        return "settings"
+    if ident == "golem-usb" or text.startswith(("Camera", "Microphone", "Wi-Fi", "Bluetooth", "Connected to")):
+        return "devices"
+    return "system"
+
+
+def lines(only=None):
     args = ["journalctl", "--no-pager", "-o", "json", "--since", "-30 days"]
     for s in SOURCES:
         args += ["-t", s]
@@ -71,13 +91,14 @@ def lines():
         if not isinstance(msg, str):
             continue
         text = sentence(e.get("SYSLOG_IDENTIFIER", ""), msg)
-        if text:
+        if text and (only is None or kind(e.get("SYSLOG_IDENTIFIER", ""), text) == only):
             t = time.localtime(int(e["__REALTIME_TIMESTAMP"]) / 1e6)
             yield time.strftime("%a %d %b %H:%M:%S", t) + "  " + text
 
 
 def main():
-    text = "\n".join(lines()) or "Nothing yet."
+    only = sys.argv[sys.argv.index("--kind") + 1] if "--kind" in sys.argv else None
+    text = "\n".join(lines(only)) or "Nothing yet."
     if "--text" in sys.argv or not sys.stdout.isatty():
         print(text)
     else:
