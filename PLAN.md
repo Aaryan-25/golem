@@ -1,6 +1,8 @@
 # Plan
 
-**NOW: Step 0** (needs no code)
+**NOW: Step 2** (waiting for the first real update to finish on the laptop)
+
+Done: Step 1 (21 Nov 2026). Step 0 was skipped; its hardware checks moved into Step 3's test.
 
 Each step has a goal, what gets made, and a **done when** test that I do myself on the Dell.
 The next step only starts when the current one's test passes. If a test fails, the step stays
@@ -8,7 +10,7 @@ open and gets fixed. Nothing new gets added on top of a failing step.
 
 ---
 
-## Step 0: Check the laptop with plain NixOS
+## Step 0: Check the laptop with plain NixOS (skipped)
 **Goal:** find out what works on this hardware before writing any code.
 **Made:** nothing. Use the official NixOS live USB.
 
@@ -31,7 +33,7 @@ The SSD and Windows are not touched.
 
 ---
 
-## Step 1: Golem's smallest self, on the pendrive
+## Step 1: Golem's smallest self, on the pendrive ✅
 **Goal:** my own system boots from the pendrive. It's plain, but it's mine.
 **Made:** the recipe (NixOS flake), the GitHub check, and a pendrive image built by GitHub. You flash it and it's already Golem, with no installer step.
 After boot: a login, a tiling window manager, a terminal, and Wi-Fi I can turn on.
@@ -52,6 +54,7 @@ and picking the older version from the boot menu still works.
 **Made:** Wi-Fi off at every start, no internet time sync, silent boot, a key to turn Wi-Fi on and off.
 
 **Done when:** after a reboot Wi-Fi is off, nothing connects until I turn it on, and the boot shows no text.
+Also check the hardware left over from Step 0: sound, volume and brightness keys, lid sleep, battery, a USB stick.
 
 ## Step 4: Zones
 **Goal:** default = deny, so every app runs in a zone.
