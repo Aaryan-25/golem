@@ -45,8 +45,12 @@ pkgs.testers.runNixOSTest {
         machine.send_key("meta_l-h")
         machine.wait_until_succeeds("pgrep -u lilgolemwitch -f 'rofi.*KEYS'", timeout=60)
         machine.send_key("esc")
+        machine.wait_until_fails("pgrep -u lilgolemwitch rofi", timeout=30)
         machine.send_key("alt-spc")
-        machine.wait_until_succeeds("pgrep -u lilgolemwitch -f 'rofi.*drun'", timeout=60)
+        if machine.execute("timeout 30 sh -c 'until pgrep -u lilgolemwitch -f rofi.*drun; do sleep 1; done'")[0] != 0:
+            print(machine.execute("ps -u lilgolemwitch -o pid,args; journalctl -b --no-pager | grep -iE 'rofi|golem-launch|i3' | tail -30")[1])
+            print(machine.execute("su - lilgolemwitch -c 'DISPLAY=:0 timeout 5 golem-launch' 2>&1 | tail -20")[1])
+            raise Exception("Alt+Space did not open the launcher")
         machine.send_key("esc")
 
     with subtest("Step 4: my folders exist"):
