@@ -24,7 +24,7 @@ let
       pgrep -u "$(id -u)" -x i3lock >/dev/null && exit 0      # already locked
       logger -t golem "LOCK"
       # Sleep after the rest of the idle time (Control Panel > POWER), if still locked by then.
-      get() { sed -n "s/^$1=//p" /var/lib/golem/settings.conf 2>/dev/null | tail -n1; }
+      get() { if [ -f /var/lib/golem/settings.conf ]; then sed -n "s/^$1=//p" /var/lib/golem/settings.conf | tail -n1; fi; }
       sl=$(get idle_sleep); lk=$(get idle_lock); sl=''${sl:-30}; lk=''${lk:-5}
       wait_s=1500
       if [ "$sl" = never ]; then wait_s=0

@@ -171,7 +171,7 @@ let
     exec --no-startup-id golem-alert --watch
     include ~/zones/settings/i3-placements
     # Login = lock screen; idle: dim at 4 min, lock at 5; lid: lock before sleep (lock.nix)
-    exec --no-startup-id golem-lock --start
+    exec --no-startup-id sh -c 'golem-lock --start || i3-msg exit'      # never leave the start unlocked
     exec --no-startup-id xset s 240 60
     exec --no-startup-id xss-lock -n /etc/golem/dim --transfer-sleep-lock -- golem-lock --auto
     include /var/lib/golem/keys.i3
