@@ -78,14 +78,14 @@ YELLOW (internet, no files), GREEN (trusted). RAM and CPU limits per zone.
 
 **Done when:** I do ten things and all ten show up in the log in words I understand.
 
-## Step 8: Control Panel (text)
+## Step 8: Control Panel (simple)
 **Goal:** change zones and keys without touching files.
-**Made:** a simple keyboard panel in the GREEN zone. Apply asks my password once.
+**Made:** the basic full-screen panel from DECISIONS.md (pages on the left, the page on the right, no effects) in the GREEN zone. Apply asks my password once. No text panel is made.
 
 **Done when:** I change an app's zone and a key from the panel, and both work after Apply.
 
 ## Step 9: Control Panel (game style)
-**Goal:** the panel becomes the game menu.
+**Goal:** the same panel becomes the game menu (no second panel).
 **Made:** decided at the time, in small pieces, from IDEAS.md.
 
 ---

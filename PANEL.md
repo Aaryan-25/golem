@@ -1,5 +1,7 @@
 # Control Panel: everything it could hold
 
+My answers for groups A to C (21 Nov 2026) are in DECISIONS.md.
+
 Each item is marked by how much work it takes:
 - **S:** small. Standard tools already do it, so it's mostly a matter of putting it in the panel. One short session.
 - **M:** medium. Some Golem-specific work. One full session.
@@ -15,6 +17,8 @@ The groups run from "needs your answers before building" down to "can be built w
 | Truth log viewer | what counts as an event, the filters | L |
 | Running apps and services | which ones count as "core" and get a warning | M |
 | Drivers panel | which drivers get an on/off switch | M |
+| Driver finder | decided: finds what's missing, downloads only after I say yes | M |
+| Keyboard light (Asus) | decided: follows the palette, red alert pulse, keybinds | S |
 | Look (colours, fonts, wallpaper, animations, sounds) and the panel's own style | the whole look | L |
 | Keys editor | your key list | M |
 | Screen-capture permission | which apps may see the screen | L |
@@ -26,7 +30,7 @@ The groups run from "needs your answers before building" down to "can be built w
 |---|---|---|
 | Red alert triggers | what raises it, how many presses to dismiss | M |
 | Tracker and ad blocking | which block list to use | S |
-| Save slots (backup of settings) | what gets saved | M |
+| Save slots (older system versions) and backups (my settings) | decided: both | M |
 | History (recent files, clipboard, search) | what to keep, if anything | M |
 | Guest user | yes or no | M |
 | Folder structure | your folders | S |
@@ -46,7 +50,7 @@ The groups run from "needs your answers before building" down to "can be built w
 | Trusted certificates viewer | M |
 
 ## D. Works with sensible defaults, small work
-Wi-Fi · Bluetooth · Sound (volume, devices, mic on/off) · Display (brightness, resolution,
+Wi-Fi · Bluetooth · Battery charge limit (80%) · Sound (volume, devices, mic on/off) · Display (brightness, resolution,
 night light, second screen) · Battery, power modes and sleep · Keyboard repeat and touchpad ·
 Time zone and setting the clock by hand · Hidden PC name and MAC address · Sharing off ·
 Telemetry status · Printers · Fonts · Text size, cursor and contrast · USB drives ·
