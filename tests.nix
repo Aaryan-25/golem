@@ -178,7 +178,10 @@ pkgs.testers.runNixOSTest {
         for k in keys:
             if k[2].endswith("golem-truth"):
                 k[0] = "Super+y"
-        assert ask_guard({"do": "apply", "password": "golem", "apps": apps, "keys": keys}) == "OK"
+        answer = ask_guard({"do": "apply", "password": "golem", "apps": apps, "keys": keys})
+        if answer != "OK":
+            print(machine.execute("journalctl -b --no-pager | grep -iE 'golem-helper|golem-panel|pam' | tail -20")[1])
+        assert answer == "OK", answer
         machine.succeed("grep -q zone=offline /var/lib/golem/apps/bash.conf")
         machine.succeed("grep -q 'bindsym Mod4+y .*golem-truth' /var/lib/golem/keys.i3")
         truth = machine.succeed("golem-truth --text")
