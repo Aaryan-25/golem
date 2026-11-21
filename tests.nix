@@ -194,7 +194,7 @@ pkgs.testers.runNixOSTest {
         machine.sleep(2)
         machine.send_key("meta_l-z")
         machine.wait_until_succeeds("pgrep -u lilgolemwitch -f panel.py", timeout=60)
-        machine.wait_until_succeeds("journalctl -b | grep -q 'Opened golem-panel in GREEN'", timeout=30)
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Opened golem-panel in GREEN'", timeout=30)
         machine.sleep(4)
         for key in ["down", "ret", "ret", "down", "ret"]:     # APPS > bash > zone > next zone
             machine.send_key(key)
