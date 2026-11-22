@@ -108,3 +108,11 @@ Do these, then press **Super+T** and check each shows up in words you understand
 - [ ] LOOK > ALERTS: "Show a test alert": red screen, gone after pressing Space 3 times
 - [ ] **F** finds things (try "battery")
 - [ ] In a terminal, `touch /var/lib/golem/apps/test.conf` is refused (only the panel can change settings)
+
+## The sand test (for Golem's look, not a step yet)
+Open a terminal (Alt+Enter) and type `golem-sand`. A moon made of sand fills the screen and drifts.
+Space: the sand flies into the next picture. B: the paper turns over. D: drift on/off. T: FLY or FLOW travel.
+`+` / `-`: more or fewer grains. Esc: quit. Your own picture: `golem-sand ~/media/mypicture.png`.
+- [ ] It opened and drew sand
+- [ ] The number it printed when it closed (frames a second, and how many grains): ______
+- [ ] Does the drift feel like the shadow realm? What's missing? ______

@@ -302,5 +302,10 @@ pkgs.testers.runNixOSTest {
                      "✓ system settings were applied at start", "✓ the window manager is running", "✓ my key list is valid"]:
             assert line in out, "missing: " + line
         machine.succeed("test -s /home/lilgolemwitch/golem-selftest.txt")
+
+    with subtest("golem-sand draws the sand and writes down how smooth it was"):
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 timeout 120 golem-sand --windowed --seconds 6' >&2")
+        machine.succeed("grep -q 'Sand test:' /home/lilgolemwitch/golem-sand.txt")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Sand test'", timeout=30)
   '';
 }

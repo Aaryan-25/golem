@@ -111,4 +111,9 @@ Wayland step).
 
 ---
 
+## Test tools (22 Nov 2026, asked for by me)
+- `golem-selftest`: every check a machine can do on the laptop, as ✓ or ✗.
+- `golem-sand`: the sand test (drift, yin-yang, picture to picture). It tells whether this laptop can carry the
+  sand look from IDEAS.md, and how many grains it can draw smoothly. The look itself is not built yet.
+
 After Step 9 the next steps come from IDEAS.md, one at a time, picked by me.
