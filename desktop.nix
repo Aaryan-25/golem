@@ -108,6 +108,7 @@ let
   keys = [
     [ "Alt+space"         "Open an app (asks its zone the first time)" "exec golem-launch" ]
     [ "Alt+Return"        "Terminal"                                   "exec ${term}" ]
+    [ "Super+e"           "Text editor"                                "exec golem-launch golem-edit" ]
     [ "Alt+Tab"           "Switch window (list of names)"              "exec golem-win switch" ]
     [ "Alt+q"             "Close window (asks first)"                  "exec golem-win close" ]
     [ "Alt+f"             "Fullscreen on/off"                          "fullscreen toggle" ]

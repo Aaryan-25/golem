@@ -109,6 +109,15 @@ melt and gather, Shadow/Negative turning inside out, find (F), and every page fr
 Wayland. Not yet: per-app site lists, distrusting certificates, clipboard and screen rules (these need the
 Wayland step).
 
+## Add-on: Text editor (built early, on the `text-editor` branch, at my request, 22 Nov 2026)
+**Goal:** my editor: Notepad-style typing in Cool Retro Term's glass, files panel, running code, live preview,
+the AI (Gemini now, my own later) and the gada animations.
+**Made:** `editor.nix` and the `editor/` folder; Super+E. Its starting zone is GREEN with internet (for the AI),
+sound and USB; after that the Control Panel decides. It joins main when I say so, after the laptop test of Steps 2 to 8.
+
+**Done when:** on the laptop, Super+E opens it; I type, save (SAVED shows), find and replace, open the files panel
+(Ctrl+B), run a Python file (F5), preview an HTML file (F6), and ask Gemini something (Ctrl+K) with my key.
+
 ---
 
 ## Test tools (22 Nov 2026, asked for by me)

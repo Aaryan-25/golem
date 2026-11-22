@@ -1,0 +1,103 @@
+
+   G O L E M   ·   E D I T O R   G U I D E                       Esc or F1 = back
+
+
+   TYPING
+     It works like Notepad. Just type. There are no modes to learn.
+     Shift + arrows        select text              Ctrl+A   select everything
+     Ctrl+C / X / V        copy / cut / paste (shared with every other app)
+     Ctrl+Z / Ctrl+Y       undo / redo, a word or line at a time
+     Esc                   stop showing search matches (you keep typing)
+
+
+   FILES
+     Ctrl+S                save (a new file asks for its name at the bottom)
+     Ctrl+O                open: type a path, Tab completes names
+     Ctrl+P                find a file by part of its name (Esc closes the list)
+     Ctrl+E                the files you have open
+     Ctrl+N                new file
+     Ctrl+B                the files panel on the left. Arrows move, Enter opens,
+                           + new file (end with / for a folder), F2 rename,
+                           Delete removes (asks first), Backspace = folder up,
+                           Esc or Ctrl+B = back to your text
+     Ctrl+Q                close the editor (asks only if something is not saved)
+
+     Other kinds open in their own app: pictures (imv), music and video (mpv), PDF
+     (zathura), links (Firefox). Word, Excel and PowerPoint files are copied to
+     ~/Downloads/for-google and Google Drive opens in Firefox to upload them.
+
+
+   CODE
+     Colours show what each part of the code is. Ctrl+S also tidies it (spacing,
+     indents) before saving; Alt+Shift+F tidies without saving.
+     F5                    run this file; what it prints appears in the bottom panel
+     Ctrl+J                the bottom panel: your own terminal (Ctrl+J again = back)
+     Alt+S                 (in that panel) switch shell: bash, python, node, lua...
+     F6                    live preview on the right for HTML, Markdown and SVG: it
+                           follows your typing (a Firefox window with no bars)
+     F7                    a picture (PNG) of this code, or of the selected lines,
+                           saved in ~/Pictures/code
+
+     Languages it can run: editor/languages.nix in your Golem repo (Python, Bash,
+     Lua and JavaScript to start). Add or remove a name there, then golem-update.
+
+
+   AI  (Ctrl+K)
+     A list at the bottom: ask about the code, explain it simply, find and fix
+     mistakes, change it to another language, turn a picture into code, write new
+     code from a description. Code it writes opens as a new file; answers open on
+     the right. It works on the selection if there is one, else the whole file.
+     First: get a key at aistudio.google.com, then Ctrl+K > Set my Gemini key.
+     Your own offline AI later: Ctrl+K > Choose the AI > own, and give its address.
+     Wi-Fi has to be on for Gemini.
+
+
+   PANELS
+     Alt+arrows            move between your text and the panels (files, terminal,
+                           AI answer)
+
+
+   THE GADA
+     It flies in on the start screen and floats over the sigil; turns in the corner
+     while something works (the AI, code running, the preview opening); strikes when
+     you save; taps on each find; slams once per replace (up to three); rises in a
+     ring of light when code runs fine; trembles when something fails; is thrown to
+     the AI's answer and returns; spins away when you close.
+     Alt+G turns all of it off (or back on). The choice is remembered.
+
+
+   VIEW
+     Ctrl+L                line numbers on / off
+     Alt+Z                 word wrap on / off
+     Ctrl+Plus / Ctrl+Minus    bigger / smaller letters (remembered)
+     Right-click (or Ctrl+Shift+M for a menu bar): Cool Retro Term's own settings
+     and screen styles (Amber, Green, IBM DOS, Apple ][...). Your choices stay.
+     "Golem" in its Profiles list brings Golem's look back.
+
+
+   EXTENSIONS
+     Extensions add abilities (a file tree, spell checking, Markdown preview...).
+     They are Neovim plugins. They are built into Golem, so nothing downloads
+     while you work and nothing reaches the internet.
+
+     To add one:
+       1. Find its name: on search.nixos.org (Packages) search  vimPlugins.
+          followed by a word, e.g.  vimPlugins.nvim-tree-lua
+       2. On GitHub, open editor/extensions.nix in your Golem repo and add the part
+          after "vimPlugins." on its own line, in quotes:      "nvim-tree-lua"
+       3. Some extensions need a line to switch them on. Their page says so (it
+          looks like  require("nvim-tree").setup()). Put that line in
+          editor/extensions.lua.
+       4. Run  golem-update  in a terminal (Alt+Enter), then reopen the editor.
+     If something breaks, delete the line again and update; or ask Claude.
+
+     To remove one: delete its line in extensions.nix (and extensions.lua), update.
+
+
+   WHERE THINGS LIVE
+     The editor's recipe       editor/ and editor.nix in the Golem repo
+     Its zone and permissions  Control Panel (Super+Z), app golem-edit
+     Languages                 editor/languages.nix in the Golem repo
+     AI key and choice         ~/.local/share/golem-edit/ai
+     Open it                   Super+E, or Alt+Space and type  edit
+
