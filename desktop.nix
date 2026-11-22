@@ -62,10 +62,26 @@ let
       PLACES="$HOME/zones/settings/placements.txt"      # app -> workspace
       INCL="$HOME/zones/settings/i3-placements"
       cls() { xprop -id "$(xdotool getactivewindow)" WM_CLASS 2>/dev/null | sed -n 's/.*", "\(.*\)"/\1/p'; }
+      # Windows as sand (realm.py; the switch is in the Control Panel): ask the realm to cover the window first.
+      sand() {
+        if eval "$(xdotool getwindowgeometry --shell "$2" 2>/dev/null)"; then
+          golem-realm win "$1" "$X" "$Y" "$WIDTH" "$HEIGHT" || true
+        fi
+      }
       case "''${1:-}" in
         close)
           n=$(cls); n=''${n:-this window}
-          if [ "$(golem-ask "CLOSE $n?" no yes)" = yes ]; then i3-msg -q kill; logger -t golem "WINDOW closed: $n"; fi ;;
+          if [ "$(golem-ask "CLOSE $n?" no yes)" = yes ]; then
+            id=$(xdotool getactivewindow); sand close "$id"
+            i3-msg -q "[id=$id] kill"; logger -t golem "WINDOW closed: $n"
+          fi ;;
+        full)   # maximise / back: the window flies to its new size as sand
+          id=$(xdotool getactivewindow); sand full "$id"
+          i3-msg -q "[id=$id] fullscreen toggle"; sleep 0.1; sand moved "$id" ;;
+        min)    # minimise: it blows down to the bottom of the screen and waits there (Super+Shift+M brings it back)
+          id=$(xdotool getactivewindow); n=$(cls); sand min "$id"
+          i3-msg -q "[id=$id] move scratchpad"; logger -t golem "WINDOW minimised: $n" ;;
+        unmin) i3-msg -q "scratchpad show" ;;
         send)   # send the window to a workspace; its app opens there from now on
           n=$(cls); i3-msg -q "move container to workspace number $2"
           if [ -n "$n" ]; then
@@ -111,7 +127,9 @@ let
     [ "Super+o"           "Find a file and open it in the editor"      "exec golem-launch golem-edit ~" ]
     [ "Alt+Tab"           "Switch window (list of names)"              "exec golem-win switch" ]
     [ "Alt+q"             "Close window (asks first)"                  "exec golem-win close" ]
-    [ "Alt+f"             "Fullscreen on/off"                          "fullscreen toggle" ]
+    [ "Alt+f"             "Fullscreen on/off"                          "exec golem-win full" ]
+    [ "Super+m"           "Minimise window"                            "exec golem-win min" ]
+    [ "Super+Shift+m"     "Bring back a minimised window"              "exec golem-win unmin" ]
     [ "Super+z"           "Control Panel"                              "exec golem-panel-start" ]
     [ "Super+h"           "Show this key list"                         "exec golem-win keys" ]
     [ "Super+Left"        "Focus left"                                 "focus left" ]
@@ -177,8 +195,7 @@ let
     # Golem's own panel is the one window that takes focus when it opens (DECISIONS: panels do)
     for_window [class="(?i)^golem-panel$"] fullscreen enable, focus
     for_window [class="(?i)^golem-alert$"] fullscreen enable, focus
-    # The shadow realm (realm.nix): the Start panel at login, Super+Escape, and the idle screen
-    for_window [class="^golem-realm$"] fullscreen enable, focus
+    # The shadow realm (realm.nix): the Start panel at login, Super+Escape, the idle screen, windows as sand
     exec --no-startup-id golem-realm --daemon
   '';
 in {

@@ -102,6 +102,22 @@ pkgs.testers.runNixOSTest {
         machine.send_key("alt-ret")
         machine.wait_until_succeeds("pgrep -u lilgolemwitch -f bin/xterm", timeout=60)
 
+    with subtest("Step C: windows as sand: maximise and back, minimise and bring back"):
+        machine.sleep(2)
+        machine.send_key("alt-f")
+        machine.sleep(3)
+        machine.send_key("alt-f")
+        machine.sleep(3)
+        machine.send_key("meta_l-m")
+        machine.wait_until_succeeds("journalctl -b -t golem -o cat | grep -q 'WINDOW minimised'", timeout=30)
+        machine.sleep(2)
+        machine.send_key("meta_l-shift-m")
+        machine.sleep(2)
+        machine.wait_until_fails(realm_seen, timeout=30)
+        machine.succeed("pgrep -u lilgolemwitch -f realm.py")
+        machine.succeed("pgrep -u lilgolemwitch -f bin/xterm")
+        machine.succeed("grep -q window_sand /etc/golem/settings-schema.json")
+
     def close_menu():
         for _ in range(10):
             machine.sleep(2)

@@ -23,6 +23,7 @@
 
   "face":           {"page": "FACE", "label": "Face", "values": ["shadow", "negative"], "default": "shadow", "scope": "user", "help": "SHADOW: pale light on black. NEGATIVE: ink on white. (Super+I switches it anywhere.)"},
   "effects":        {"page": "FACE", "label": "Effects", "values": ["on", "off"], "default": "on", "scope": "user", "help": "Drifting motes and the gather and melt between pages. OFF is calmer and lighter."},
+  "window_sand":    {"page": "FACE", "label": "Windows as sand", "values": ["on", "off"], "default": "on", "scope": "user", "help": "Opening, closing, maximising and minimising a window turn it to sand that flies. OFF: windows just appear and go."},
   "motes":          {"page": "FACE", "label": "Motes", "values": ["sparse", "normal", "dense"], "default": "normal", "scope": "user", "help": "How many motes drift behind the panel."},
 
   "alert_key":      {"page": "ALERTS", "label": "Dismiss the red alert with", "values": ["space", "Return", "Escape", "x"], "default": "space", "scope": "user", "help": "The key you press to dismiss a red alert."},

@@ -5,6 +5,8 @@ One program stays running for the whole session, so it answers at once:
   golem-realm show          the Start panel (Super+Escape)
   golem-realm idle          the idle screen: the tabs blow away; any touch brings them back
   golem-realm hide          back to the desktop
+  golem-realm win close|min|full X Y W H    a window turns to sand (golem-win asks, then acts once "ready")
+  golem-realm win moved X Y W H             where that window is now (after full)
 
 Start panel keys: Up/Down (or the mouse) choose, Enter (or a click) does it, Esc goes back to the desktop,
 B turns the paper over (the yin-yang: the same as Super+I). The cursor is a small light in the sand.
@@ -24,7 +26,7 @@ SLUMBER = [("SLEEP", "systemctl suspend"), ("RESTART", "systemctl reboot"), ("SH
 
 VERT = """
 #version 330
-in vec3 a_from; in vec3 a_to; in vec2 a_more;           // a_more: seed, layer (0 = tabs, 1 = scenery)
+in vec3 a_from; in vec3 a_to; in vec2 a_more;           // a_more: seed, layer (0 = tabs, 1 = scenery, 2 = a window)
 uniform float t_now, fly, slow, ink, fade, erase, size, aspect;
 uniform vec2 lamp; uniform float lamp_on, pulse;
 uniform vec2 line_at, line_out;
@@ -46,7 +48,7 @@ void main() {
     vec2 q = vec2(p.x * aspect, p.y);
     float along = dot(q - line_at, vec2(-line_out.y, line_out.x));
     float waver = 0.08 * sin(along * 5.0 + t_now * 0.15) + 0.04 * sin(along * 13.0 - t_now * 0.1) + (rnd(5.0) - 0.5) * 0.25;
-    float away = a_more.y > 0.5 ? smoothstep(0.0, 0.6, dot(q - line_at, line_out) + waver) : 0.12 * step(0.9, rnd(10.0));
+    float away = a_more.y > 1.5 ? 0.0 : a_more.y > 0.5 ? smoothstep(0.0, 0.6, dot(q - line_at, line_out) + waver) : 0.12 * step(0.9, rnd(10.0));
     float alive = 1.0;
     if (away > 0.0) {
         float life = 4.0 + 5.0 * rnd(6.0);
@@ -88,6 +90,17 @@ void main() {
     color = ink > 0.5 ? vec4(vec3(a * 0.6 / (1.0 + 3.0 * v_lit)), 1.0)
                       : vec4(vec3(0.95, 0.94, 0.91) * a * (0.6 + 0.9 * v_lit), 1.0);
 }
+"""
+
+QUAD_V = """
+#version 330
+in vec2 p; out vec2 uv;
+void main() { uv = vec2(p.x * 0.5 + 0.5, 0.5 - p.y * 0.5); gl_Position = vec4(p, 0.0, 1.0); }
+"""
+QUAD_F = """
+#version 330
+in vec2 uv; uniform sampler2D tex; out vec4 c;
+void main() { c = vec4(texture(tex, uv).rgb, 1.0); }
 """
 
 
@@ -189,6 +202,22 @@ class Realm:
             raise SystemExit("golem-realm: the graphics chip could not open a window")
         glfw.make_context_current(self.win)
         glfw.swap_interval(1)
+        # The realm floats above everything and isn't arranged by the window manager; when the Start panel
+        # is up it takes the keyboard itself (like a game's menu), and gives it back when it goes.
+        from Xlib import display as xdisplay, X
+        self.X, self.xd = X, xdisplay.Display()
+        self.xw = self.xd.create_resource_object("window", glfw.get_x11_window(self.win))
+        self.xw.change_attributes(override_redirect=True)
+        self.xd.sync()
+        glfw.set_window_pos(self.win, 0, 0)
+        # The keyboard grab must come from the drawing's own connection to the screen, or the keys go elsewhere.
+        import ctypes
+        self.x11 = ctypes.CDLL("libX11.so.6")
+        self.x11.XGrabKeyboard.argtypes = [ctypes.c_void_p, ctypes.c_ulong, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_ulong]
+        self.x11.XUngrabKeyboard.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+        self.x11.XFlush.argtypes = [ctypes.c_void_p]
+        self.gdpy = ctypes.c_void_p(glfw.get_x11_display())
+        self.gwin = glfw.get_x11_window(self.win)
         glfw.set_input_mode(self.win, glfw.CURSOR, glfw.CURSOR_HIDDEN)
         self.ctx = moderngl.create_context()
         self.ctx.enable(moderngl.PROGRAM_POINT_SIZE | moderngl.BLEND)
@@ -212,6 +241,15 @@ class Realm:
         self.vbo = self.ctx.buffer(reserve=(self.n_tabs + self.n_scene) * 8 * 4)
         self.vao = self.ctx.vertex_array(self.prog, [(self.vbo, "3f 3f 2f", "a_from", "a_to", "a_more")])
         self.seeds = self.rng.random(self.n_tabs + self.n_scene).astype("f4")
+        self.n_win = 40000
+        self.win_vbo = self.ctx.buffer(reserve=self.n_win * 8 * 4)
+        self.win_vao = self.ctx.vertex_array(self.prog, [(self.win_vbo, "3f 3f 2f", "a_from", "a_to", "a_more")])
+        self.quad = self.ctx.program(vertex_shader=QUAD_V, fragment_shader=QUAD_F)
+        qb = self.ctx.buffer(np.array([-1, -1, 1, -1, -1, 1, 1, 1], "f4").tobytes())
+        self.quad_vao = self.ctx.vertex_array(self.quad, [(qb, "2f", "p")])
+        self.bg = None
+        self.mode = "panel"                              # or "window": a window turning to sand over the screen
+        self.reply, self.reply_due, self.pending_open, self.win_pic = None, False, None, None
         glfw.set_key_callback(self.win, self.on_key)
         glfw.set_cursor_pos_callback(self.win, self.on_mouse)
         glfw.set_mouse_button_callback(self.win, self.on_click)
@@ -262,10 +300,8 @@ class Realm:
         self.items, self.sel, self.after = TABS, 0, None
         frm = np.vstack([self.scattered(self.n_tabs, 1.0), self.scattered(self.n_scene, 1.0)]) if waking or not self.visible else self.where_now()
         self.load(frm, np.vstack([self.tabs_now(), self.scene]), 2.6 if waking else 0.9)
-        if not self.visible:
-            self.glfw.show_window(self.win)
-            self.visible = True
-            quiet(["i3-msg", "-q", '[class="^golem-realm$"] fullscreen enable, focus'])
+        self.mode = "panel"
+        self.appear(grab=True)
         self.erase_goal, self.idle = 0.0, False
 
     def leave(self, then=None):
@@ -274,9 +310,27 @@ class Realm:
         self.load(frm, np.vstack([self.scattered(self.n_tabs, 2.2), self.scattered(self.n_scene, 2.2)]), 0.6)
         self.after = ("hide", then)
 
+    def appear(self, grab):
+        if not self.visible:
+            self.glfw.show_window(self.win)
+            self.visible = True
+        self.xw.configure(stack_mode=self.X.Above)
+        if grab:
+            self.xw.set_input_focus(self.X.RevertToParent, self.X.CurrentTime)
+            self.xd.flush()
+            for _ in range(40):                          # someone else (a menu) may hold the keyboard a moment
+                if self.x11.XGrabKeyboard(self.gdpy, self.gwin, 0, 1, 1, 0) == 0:
+                    break
+                time.sleep(0.05)
+            self.x11.XFlush(self.gdpy)
+        self.xd.flush()
+
     def hide_now(self):
+        self.x11.XUngrabKeyboard(self.gdpy, 0)
+        self.x11.XFlush(self.gdpy)
         self.glfw.hide_window(self.win)
         self.visible = False
+        self.mode = "panel"
 
     def go_idle(self):
         if not self.visible:
@@ -288,6 +342,105 @@ class Realm:
     def wake(self):
         if self.idle:
             self.erase_goal, self.idle = 0.0, False
+
+    # --- windows as sand ---
+    def window_sand_on(self):
+        try:
+            return not any(line.strip() == "window_sand=off" for line in open(SETTINGS))
+        except OSError:
+            return True
+
+    def screen(self):
+        from PIL import ImageGrab
+        return np.asarray(ImageGrab.grab().convert("RGB").resize((self.W, self.H)))
+
+    def window_homes(self, shot, rect):
+        """The window's own picture as grains: where it's bright, more sand."""
+        x, y, w, h = rect
+        lum = shot[::2, ::2].mean(axis=2) / 255.0
+        img = np.zeros_like(lum, dtype="f4")
+        img[y // 2:(y + h) // 2, x // 2:(x + w) // 2] = 0.15 + 0.85 * lum[y // 2:(y + h) // 2, x // 2:(x + w) // 2]
+        return homes(img, self.n_win, self.rng)
+
+    def set_bg(self, shot, hole=None):
+        bg = shot.copy()
+        if hole:
+            x, y, w, h = hole
+            bg[max(0, y):y + h, max(0, x):x + w] = 0
+        if self.bg is None or self.bg.size != (self.W, self.H):
+            self.bg = self.ctx.texture((self.W, self.H), 3, bg.tobytes())
+        else:
+            self.bg.write(bg.tobytes())
+
+    def win_load(self, frm, to, length):
+        data = np.hstack([frm, to, np.stack([self.rng.random(self.n_win, "f4"), np.full(self.n_win, 2, "f4")], 1)])
+        self.win_vbo.write(data.astype("f4").tobytes())
+        self.fly_t0, self.fly_len, self.slow = time.monotonic(), length, 0.6
+
+    def point(self, rect, spread, n):
+        x, y, w, h = rect
+        p = np.zeros((n, 3), "f4")
+        p[:, 0] = (x + w / 2) / self.W + (self.rng.random(n) - 0.5) * spread * w / self.W
+        p[:, 1] = (y + h / 2) / self.H + (self.rng.random(n) - 0.5) * spread * h / self.H
+        return p
+
+    def window_event(self, kind, rect, conn=None):
+        """close / min: the window's sand flies off (it closes underneath). full: it flies to its new size.
+        open: the new window gathers out of a little cloud."""
+        if self.visible and self.mode == "panel":
+            if conn:
+                conn.close()
+            return
+        x, y, w, h = rect
+        rect = (max(0, x), max(0, y), min(w, self.W), min(h, self.H))
+        shot = self.screen()
+        self.win_pic = (self.window_homes(shot, rect), rect)
+        here = self.win_pic[0]
+        if kind == "close":
+            self.set_bg(shot, rect)
+            away = here.copy()                             # blown off by the wind of the realm, fading
+            away[:, 0] += (0.25 + 0.4 * self.rng.random(self.n_win)) * 0.94
+            away[:, 1] += (self.rng.random(self.n_win) - 0.6) * 0.3
+            away[:, 2] = 0
+            self.win_load(here, away, 0.6)
+        elif kind == "min":
+            self.set_bg(shot, rect)
+            self.win_load(here, self.point((self.W // 2 - 20, self.H - 6, 40, 4), 1.0, self.n_win), 0.5)
+        elif kind == "full":
+            self.set_bg(shot * 0, None)
+            self.win_load(here, here, 3.0)                 # held still until it's told where the window went
+        elif kind == "open":
+            self.set_bg(shot, rect)
+            self.win_load(self.point(rect, 0.15, self.n_win), here, 0.5)
+        self.mode = "window"
+        self.after = ("hide", None)
+        self.appear(grab=False)
+        self.reply, self.reply_due = conn, conn is not None
+
+    def window_moved(self, rect, conn):
+        if conn:
+            conn.close()
+        if not self.win_pic or self.mode != "window":
+            return
+        here, (x0, y0, w0, h0) = self.win_pic
+        x, y, w, h = rect
+        to = here.copy()
+        to[:, 0] = (x + (here[:, 0] * self.W - x0) * w / max(1, w0)) / self.W
+        to[:, 1] = (y + (here[:, 1] * self.H - y0) * h / max(1, h0)) / self.H
+        self.win_load(here, to, 0.45)
+        self.after = ("hide", None)
+
+    def open_soon(self, con_id):
+        self.pending_open = (time.monotonic() + 0.15, con_id)
+
+    def open_now(self, con_id):
+        try:
+            import i3ipc
+            con = i3ipc.Connection().get_tree().find_by_id(con_id)
+            r = con.rect
+            self.window_event("open", (r.x, r.y, r.width, r.height))
+        except Exception as e:
+            print("realm: no open animation:", e)
 
     # --- doing ---
     def choose(self):
@@ -353,8 +506,17 @@ class Realm:
         srv.listen(4)
         while True:
             c, _ = srv.accept()
-            with c:
-                self.queue.put(c.recv(256).decode(errors="replace").strip())
+            c.settimeout(2)
+            try:
+                cmd = c.recv(256).decode(errors="replace").strip()
+            except OSError:
+                c.close()
+                continue
+            if cmd.startswith("win "):
+                self.queue.put((cmd, c))                   # answered once the sand is on the screen
+            else:
+                c.close()
+                self.queue.put((cmd, None))
             self.glfw.post_empty_event()
 
     def watch_windows(self):
@@ -367,9 +529,8 @@ class Realm:
             return
 
         def new(_, ev):
-            if (ev.container.window_class or "") != "golem-realm":
-                self.queue.put("app-opened")
-                self.glfw.post_empty_event()
+            self.queue.put(("app-opened %d" % ev.container.id, None))
+            self.glfw.post_empty_event()
         i3.on(i3ipc.Event.WINDOW_NEW, new)
         i3.main()
 
@@ -386,17 +547,39 @@ class Realm:
         log("The realm woke up")
         while not g.window_should_close(self.win):
             while not self.queue.empty():
-                cmd = self.queue.get()
+                cmd, conn = self.queue.get()
+                word = cmd.split()
+                if word[:1] == ["win"] and len(word) >= 6 and self.window_sand_on():
+                    try:
+                        rect = tuple(int(float(v)) for v in word[2:6])
+                    except ValueError:
+                        conn.close()
+                        continue
+                    if word[1] == "moved":
+                        self.window_moved(rect, conn)
+                    else:
+                        self.window_event(word[1], rect, conn)
+                    continue
+                if conn:
+                    conn.close()
+                if word[:1] == ["app-opened"]:
+                    if self.visible and self.mode == "panel" and not self.after:
+                        self.hide_now()
+                    elif not self.visible and self.window_sand_on():
+                        self.open_soon(int(word[1]))
+                    continue
                 if cmd == "show":
                     self.show()
                 elif cmd == "idle":
                     self.go_idle()
                 elif cmd == "hide" and self.visible:
                     self.leave()
-                elif cmd == "app-opened" and self.visible and not self.after:
-                    self.hide_now()
+
+            if self.pending_open and time.monotonic() >= self.pending_open[0]:
+                self.open_now(self.pending_open[1])
+                self.pending_open = None
             if not self.visible:
-                g.wait_events_timeout(0.5)
+                g.wait_events_timeout(0.05 if self.pending_open else 0.5)
                 continue
             now = time.monotonic()
             if now - last_face > 1:                       # the face changed (B, Super+I or the panel): turn the paper
@@ -422,22 +605,35 @@ class Realm:
             self.lamp = [a + (b - a) * 0.15 for a, b in zip(self.lamp, self.lamp_goal)]
             fw, fh = g.get_framebuffer_size(self.win)
             self.ctx.viewport = (0, 0, fw, fh)
-            if self.ink:
+            if self.mode == "window":
+                self.ctx.disable(self.mgl.BLEND)
+                self.bg.use(0)
+                self.quad_vao.render(self.mgl.TRIANGLE_STRIP)
+                self.ctx.enable(self.mgl.BLEND)
+                self.ctx.blend_func = (self.mgl.ZERO, self.mgl.ONE_MINUS_SRC_COLOR) if self.ink else (self.mgl.ONE, self.mgl.ONE)
+            elif self.ink:
                 self.ctx.clear(0.957, 0.957, 0.945)
                 self.ctx.blend_func = self.mgl.ZERO, self.mgl.ONE_MINUS_SRC_COLOR
             else:
                 self.ctx.clear(0.0, 0.0, 0.0)
                 self.ctx.blend_func = self.mgl.ONE, self.mgl.ONE
             u = {"t_now": now - self.t0, "fly": fly, "slow": self.slow, "ink": float(self.ink), "fade": fade,
-                 "erase": self.erase, "size": max(1.6, 2.4 * fh / 1080), "aspect": fw / max(1, fh),
-                 "lamp": tuple(self.lamp), "lamp_on": 0.0 if self.idle else 1.0,
+                 "erase": self.erase, "size": max(1.6, 2.4 * fh / 1080) * (1.5 if self.mode == "window" else 1.0), "aspect": fw / max(1, fh),
+                 "lamp": tuple(self.lamp), "lamp_on": 0.0 if self.idle or self.mode == "window" else 1.0,
                  "pulse": min(1.0, (now - self.pulse_t0) / 0.6),
                  "line_at": (0.62 * fw / max(1, fh), 0.5), "line_out": (0.94, -0.34)}
             for k, v in u.items():
                 if k in self.prog:
                     self.prog[k].value = v
-            self.vao.render(self.mgl.POINTS)
+            (self.win_vao if self.mode == "window" else self.vao).render(self.mgl.POINTS)
             g.swap_buffers(self.win)
+            if self.reply_due:                            # the sand is on the screen: the window may go now
+                try:
+                    self.reply.sendall(b"ready")
+                    self.reply.close()
+                except OSError:
+                    pass
+                self.reply, self.reply_due = None, False
             g.poll_events()
 
 
@@ -475,6 +671,16 @@ def main():
         except SystemExit as e:
             log(f"The realm could not start: {e}")
             raise
+        return
+    if arg == "win":
+        s = socket.socket(socket.AF_UNIX)
+        s.settimeout(1.5)
+        try:
+            s.connect(SOCK)
+            s.sendall(" ".join(sys.argv[1:]).encode())
+            s.recv(16)                                   # wait until the sand covers the window (or give up)
+        except OSError:
+            pass
         return
     if arg not in ("show", "idle", "hide"):
         print(__doc__)
