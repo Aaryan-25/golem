@@ -78,7 +78,7 @@ G = {
 }
 
 UNIT = 116           # one grid step, in font units (cap height 6 steps = 696)
-CUT = 80             # how wide a cut is
+CUT = 125             # how wide a cut is
 SIDE = 90            # space on each side of a letter
 ADV = 4 * UNIT + 2 * SIDE
 

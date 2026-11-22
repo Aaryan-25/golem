@@ -225,7 +225,7 @@ class Realm:
         self.prog = self.ctx.program(vertex_shader=VERT, fragment_shader=FRAG)
         self.rng = np.random.default_rng()
         self.pics = Pictures(self.W, self.H)
-        self.n_tabs, self.n_scene = 22000, 30000
+        self.n_tabs, self.n_scene = 36000, 30000
         self.scene = homes(self.pics.scenery(), self.n_scene, self.rng)
         self.items, self.sel = TABS, 0
         self.tab_homes = self.tabs_now()
