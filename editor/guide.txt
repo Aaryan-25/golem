@@ -57,13 +57,22 @@
                            AI answer)
 
 
-   THE GADA
-     It flies in on the start screen and floats over the sigil; turns in the corner
-     while something works (the AI, code running, the preview opening); strikes when
-     you save; taps on each find; slams once per replace (up to three); rises in a
-     ring of light when code runs fine; trembles when something fails; is thrown to
-     the AI's answer and returns; spins away when you close.
-     Alt+G turns all of it off (or back on). The choice is remembered.
+   THE GADA  (Alt+G: its settings)
+     It flies in on the start screen and floats beside the sigil; travels the
+     bottom line while something works; strikes when you save (harder the more you
+     changed); taps on each find while the matches light up; slams on replace and
+     each new word flashes; spins back on undo; shattered lines fall as motes;
+     rises in a ring of light when code runs fine; trembles and leaves a healing
+     crack when something fails; is thrown to the AI's answer, which is carved in;
+     rests on the bottom line after 3 quiet minutes (a key wakes it); makes the
+     line you're on glow while you type fast; dims at night; fades away on close.
+
+     Alt+G  Animations: HIGH (everything), MEDIUM (no glow or flashes), LOW (only
+            working, save, failure, relics), OFF
+            Weapon: gada, vajra (thunderbolt) or trishul (trident)
+            Sound: soft thuds, whooshes and chimes, on or off
+            Codex: the relics you've found, like "First Light" for your first save,
+            "Spark" for your first program run, "Oracle" for the first AI answer
 
 
    VIEW

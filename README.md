@@ -109,8 +109,9 @@ App settings are in `/var/lib/golem/apps` (window placements stay in `~/zones/se
 Notepad-style typing in Cool Retro Term's glass, in Golem's colours. **F1 inside it shows every key.**
 Autosave with an honest SAVED / NOT SAVED line, find and replace, files panel (Ctrl+B), Ctrl+P to find a file,
 F5 runs the file, Ctrl+J a terminal (Alt+S switches shell), F6 live preview of HTML and Markdown, F7 a picture
-of the code, Ctrl+K the AI (Gemini with your key; your own AI later). A gada flies in, turns while things work,
-strikes when you save (Alt+G turns the animations off). Pictures, music, video, PDFs and links open in their own
+of the code, Ctrl+K the AI (Gemini with your key; your own AI later). A gada flies in, travels the bottom line
+while things work, strikes when you save, and reacts to finds, replaces, undo, deletes, runs, failures and the AI;
+relics are found along the way. Alt+G: animations HIGH / MEDIUM / LOW / OFF, weapon (gada, vajra, trishul), sound, codex. Pictures, music, video, PDFs and links open in their own
 apps; Word, Excel and PowerPoint go to Google Drive in Firefox.
 Languages it can run: `editor/languages.nix`. Extensions: `editor/extensions.nix`. Add a name on GitHub, then `golem-update`.
 It starts in GREEN with internet (for the AI), sound and USB allowed; the Control Panel can change that.

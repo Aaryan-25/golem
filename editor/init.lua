@@ -194,6 +194,7 @@ paint()
 -- Small helpers
 -------------------------------------------------------------------------------
 local function tilde(path) -- /home/x/notes.txt -> ~/notes.txt
+  if home ~= '' and (path == home or path == home .. '/') then return '~' end
   if home ~= '' and path:sub(1, #home + 1) == home .. '/' then return '~' .. path:sub(#home + 1) end
   return path
 end
@@ -331,8 +332,17 @@ local function save()
   end
   if _G.Golem and _G.Golem.tidy then _G.Golem.tidy(b) end -- arrange the code neatly
   local ok = write_buf(b, true)
-  if _G.Golem then -- the gada strikes, or trembles if the save failed
-    if ok and _G.Golem.strike then _G.Golem.strike() elseif not ok and _G.Golem.shake then _G.Golem.shake() end
+  if _G.Golem then -- the gada strikes (harder the more you changed), or trembles if the save failed
+    local G = _G.Golem
+    if ok and G.strike then
+      local tick = vim.b[b].changedtick
+      local changed = tick - (vim.b[b].golem_struck or tick - 1)
+      vim.b[b].golem_struck = tick
+      G.strike(changed > 300 and 3 or changed > 40 and 2 or 1)
+      if G.saved_event then G.saved_event() end
+    elseif not ok and G.shake then
+      G.shake()
+    end
   end
   return ok
 end
@@ -435,6 +445,8 @@ function _G.GolemStatus()
   local label
   if vim.b[b].golem_start then
     label = 'GOLEM  /  EDITOR'
+  elseif vim.b[b].golem_codex then
+    label = 'GOLEM  /  CODEX'
   elseif vim.b[b].golem_guide then
     label = 'GOLEM  /  EDITOR GUIDE'
   else
@@ -445,6 +457,10 @@ function _G.GolemStatus()
   if is_text(b) and not vim.b[b].golem_start then
     where = string.format('LINE %d / %d   ', api.nvim_win_get_cursor(w)[1], api.nvim_buf_line_count(b))
   end
+  -- a narrow window: drop the line count, then show only the file's own name
+  local width = api.nvim_win_get_width(w)
+  if fn.strdisplaywidth(label .. where .. s) + 6 > width then where = '' end
+  if fn.strdisplaywidth(label .. s) + 6 > width and name ~= '' then label = fn.fnamemodify(name, ':t') end
   label = label:gsub('%%', '%%%%')
   return '  %#GolemDim#' .. label .. '%=' .. '%#GolemDim#' .. where
       .. (loud and '%#GolemBright#' or '%#GolemDim#') .. s .. '  '
@@ -520,7 +536,15 @@ do
       },
       mappings = { choose_marked = '', mark = '', mark_all = '' },
     })
-    vim.ui.select = pick.ui_select -- every menu (AI, shells) rises from the bottom like the finder
+    -- every menu (AI, shells, the gada) rises from the bottom like the finder, named by its prompt
+    vim.ui.select = function(items, opts, on_choice)
+      local name = ((opts or {}).prompt or ''):gsub(':?%s*$', '')
+      local prefix = name ~= '' and (name:upper() .. '  ') or '  '
+      local keep = pick.config.window.prompt_prefix
+      pick.config.window.prompt_prefix = prefix -- the list waits for your choice, then it goes back
+      pcall(pick.ui_select, items, opts, on_choice, { window = { prompt_prefix = prefix } })
+      pick.config.window.prompt_prefix = keep
+    end
   end
 end
 
@@ -560,6 +584,7 @@ local function find()
     if _G.Golem.shake then _G.Golem.shake() end
   else
     if _G.Golem.tap then _G.Golem.tap() end
+    if _G.Golem.sweep then _G.Golem.sweep(pat) end -- the matches on screen light up in turn
     local n = fn.searchcount({ pattern = pat, maxcount = 0, timeout = 1000 }).total or 0
     say('FOUND ' .. n .. '  ·  F3 NEXT  ·  SHIFT+F3 BACK  ·  ESC STOPS SHOWING THEM')
   end
@@ -583,7 +608,8 @@ local function replace()
   vim.cmd('keeppatterns silent %s/' .. pat .. '/' .. fn.escape(with, '\\/&~') .. '/ge')
   fn.winrestview(view)
   say('REPLACED ' .. n .. (n == 1 and ' TIME' or ' TIMES'))
-  if _G.Golem.slam then _G.Golem.slam(n) end
+  if _G.Golem.slam then _G.Golem.slam(n, with) end
+  if n >= 20 and _G.Golem.relic then _G.Golem.relic('hammer') end
 end
 
 local function goto_line()
@@ -854,10 +880,10 @@ map(all, '<F15>', cmd(function() find_next(true) end))
 map('i', '<Esc>', '<Cmd>nohlsearch<CR>') -- Esc never leaves typing
 
 -- undo / redo, in small steps (each word, line and sentence)
-map('i', '<C-z>', '<C-g>u<Cmd>undo<CR>')
-map('i', '<C-y>', '<Cmd>redo<CR>')
-map({ 'n', 'v', 's' }, '<C-z>', '<Esc>u')
-map({ 'n', 'v', 's' }, '<C-y>', '<Esc><C-r>')
+map('i', '<C-z>', '<C-g>u<Cmd>undo<CR><Cmd>lua if Golem.rewind then Golem.rewind(-1) end<CR>')
+map('i', '<C-y>', '<Cmd>redo<CR><Cmd>lua if Golem.rewind then Golem.rewind(1) end<CR>')
+map({ 'n', 'v', 's' }, '<C-z>', '<Esc>u<Cmd>lua if Golem.rewind then Golem.rewind(-1) end<CR>')
+map({ 'n', 'v', 's' }, '<C-y>', '<Esc><C-r><Cmd>lua if Golem.rewind then Golem.rewind(1) end<CR>')
 for _, k in ipairs({ '<Space>', '.', ',', '!', '?', ';', ':' }) do
   map('i', k, k .. '<C-g>u')
 end

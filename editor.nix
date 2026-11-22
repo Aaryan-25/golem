@@ -65,12 +65,16 @@ let
     exec ${pkgs.python3.withPackages (p: [ p.markdown ])}/bin/python3 ${./editor/bin}/golem-preview "$@"
   '';
 
+  # The gada's soft sounds, made from numbers at build time (no recordings).
+  sounds = pkgs.runCommand "golem-edit-sounds" { } "${pkgs.python3}/bin/python3 ${./editor/sounds.py} $out";
+
   # Neovim with everything the editor uses.
   inner = pkgs.writeShellScriptBin "golem-edit-nvim" ''
     export GOLEM_PALETTE="${sh.void} ${sh.shade} ${sh.mist} ${sh.text} ${sh.pale} ${hues.shadow}"
     export GOLEM_EDIT_EXTENSIONS=${./editor/extensions.lua}
+    export GOLEM_EDIT_SOUNDS=${sounds}
     export PATH=${lib.makeBinPath ([ pkgs.ripgrep pkgs.xclip pkgs.util-linux pkgs.file pkgs.silicon
-      pkgs.bash golemOpen golemRun golemPreview golemAi ] ++ tidiers)}:$PATH
+      pkgs.bash pkgs.alsa-utils golemOpen golemRun golemPreview golemAi ] ++ tidiers)}:$PATH
     exec ${nvim}/bin/nvim "$@"
   '';
 

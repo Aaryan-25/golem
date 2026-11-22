@@ -116,7 +116,8 @@ the AI (Gemini now, my own later) and the gada animations.
 sound and USB; after that the Control Panel decides. It joins main when I say so, after the laptop test of Steps 2 to 8.
 
 **Done when:** on the laptop, Super+E opens it; I type, save (SAVED shows), find and replace, open the files panel
-(Ctrl+B), run a Python file (F5), preview an HTML file (F6), and ask Gemini something (Ctrl+K) with my key.
+(Ctrl+B), run a Python file (F5), preview an HTML file (F6), and ask Gemini something (Ctrl+K) with my key;
+Alt+G changes the animation level and weapon, and nothing feels slow on LOW.
 
 ---
 

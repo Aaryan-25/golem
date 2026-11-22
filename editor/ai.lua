@@ -98,6 +98,7 @@ local function request(what, prompt, image, done)
         for _, ext in ipairs({ '.json', '.out', '.err', '.img' }) do os.remove(base .. ext) end
         if out and vim.trim(out) ~= '' then
           done(out)
+          if S.relic then S.relic('oracle') end
           if S.throw then vim.defer_fn(function() S.throw(2, math.floor(vim.o.columns * 0.78)) end, 100) end
         else
           say('THE AI DID NOT ANSWER: ' .. (err or vim.trim(table.concat(errs, ' '))):sub(1, 120))
@@ -115,7 +116,11 @@ local answer_win
 
 local function show_answer(text, title)
   local b = api.nvim_create_buf(false, true)
-  api.nvim_buf_set_lines(b, 0, -1, false, vim.split(text, '\n', { plain = true }))
+  if S.carve then
+    S.carve(b, text) -- carved in, a little at a time
+  else
+    api.nvim_buf_set_lines(b, 0, -1, false, vim.split(text, '\n', { plain = true }))
+  end
   vim.bo[b].filetype = 'markdown'
   vim.bo[b].bufhidden = 'wipe'
   vim.b[b].golem_ai = title
@@ -191,7 +196,10 @@ local actions = {
     local code, part = grab()
     request('change ' .. filename() .. ' to ' .. to, 'Rewrite ' .. part .. filename() .. ' (' .. lang_of_buffer()
       .. ') in ' .. to .. ', doing exactly the same thing. Reply with only one code block.\n```\n' .. code .. '\n```',
-      nil, function(a) new_code_buffer(code_only(a), to) end)
+      nil, function(a)
+        new_code_buffer(code_only(a), to)
+        if S.relic then S.relic('tongues') end
+      end)
   end },
   { 'Turn a picture into code', function()
     local img = ask('WHICH PICTURE?  ', '~/', 'file')

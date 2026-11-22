@@ -171,7 +171,10 @@ local function terminal_panel()
     term.win = nil
     return S.back_to_text()
   end
-  if term.buf and api.nvim_buf_is_valid(term.buf) then
+  if term.win and api.nvim_win_is_valid(term.win) then
+    api.nvim_set_current_win(term.win) -- the bottom panel is open (a run or a shell): go there
+    vim.cmd('startinsert')
+  elseif term.buf and api.nvim_buf_is_valid(term.buf) then
     show_bottom(term.buf)
   else
     term.shell = term.shell or (have('bash') and 'bash' or vim.o.shell)
@@ -216,6 +219,7 @@ local function run()
     local code = vim.v.event and vim.v.event.status or 0
     vim.defer_fn(function() -- it ran fine: raised; it failed: trembles
       if code == 0 then S.raise() else S.shake() end
+      if S.run_event then S.run_event(code == 0) end
     end, 150)
   end })
   api.nvim_create_autocmd('BufWipeout', { buffer = run_buf, once = true, callback = function() stop() end })
@@ -238,6 +242,7 @@ local function preview()
   fn.jobstart({ 'golem-preview', fn.fnamemodify(name, ':p') }, { detach = true })
   local stop = S.busy and S.busy() or function() end
   vim.defer_fn(stop, 6000) -- the browser takes a few seconds to appear on the Celeron
+  if S.relic then S.relic('mirror') end
   say('PREVIEW OPENS ON THE RIGHT. IT FOLLOWS YOUR TYPING.')
 end
 
@@ -274,6 +279,7 @@ local function picture()
   end
   if vim.v.shell_error ~= 0 then return say('PICTURE FAILED: ' .. vim.trim(res):sub(1, 80)) end
   S.truth('Editor made a picture of code: ' .. tilde(out))
+  if S.relic then S.relic('etching') end
   say('PICTURE SAVED: ' .. tilde(out))
   S.open_other(out)
 end
@@ -320,8 +326,11 @@ function S.tidy(b, loud)
     return
   end
   local view = fn.winsaveview()
+  vim.b[b].golem_tidying = true -- tidying is not deleting: no shatter
   api.nvim_buf_set_lines(b, 0, -1, false, new)
+  vim.schedule(function() if api.nvim_buf_is_valid(b) then vim.b[b].golem_tidying = false end end)
   fn.winrestview(view)
+  if S.relic then S.relic('tamer') end
   if loud then say('TIDIED') end
 end
 
