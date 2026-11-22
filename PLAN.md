@@ -117,7 +117,8 @@ sound and USB; after that the Control Panel decides. It joins main when I say so
 
 **Done when:** on the laptop, Super+E opens it; I type, save (SAVED shows), find and replace, open the files panel
 (Ctrl+B), run a Python file (F5), preview an HTML file (F6), and ask Gemini something (Ctrl+K) with my key;
-Alt+G changes the animation level and weapon, and nothing feels slow on LOW.
+Alt+G changes the animation level and weapon, and nothing feels slow on LOW; F9 shows a Python file as a flowchart, and F10's
+blocks write a small program that F5 then runs.
 
 ---
 

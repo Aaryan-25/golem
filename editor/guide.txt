@@ -59,7 +59,18 @@
                            and Sanskrit letters joined properly (the CRT screen
                            can't join them)
      F7                    a picture (PNG) of this code, or of the selected lines,
-                           saved in ~/Pictures/code
+                           saved in ~/media/code
+     F9                    the flowchart: your code as boxes and arrows on the right.
+                           Python is drawn here and follows your typing; the boxes of
+                           the line you're on light up; Enter on a box jumps to its
+                           line. Other languages are drawn by the AI (Wi-Fi needed;
+                           F9 twice redraws). F9 or Esc in it goes back.
+     F10                   the block builder: snap blocks together (logic, loops,
+                           maths, text, lists, variables, functions) in a window on the
+                           right; the code is written into this file as you build, for
+                           .py, .js or .lua files. The blocks are kept next to it
+                           (name.py.blocks.json), so F10 brings the same picture back.
+                           If the text was changed by hand, it asks before replacing it.
 
      Languages it can run: editor/languages.nix in your Golem repo (Python, Bash,
      Lua and JavaScript to start). Add or remove a name there, then golem-update.

@@ -1,0 +1,152 @@
+<!doctype html>
+<!-- Golem editor: the block builder (F10). Snap blocks together; the real code is written into
+     your file as you build. Served by golem-blocks from this computer only. -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>BLOCKS</title>
+<script src="/blockly/blockly_compressed.js"></script>
+<script src="/blockly/blocks_compressed.js"></script>
+<script src="/blockly/msg/en.js"></script>
+<script src="/blockly/__LANG___compressed.js"></script>
+<style>
+  html, body { margin: 0; height: 100%; background: #050506; overflow: hidden;
+    font-family: "DejaVu Sans Mono", monospace; color: #c8ccd8; }
+  #area { position: absolute; inset: 0; }
+  #note { position: absolute; left: 14px; bottom: 10px; z-index: 50; font-size: 13px; letter-spacing: .08em;
+    color: #6f7484; pointer-events: none; }
+  #note b { color: #e6e9f2; font-weight: 600; }
+  #ask { position: absolute; inset: 0; z-index: 60; display: none; align-items: center; justify-content: center;
+    background: rgba(5, 5, 6, .86); }
+  #ask div { max-width: 34em; padding: 1.6em 1.8em; border: 1px solid #14161c; background: #0b0c10;
+    font-size: 15px; line-height: 1.6; }
+  #ask button { margin: 1.2em 1em 0 0; padding: .5em 1.1em; background: #14161c; color: #e6e9f2;
+    border: 1px solid #6f7484; font: inherit; cursor: pointer; }
+  #ask button:hover, #ask button:focus { background: #e6e9f2; color: #050506; outline: none; }
+  .blocklyToolboxDiv { padding-top: 10px; }
+  .blocklyTreeLabel { font-family: "DejaVu Sans Mono", monospace !important; letter-spacing: .06em; }
+</style>
+</head>
+<body>
+<div id="area"></div>
+<div id="note"><b>BLOCKS</b> → <b>__NAME__</b> · the code is written as you build · <span id="state">ready</span></div>
+<div id="ask"><div>
+  <b>__NAME__</b> already has text that these blocks did not write (or it was changed by hand since).
+  If you go on, the blocks will replace that text the moment you change them.
+  <br><button id="go">Use blocks (replace the text)</button><button id="stop">Leave the text alone</button>
+</div></div>
+<script>
+const CFG = __CONFIG__;   // { lang, name, blocks, handEdited }
+
+// Golem's look: the void, the pale light, and muted block colours (one per kind)
+const theme = Blockly.Theme.defineTheme('golem', {
+  base: Blockly.Themes.Classic,
+  blockStyles: {
+    logic_blocks:     { colourPrimary: '#4d5878', colourSecondary: '#3a4360', colourTertiary: '#8e9bc0' },
+    loop_blocks:      { colourPrimary: '#5f7f86', colourSecondary: '#48636a', colourTertiary: '#9fc3c9' },
+    math_blocks:      { colourPrimary: '#7a3b3b', colourSecondary: '#5e2d2d', colourTertiary: '#c46a6a' },
+    text_blocks:      { colourPrimary: '#5c5f6e', colourSecondary: '#474a57', colourTertiary: '#c8ccd8' },
+    list_blocks:      { colourPrimary: '#4f5a52', colourSecondary: '#3d463f', colourTertiary: '#9fb3a4' },
+    variable_blocks:  { colourPrimary: '#6a5a78', colourSecondary: '#52455d', colourTertiary: '#b3a2c4' },
+    procedure_blocks: { colourPrimary: '#3e4a5c', colourSecondary: '#2f3847', colourTertiary: '#8e9bc0' },
+  },
+  categoryStyles: {
+    logic_category: { colour: '#4d5878' }, loop_category: { colour: '#5f7f86' },
+    math_category: { colour: '#7a3b3b' }, text_category: { colour: '#5c5f6e' },
+    list_category: { colour: '#4f5a52' }, variable_category: { colour: '#6a5a78' },
+    procedure_category: { colour: '#3e4a5c' },
+  },
+  componentStyles: {
+    workspaceBackgroundColour: '#050506', toolboxBackgroundColour: '#0b0c10',
+    toolboxForegroundColour: '#c8ccd8', flyoutBackgroundColour: '#14161c',
+    flyoutForegroundColour: '#c8ccd8', flyoutOpacity: 0.96, scrollbarColour: '#6f7484',
+    insertionMarkerColour: '#e6e9f2', insertionMarkerOpacity: 0.3, cursorColour: '#e6e9f2',
+  },
+  fontStyle: { family: 'DejaVu Sans Mono, monospace', size: 11 },
+});
+
+const num = (n) => ({ shadow: { type: 'math_number', fields: { NUM: n } } });
+const txt = (t) => ({ shadow: { type: 'text', fields: { TEXT: t } } });
+const toolbox = { kind: 'categoryToolbox', contents: [
+  { kind: 'category', name: 'Logic', categorystyle: 'logic_category', contents: [
+    { kind: 'block', type: 'controls_if' }, { kind: 'block', type: 'logic_compare' },
+    { kind: 'block', type: 'logic_operation' }, { kind: 'block', type: 'logic_negate' },
+    { kind: 'block', type: 'logic_boolean' } ] },
+  { kind: 'category', name: 'Loops', categorystyle: 'loop_category', contents: [
+    { kind: 'block', type: 'controls_repeat_ext', inputs: { TIMES: num(10) } },
+    { kind: 'block', type: 'controls_whileUntil' },
+    { kind: 'block', type: 'controls_for', inputs: { FROM: num(1), TO: num(10), BY: num(1) } },
+    { kind: 'block', type: 'controls_forEach' }, { kind: 'block', type: 'controls_flow_statements' } ] },
+  { kind: 'category', name: 'Math', categorystyle: 'math_category', contents: [
+    { kind: 'block', type: 'math_number' },
+    { kind: 'block', type: 'math_arithmetic', inputs: { A: num(1), B: num(1) } },
+    { kind: 'block', type: 'math_single' }, { kind: 'block', type: 'math_round' },
+    { kind: 'block', type: 'math_modulo', inputs: { DIVIDEND: num(64), DIVISOR: num(10) } },
+    { kind: 'block', type: 'math_random_int', inputs: { FROM: num(1), TO: num(100) } } ] },
+  { kind: 'category', name: 'Text', categorystyle: 'text_category', contents: [
+    { kind: 'block', type: 'text' }, { kind: 'block', type: 'text_print', inputs: { TEXT: txt('hello') } },
+    { kind: 'block', type: 'text_join' }, { kind: 'block', type: 'text_length' },
+    { kind: 'block', type: 'text_prompt_ext', inputs: { TEXT: txt('your answer?') } } ] },
+  { kind: 'category', name: 'Lists', categorystyle: 'list_category', contents: [
+    { kind: 'block', type: 'lists_create_with' }, { kind: 'block', type: 'lists_length' },
+    { kind: 'block', type: 'lists_getIndex' }, { kind: 'block', type: 'lists_setIndex' } ] },
+  { kind: 'sep' },
+  { kind: 'category', name: 'Variables', categorystyle: 'variable_category', custom: 'VARIABLE' },
+  { kind: 'category', name: 'Functions', categorystyle: 'procedure_category', custom: 'PROCEDURE' },
+] };
+
+const ws = Blockly.inject('area', {
+  toolbox, theme, renderer: 'thrasos', trashcan: true, sounds: false,
+  grid: { spacing: 24, length: 2, colour: '#14161c', snap: true },
+  zoom: { controls: true, wheel: true, startScale: 0.95 }, move: { scrollbars: true, drag: true, wheel: false },
+});
+
+const gens = { python: () => python.pythonGenerator, javascript: () => javascript.javascriptGenerator,
+  lua: () => lua.luaGenerator };
+const gen = gens[CFG.lang]();
+
+// JavaScript runs with Node (F5), not in a browser: print and ask use the terminal there.
+if (CFG.lang === 'javascript') {
+  const J = javascript.javascriptGenerator, O = javascript.Order;
+  J.forBlock['text_print'] = (b) => 'console.log(' + (J.valueToCode(b, 'TEXT', O.NONE) || "''") + ');\n';
+  J.forBlock['text_prompt_ext'] = (b) => {
+    const q = J.valueToCode(b, 'TEXT', O.NONE) || "''";
+    const ask = '(function (q) { process.stdout.write(String(q)); const b = Buffer.alloc(4096); '
+      + 'const n = require("fs").readSync(0, b, 0, 4096, null); return b.toString("utf8", 0, n).trim(); })(' + q + ')';
+    return [b.getFieldValue('TYPE') === 'NUMBER' ? 'Number(' + ask + ')' : ask, O.FUNCTION_CALL];
+  };
+}
+const state = document.getElementById('state');
+
+if (CFG.blocks) {
+  try { Blockly.serialization.workspaces.load(CFG.blocks, ws); }
+  catch (e) { state.textContent = 'could not read the saved blocks: ' + e.message; }
+}
+
+let allowed = !CFG.handEdited, timer = null;
+function save() {
+  if (!allowed) return;
+  const code = gen.workspaceToCode(ws);
+  const blocks = Blockly.serialization.workspaces.save(ws);
+  state.textContent = 'writing…';
+  fetch('/save', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ code, blocks }) })
+    .then((r) => r.json()).then((r) => { state.textContent = r.ok ? 'written ' + new Date().toLocaleTimeString() : r.error; })
+    .catch(() => { state.textContent = 'not written: the editor side is closed'; });
+}
+ws.addChangeListener((e) => {
+  if (e.isUiEvent) return;               // only real changes to the blocks
+  clearTimeout(timer); timer = setTimeout(save, 400);
+});
+
+if (CFG.handEdited) {
+  const ask = document.getElementById('ask');
+  ask.style.display = 'flex';
+  document.getElementById('go').onclick = () => { allowed = true; ask.style.display = 'none'; save(); };
+  document.getElementById('stop').onclick = () => { ask.style.display = 'none';
+    state.textContent = 'not writing: the text is left alone (close this window)'; };
+  document.getElementById('go').focus();
+}
+</script>
+</body>
+</html>

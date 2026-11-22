@@ -5,7 +5,8 @@
 --   F5           run this file (its output appears in the bottom panel)
 --   F6           live preview on the right (HTML, CSS, JavaScript, Markdown; any other text file as
 --                text, with Devanagari joined properly), updates as you type
---   F7           a picture of this code (PNG), saved in ~/Pictures/code
+--   F7           a picture of this code (PNG), saved in ~/media/code
+--   F10          the block builder: snap blocks together, the code is written as you build
 --   Alt+Shift+F  tidy the code now (Ctrl+S also tidies before saving)
 
 local api, fn = vim.api, vim.fn
@@ -246,6 +247,47 @@ local function preview()
 end
 
 -------------------------------------------------------------------------------
+-- The block builder (F10): snap blocks together in a window on the right; the code is
+-- written into this file as you build, and the editor shows it within a second.
+-------------------------------------------------------------------------------
+local blocks_job, blocks_watch = nil, nil
+
+local function blocks()
+  local b = api.nvim_get_current_buf()
+  if not S.is_text(b) then return end
+  local name = api.nvim_buf_get_name(b)
+  if name == '' then
+    say('FIRST GIVE IT A NAME ENDING IN .py, .js OR .lua')
+    if not S.save() then return end
+    name = api.nvim_buf_get_name(b)
+  end
+  local ext = fn.fnamemodify(name, ':e'):lower()
+  if not (ext == 'py' or ext == 'js' or ext == 'mjs' or ext == 'lua') then
+    return say('BLOCKS MAKE PYTHON (.py), JAVASCRIPT (.js) OR LUA (.lua) FILES')
+  end
+  S.autosave_now()
+  if blocks_job then return say('THE BLOCK BUILDER IS ALREADY OPEN') end
+  blocks_job = fn.jobstart({ 'golem-blocks', name }, {
+    on_exit = function()
+      blocks_job = nil
+      S.blocks_open = false
+      if blocks_watch then blocks_watch:stop(); blocks_watch:close(); blocks_watch = nil end
+    end,
+  })
+  if blocks_job <= 0 then blocks_job = nil; return say('THE BLOCK BUILDER (golem-blocks) IS MISSING') end
+  S.blocks_open = true
+  -- look at the disk often while it is open, so the code appears as you build
+  blocks_watch = (vim.uv or vim.loop).new_timer()
+  blocks_watch:start(700, 700, vim.schedule_wrap(function()
+    if fn.mode() ~= 'c' then pcall(vim.cmd, 'silent! checktime') end
+  end))
+  local stop = S.busy and S.busy() or function() end
+  vim.defer_fn(stop, 6000)
+  if S.relic then S.relic('builder') end
+  say('BLOCKS OPEN ON THE RIGHT. THE CODE APPEARS HERE AS YOU BUILD (F9 SHOWS ITS FLOWCHART).')
+end
+
+-------------------------------------------------------------------------------
 -- A picture of the code (F7): PNG in ~/Pictures/code, then shown in the picture viewer.
 -------------------------------------------------------------------------------
 local function picture()
@@ -262,14 +304,14 @@ local function picture()
     lines = api.nvim_buf_get_lines(b, 0, -1, false)
   end
   local ext = name ~= '' and fn.fnamemodify(name, ':e') or 'txt'
-  local dir = vim.env.HOME .. '/Pictures/code'
+  local dir = vim.env.HOME .. '/media/code' -- Golem's media folder
   fn.mkdir(dir, 'p')
   local out = string.format('%s/%s-%s.png', dir, name ~= '' and fn.fnamemodify(name, ':t:r') or 'code',
     os.date('%Y%m%d-%H%M%S'))
   local face = S.face == 'negative'
   local args = { 'silicon', '--output', out, '--language', ext ~= '' and ext or 'txt',
     '--font', 'DejaVu Sans Mono=22', '--no-window-controls', '--theme', face and 'GitHub' or 'Nord',
-    '--background', S.P.void, '--pad-horiz', '48', '--pad-vert', '40', '--shadow-blur-radius', '0' }
+    '--background', face and (vim.env.GOLEM_NEGATIVE_VOID or '#eceae4') or S.P.void, '--pad-horiz', '48', '--pad-vert', '40', '--shadow-blur-radius', '0' }
   local res = fn.system(args, table.concat(lines, '\n'))
   if vim.v.shell_error ~= 0 then
     -- an unknown language name: try again as plain text
@@ -344,6 +386,7 @@ map({ 'n', 't' }, '<M-s>', switch_shell)
 map(all, '<F5>', run)
 map(all, '<F6>', preview)
 map(all, '<F7>', picture)
+map(all, '<F10>', blocks)
 map(all, '<M-F>', function() S.tidy(nil, true) end)
 
 -- Alt+arrows move between the panels and your text.

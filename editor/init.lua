@@ -381,7 +381,13 @@ api.nvim_create_autocmd('FileChangedShell', {
       vim.v.fcs_choice = ''
     elseif not vim.bo[a.buf].modified then
       vim.v.fcs_choice = 'reload' -- nothing of yours was unsaved: show their version
-      vim.schedule(function() say('RELOADED: ANOTHER APP CHANGED ' .. tilde(api.nvim_buf_get_name(a.buf))) end)
+      vim.schedule(function()
+        if _G.Golem and _G.Golem.blocks_open then
+          say('THE BLOCKS WROTE NEW CODE INTO ' .. tilde(api.nvim_buf_get_name(a.buf)))
+        else
+          say('RELOADED: ANOTHER APP CHANGED ' .. tilde(api.nvim_buf_get_name(a.buf)))
+        end
+      end)
     else
       vim.b[a.buf].golem_disk = 'changed'
       vim.v.fcs_choice = ''
@@ -437,6 +443,7 @@ function _G.GolemStatus()
   local w = vim.g.statusline_winid or api.nvim_get_current_win()
   local b = api.nvim_win_get_buf(w)
   if vim.bo[b].filetype == 'NvimTree' then return '  %#GolemDim#FILES  ·  ESC BACK' end
+  if vim.bo[b].filetype == 'golemflow' then return '  %#GolemDim#FLOWCHART  ·  ENTER JUMPS TO THE CODE  ·  ESC BACK' end
   if vim.bo[b].buftype == 'terminal' then
     return '  %#GolemDim#' .. (vim.b[b].golem_term or 'TERMINAL') .. '%=CTRL+J BACK TO YOUR TEXT  '
   end
@@ -741,7 +748,7 @@ _G.Golem = {
   save = save, open_path = open_path, open_ask = open_ask, map = map, all = all, here = here,
   write_buf = write_buf, autosave_now = autosave_all, state = state, quit = quit, guide = guide,
 }
-for _, part in ipairs({ 'mace.lua', 'panels.lua', 'ai.lua', 'writing.lua', 'dashboard.lua' }) do
+for _, part in ipairs({ 'mace.lua', 'panels.lua', 'ai.lua', 'writing.lua', 'flow.lua', 'dashboard.lua' }) do
   local ok, err = pcall(dofile, here .. '/' .. part)
   if not ok then vim.schedule(function() say('PART OF THE EDITOR FAILED TO LOAD: ' .. tostring(err)) end) end
 end

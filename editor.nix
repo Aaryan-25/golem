@@ -10,7 +10,8 @@
 #   guide.txt              the guide shown with F1
 #   extensions.nix / .lua  extensions (Neovim plugins): add names, then golem-rebuild
 #   languages.nix          languages it can run: add names, then golem-rebuild
-#   bin/                   helpers: golem-open, golem-run, golem-preview, golem-ai
+#   bin/                   helpers: golem-open, golem-run, golem-preview, golem-ai, golem-flow, golem-blocks
+#   flow.lua / blocks.html the flowchart view (F9) and the block builder (F10)
 #
 # The look: Cool Retro Term's full CRT glass in Golem's colours (settings.nix), in the current
 # face (Shadow / Negative, from the Control Panel) each time it opens. Right-click inside it (or
@@ -73,13 +74,38 @@ let
   # The gada's soft sounds, made from numbers at build time (no recordings).
   sounds = pkgs.runCommand "golem-edit-sounds" { } "${pkgs.python3}/bin/python3 ${./editor/sounds.py} $out";
 
+  # Blockly (Google's snap-together blocks, Apache-2.0), fetched once when Golem is built;
+  # only the parts the block builder uses are kept. Nothing is fetched while you work.
+  blockly = pkgs.runCommand "blockly-13.5.0" {
+    src = pkgs.fetchurl {
+      url = "https://registry.npmjs.org/blockly/-/blockly-13.5.0.tgz";
+      hash = "sha256-nlQcsQ8P3KK54h7MXDJtY+/BKo4rjYpMB3R2Mi67UME=";
+    };
+  } ''
+    mkdir -p $out/msg x
+    tar -xzf $src -C x
+    cp x/package/{blockly,blocks,python,javascript,lua}_compressed.js $out/
+    cp x/package/msg/en.js $out/msg/
+    cp -r x/package/media $out/media
+    cp x/package/LICENSE $out/
+  '';
+  golemBlocks = pkgs.writeShellScriptBin "golem-blocks" ''
+    export PATH=${lib.makeBinPath [ pkgs.firefox ]}:$PATH
+    export GOLEM_BLOCKLY=${blockly} GOLEM_BLOCKS_PAGE=${./editor/blocks.html}
+    exec ${pkgs.python3}/bin/python3 ${./editor/bin}/golem-blocks "$@"
+  '';
+  golemFlow = pkgs.writeShellScriptBin "golem-flow" ''
+    exec ${pkgs.python3}/bin/python3 ${./editor/bin}/golem-flow "$@"
+  '';
+
   # Neovim with everything the editor uses.
   inner = pkgs.writeShellScriptBin "golem-edit-nvim" ''
     export GOLEM_PALETTE="${sh.void} ${sh.shade} ${sh.mist} ${sh.text} ${sh.pale} ${hues.shadow}"
     export GOLEM_EDIT_EXTENSIONS=${./editor/extensions.lua}
     export GOLEM_EDIT_SOUNDS=${sounds}
+    export GOLEM_NEGATIVE_VOID="${ng.void}"
     export PATH=${lib.makeBinPath ([ pkgs.ripgrep pkgs.xclip pkgs.util-linux pkgs.file pkgs.silicon
-      pkgs.bash pkgs.alsa-utils golemOpen golemRun golemPreview golemAi ] ++ tidiers)}:$PATH
+      pkgs.bash pkgs.alsa-utils golemOpen golemRun golemPreview golemAi golemBlocks golemFlow ] ++ tidiers)}:$PATH
     exec ${nvim}/bin/nvim "$@"
   '';
 

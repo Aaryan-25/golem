@@ -760,6 +760,8 @@ local RELICS = {
   { 'etching', 'Etching', 'your first picture of code' },
   { 'hammer', 'Hammer of Many', 'replaced 20 or more words at once' },
   { 'tamer', 'Tamer of Chaos', 'tidied a file that needed it' },
+  { 'architect', 'Architect', 'saw your code as a flowchart' },
+  { 'builder', 'Builder', 'built a program from blocks' },
 }
 local relic_file = box .. '/relics.json'
 local R = { found = {}, stats = { lines = 0, runs_ok = 0, days = {} } }
