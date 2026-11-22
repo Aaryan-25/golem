@@ -111,7 +111,9 @@ Autosave with an honest SAVED / NOT SAVED line, find and replace, files panel (C
 F5 runs the file, Ctrl+J a terminal (Alt+S switches shell), F6 live preview of HTML and Markdown, F7 a picture
 of the code, Ctrl+K the AI (Gemini with your key; your own AI later). A gada flies in, travels the bottom line
 while things work, strikes when you save, and reacts to finds, replaces, undo, deletes, runs, failures and the AI;
-relics are found along the way. Alt+G: animations HIGH / MEDIUM / LOW / OFF, weapon (gada, vajra, trishul), sound, codex. Pictures, music, video, PDFs and links open in their own
+relics are found along the way. Alt+G: animations HIGH / MEDIUM / LOW / OFF, weapon (gada, vajra, trishul), sound, codex,
+spell check and word suggestions. Opening it without a file shows its dashboard (a big gada, today, pinned and recent files,
+battery / memory / Wi-Fi). Super+O opens it with the file finder. F6 also shows Hindi / Sanskrit text with letters joined. Pictures, music, video, PDFs and links open in their own
 apps; Word, Excel and PowerPoint go to Google Drive in Firefox.
 Languages it can run: `editor/languages.nix`. Extensions: `editor/extensions.nix`. Add a name on GitHub, then `golem-update`.
 It starts in GREEN with internet (for the AI), sound and USB allowed; the Control Panel can change that.

@@ -1,7 +1,8 @@
 -- Golem editor: the gada (the Indian mace), drawn with fine Braille motes, and everything it does.
 --
--- Alt+G opens its settings: how much animation (HIGH, MEDIUM, LOW or OFF), which weapon
--- (gada, vajra, trishul), sound on/off, and the codex of relics you have found.
+-- Alt+G opens the settings: how much animation (HIGH, MEDIUM, LOW or OFF), which weapon
+-- (gada, vajra, trishul), sound on/off, the codex of relics you have found, and (from
+-- writing.lua) spell check and word suggestions on/off.
 --
 --   what happens                         from level   what you see (and hear)
 --   start screen                          MEDIUM      it flies in beside the sigil and floats there
@@ -142,16 +143,17 @@ end
 local FORMS = {}
 
 FORMS.gada = function(put) -- a round, fluted head with a crown, a long handle, a knob
-  for y = -9, 2, 0.5 do put(0, y) end
+  for y = -9, 2, 0.25 do put(0, y); put(0.35, y) end
   for _, d in ipairs({ { -1, -9 }, { 1, -9 }, { 0, -10 }, { 0, -8.5 } }) do put(d[1], d[2]) end
   put(-1, 1); put(1, 1)
-  for y = -4, 4, 0.5 do
-    for x = -4, 4, 0.5 do
+  for y = -4, 4, 0.25 do
+    for x = -4, 4, 0.25 do
       local r = x * x + y * y
-      if r <= 16 and (r >= 9 or math.abs(x) < 0.6 or math.abs(y) < 0.6) then put(x, y + 6) end
+      if r <= 16 and (r >= 10.5 or math.abs(x) < 0.3 or math.abs(y) < 0.3
+          or math.abs(math.abs(x) - 2) < 0.2) then put(x, y + 6) end
     end
   end
-  for y = 10.5, 12, 0.5 do put(0, y) end
+  for y = 10.5, 12, 0.25 do put(0, y) end
   put(-1, 10.5); put(1, 10.5)
 end
 
@@ -795,8 +797,28 @@ function S.relic(id)
   end, 700)
 end
 
+-- Today's counts, for the dashboard
+local function today()
+  local d = os.date('%Y-%m-%d')
+  if type(R.stats.today) ~= 'table' or R.stats.today.date ~= d then
+    R.stats.today = { date = d, lines = 0, saves = 0 }
+  end
+  return R.stats.today
+end
+
+function S.relic_info()
+  local found, total, hint = 0, #RELICS, nil
+  for _, r in ipairs(RELICS) do
+    if R.found[r[1]] then found = found + 1 elseif not hint then hint = r[3] end
+  end
+  return { found = found, total = total, next = hint, today = today(), lines = R.stats.lines,
+    runs_ok = R.stats.runs_ok }
+end
+
 -- What the rest of the editor reports
 function S.saved_event()
+  local t = today()
+  t.saves = t.saves + 1
   if not R.found.first_light then S.relic('first_light') end
   local today = os.date('%Y-%m-%d')
   if not R.stats.days[today] then
@@ -835,6 +857,8 @@ api.nvim_create_autocmd({ 'TextChanged', 'TextChangedI' }, {
     local d = now - before
     if d > 0 and d < 200 then -- typed or pasted (a huge jump is a whole file loaded)
       R.stats.lines = R.stats.lines + d
+      local t = today()
+      t.lines = t.lines + d
       if R.stats.lines >= 100 then S.relic('hundred') end
       if R.stats.lines >= 1000 then S.relic('scribe') end
     elseif d < 0 and not vim.b[a.buf].golem_tidying then
@@ -892,7 +916,11 @@ local function settings()
     { 'sound', 'Sound:  ' .. cfg.sound:upper() },
     { 'codex', 'Codex: the relics you have found' },
   }
-  choose('GADA', items, function(i) return i[2] end, function(i)
+  if S.writing then
+    for _, x in ipairs(S.writing.items()) do items[#items + 1] = x end
+  end
+  choose('SETTINGS', items, function(i) return i[2] end, function(i)
+    if i[3] then return i[3]() end -- spell check, suggestions (writing.lua)
     if i[1] == 'level' then
       choose('ANIMATIONS', { 'high', 'medium', 'low', 'off' }, function(x)
         return ({
@@ -929,4 +957,20 @@ local function settings()
 end
 
 S.map(S.all, '<M-g>', settings)
+
+-- For the dashboard: the gada's motes as points, and a canvas to draw them on.
+function S.gada_points(cx, cy, a, s)
+  local pts, seen = {}, {}
+  local ca, sa = math.cos(a), math.sin(a)
+  FORMS.gada(function(x, y)
+    local px = math.floor(cx + (x * ca + y * sa) * s + 0.5)
+    local py = math.floor(cy - (y * ca - x * sa) * s + 0.5)
+    for dx = 0, (s > 1.5 and 1 or 0) do -- big: twice as thick, so it reads as solid metal
+      local k = (px + dx) * 8192 + py
+      if not seen[k] then seen[k] = true; pts[#pts + 1] = { x = px + dx, y = py } end
+    end
+  end)
+  return pts
+end
+S.canvas = canvas
 S.gada = { can = can, settings = settings, codex = codex }

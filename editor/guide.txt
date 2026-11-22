@@ -2,12 +2,28 @@
    G O L E M   ·   E D I T O R   G U I D E                       Esc or F1 = back
 
 
+   THE DASHBOARD  (opening the editor without a file)
+     A big gada, today's lines and saves, relics found, your pinned and recent
+     files (1-9 opens one), R reopens the files you had open last time, and one
+     letter for each thing: N new, O open, P find, B files, T terminal, K AI,
+     C codex, G settings, H this guide, Q close. At the bottom: battery, memory,
+     Wi-Fi, the time, and a line for the day (write your own, one per line, in
+     ~/.local/share/golem-edit/daily.txt).
+     Super+O (anywhere in Golem) opens it with the file finder ready.
+
+
    TYPING
      It works like Notepad. Just type. There are no modes to learn.
      Shift + arrows        select text              Ctrl+A   select everything
      Ctrl+C / X / V        copy / cut / paste (shared with every other app)
      Ctrl+Z / Ctrl+Y       undo / redo, a word or line at a time
      Esc                   stop showing search matches (you keep typing)
+     Words you've used are offered below the cursor after a few letters:
+     Tab takes one, Esc closes the list, or just keep typing.
+     Misspelled words are underlined (English). Alt+. on one: suggestions, or add
+     it to your dictionary. F8 turns spell check off / on.
+     In the questions at the bottom (OPEN, SAVE AS, FIND...): Ctrl+A clears the
+     line, Ctrl+V pastes.
 
 
    FILES
@@ -16,6 +32,10 @@
      Ctrl+P                find a file by part of its name (Esc closes the list)
      Ctrl+E                the files you have open
      Ctrl+N                new file
+     Ctrl+PageDown/PageUp  next / previous open file (a bar at the top names them
+                           when two or more are open; ● = not saved)
+     Ctrl+W                close this file
+     Alt+P                 pin this file to the dashboard (again: unpin)
      Ctrl+B                the files panel on the left. Arrows move, Enter opens,
                            + new file (end with / for a folder), F2 rename,
                            Delete removes (asks first), Backspace = folder up,
@@ -34,7 +54,10 @@
      Ctrl+J                the bottom panel: your own terminal (Ctrl+J again = back)
      Alt+S                 (in that panel) switch shell: bash, python, node, lua...
      F6                    live preview on the right for HTML, Markdown and SVG: it
-                           follows your typing (a Firefox window with no bars)
+                           follows your typing (a Firefox window with no bars).
+                           Any other text file is shown as text there, with Hindi
+                           and Sanskrit letters joined properly (the CRT screen
+                           can't join them)
      F7                    a picture (PNG) of this code, or of the selected lines,
                            saved in ~/Pictures/code
 
@@ -57,7 +80,7 @@
                            AI answer)
 
 
-   THE GADA  (Alt+G: its settings)
+   THE GADA  (Alt+G: settings)
      It flies in on the start screen and floats beside the sigil; travels the
      bottom line while something works; strikes when you save (harder the more you
      changed); taps on each find while the matches light up; slams on replace and
@@ -73,6 +96,7 @@
             Sound: soft thuds, whooshes and chimes, on or off
             Codex: the relics you've found, like "First Light" for your first save,
             "Spark" for your first program run, "Oracle" for the first AI answer
+            Spell check and word suggestions: on or off
 
 
    VIEW

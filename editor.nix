@@ -28,6 +28,11 @@ let
   # Code colours: blue, teal, ember (cold, to match the void and pale light).
   hues = { shadow = "#8e9bc0 #9fc3c9 #c46a6a"; };
 
+  # Kinds of text the editor opens when asked from elsewhere.
+  textTypes = [ "text/plain" "text/markdown" "text/x-python" "text/x-shellscript" "text/x-lua"
+    "text/html" "text/css" "text/javascript" "application/json" "text/x-csrc" "text/x-c++src"
+    "application/x-shellscript" "text/x-java" ];
+
   plugins = map (n: pkgs.vimPlugins.${n}) (import ./editor/extensions.nix);
   languages = map (n: pkgs.${n}) (import ./editor/languages.nix);
   langNames = import ./editor/languages.nix;
@@ -148,7 +153,17 @@ in {
   environment.systemPackages = [ edit golemOpen golemRun golemPreview ] ++ languages ++ [
     # so Alt+Space finds it as "Text editor" (or "edit")
     (pkgs.makeDesktopItem { name = "golem-edit"; desktopName = "Text editor (edit)"; exec = "golem-edit"; })
+    # so text files opened from anywhere (a link, another app) open in it, through its zone
+    (pkgs.makeDesktopItem {
+      name = "golem-edit-open"; desktopName = "Text editor"; exec = "golem-launch golem-edit %f";
+      noDisplay = true; mimeTypes = textTypes;
+    })
   ];
+
+  xdg.mime.defaultApplications = lib.genAttrs textTypes (_: "golem-edit-open.desktop");
+
+  # A small font that joins Devanagari letters properly (for F6's preview of Hindi / Sanskrit text).
+  fonts.packages = [ pkgs.lohit-fonts.devanagari ];
 
   # Its starting zone (only if it has none yet; after that the Control Panel decides).
   system.activationScripts.golem-edit-zone = {

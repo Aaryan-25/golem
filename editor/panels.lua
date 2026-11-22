@@ -3,7 +3,8 @@
 --   Ctrl+B       the files panel on the left (Enter opens; other kinds open in their own app)
 --   Ctrl+J       the terminal panel at the bottom (also Ctrl+`); Alt+S there switches shell
 --   F5           run this file (its output appears in the bottom panel)
---   F6           live preview on the right (HTML, CSS, JavaScript, Markdown), updates as you type
+--   F6           live preview on the right (HTML, CSS, JavaScript, Markdown; any other text file as
+--                text, with Devanagari joined properly), updates as you type
 --   F7           a picture of this code (PNG), saved in ~/Pictures/code
 --   Alt+Shift+F  tidy the code now (Ctrl+S also tidies before saving)
 
@@ -234,10 +235,8 @@ end
 local function preview()
   local name = api.nvim_buf_get_name(0)
   if name == '' or not S.is_text() then return say('SAVE THE FILE FIRST (CTRL+S)') end
-  local ext = fn.fnamemodify(name, ':e'):lower()
-  if not (ext == 'html' or ext == 'htm' or ext == 'md' or ext == 'markdown' or ext == 'svg') then
-    return say('PREVIEW SHOWS HTML, MARKDOWN AND SVG FILES')
-  end
+  -- HTML, Markdown and SVG are shown as pages; any other text file as text (where Hindi and
+  -- Sanskrit letters join properly, which the CRT screen can't do)
   S.autosave_now()
   fn.jobstart({ 'golem-preview', fn.fnamemodify(name, ':p') }, { detach = true })
   local stop = S.busy and S.busy() or function() end
