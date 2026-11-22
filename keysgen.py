@@ -46,6 +46,9 @@ def main():
         os.replace(KEYS + ".tmp", KEYS)
     with open(OUT_I3 + ".tmp", "w") as f:
         for combo, _, cmd in keys:
+            # no "busy" clock cursor while an app starts (it would wait for a signal most apps never send)
+            if cmd.startswith("exec ") and not cmd.startswith("exec --no-startup-id"):
+                cmd = "exec --no-startup-id " + cmd[5:]
             f.write(f"bindsym {i3(combo)} {cmd}\n")
     with open(OUT_TXT + ".tmp", "w") as f:
         for combo, label, _ in keys:

@@ -303,7 +303,7 @@ class Panel:
         im = Image.new("L", (W2, H2), 0)
         d = ImageDraw.Draw(im)
         ground = sum(int(self.T["void"][i:i + 2], 16) for i in (1, 3, 5)) / 765
-        fonts = {}
+        fonts, sizes = {}, {}
         for i in self.c.find_withtag("ui"):
             col = self.final.get(i) or self.c.itemcget(i, "fill")
             if not col.startswith("#"):
@@ -312,7 +312,10 @@ class Panel:
             xy = [c / 2 for c in self.c.coords(i)]
             kind = self.c.type(i)
             if kind == "text":
-                size = abs(tkfont.Font(font=self.c.itemcget(i, "font")).actual("size"))
+                spec = self.c.itemcget(i, "font")
+                if spec not in sizes:
+                    sizes[spec] = abs(tkfont.Font(font=spec).actual("size"))
+                size = sizes[spec]
                 if size not in fonts:
                     try:
                         fonts[size] = ImageFont.truetype(RUNES, max(6, int(size * 0.67)))

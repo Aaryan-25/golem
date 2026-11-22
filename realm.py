@@ -240,7 +240,7 @@ class Realm:
         self.prog = self.ctx.program(vertex_shader=VERT, fragment_shader=FRAG)
         self.rng = np.random.default_rng()
         self.pics = Pictures(self.W, self.H)
-        self.n_tabs, self.n_scene = 36000, 30000
+        self.n_tabs, self.n_scene = 16000, 12000            # light enough for a small graphics chip
         self.scene = homes(self.pics.scenery(), self.n_scene, self.rng)
         self.items, self.sel = TABS, 0
         self.tab_homes = self.tabs_now()
@@ -257,7 +257,7 @@ class Realm:
         self.vbo = self.ctx.buffer(reserve=(self.n_tabs + self.n_scene) * 8 * 4)
         self.vao = self.ctx.vertex_array(self.prog, [(self.vbo, "3f 3f 2f", "a_from", "a_to", "a_more")])
         self.seeds = self.rng.random(self.n_tabs + self.n_scene).astype("f4")
-        self.n_win = 40000
+        self.n_win = 14000
         self.win_vbo = self.ctx.buffer(reserve=self.n_win * 8 * 4)
         self.win_vao = self.ctx.vertex_array(self.prog, [(self.win_vbo, "3f 3f 2f", "a_from", "a_to", "a_more")])
         self.quad = self.ctx.program(vertex_shader=QUAD_V, fragment_shader=QUAD_F)
@@ -325,7 +325,7 @@ class Realm:
     def leave(self, then=None):
         """The sand flies away, then the realm hides and `then` runs (an app, the panel, or nothing)."""
         frm = self.where_now()
-        self.load(frm, np.vstack([self.scattered(self.n_tabs, 2.2), self.scattered(self.n_scene, 2.2)]), 0.6)
+        self.load(frm, np.vstack([self.scattered(self.n_tabs, 2.2), self.scattered(self.n_scene, 2.2)]), 0.35)
         self.after = ("hide", then)
 
     def appear(self, grab):
@@ -370,7 +370,10 @@ class Realm:
 
     def screen(self):
         from PIL import ImageGrab
-        return np.asarray(ImageGrab.grab().convert("RGB").resize((self.W, self.H)))
+        im = ImageGrab.grab().convert("RGB")
+        if im.size != (self.W, self.H):
+            im = im.resize((self.W, self.H))
+        return np.asarray(im)
 
     def window_homes(self, shot, rect):
         """The window's own picture as grains: where it's bright, more sand."""
@@ -420,16 +423,16 @@ class Realm:
             away[:, 0] += (0.25 + 0.4 * self.rng.random(self.n_win)) * 0.94
             away[:, 1] += (self.rng.random(self.n_win) - 0.6) * 0.3
             away[:, 2] = 0
-            self.win_load(here, away, 0.6)
+            self.win_load(here, away, 0.4)
         elif kind == "min":
             self.set_bg(shot, rect)
-            self.win_load(here, self.point((self.W // 2 - 20, self.H - 6, 40, 4), 1.0, self.n_win), 0.5)
+            self.win_load(here, self.point((self.W // 2 - 20, self.H - 6, 40, 4), 1.0, self.n_win), 0.35)
         elif kind == "full":
             self.set_bg(shot * 0, None)
             self.win_load(here, here, 3.0)                 # held still until it's told where the window went
         elif kind == "open":
             self.set_bg(shot, rect)
-            self.win_load(self.point(rect, 0.15, self.n_win), here, 0.5)
+            self.win_load(self.point(rect, 0.15, self.n_win), here, 0.35)
         self.mode = "window"
         self.after = ("hide", None)
         self.appear(grab=False)
@@ -445,7 +448,7 @@ class Realm:
         to = here.copy()
         to[:, 0] = (x + (here[:, 0] * self.W - x0) * w / max(1, w0)) / self.W
         to[:, 1] = (y + (here[:, 1] * self.H - y0) * h / max(1, h0)) / self.H
-        self.win_load(here, to, 0.45)
+        self.win_load(here, to, 0.35)
         self.after = ("hide", None)
 
     def page_turn(self, a, b, conn):
@@ -461,7 +464,7 @@ class Realm:
             return
         ground = np.full((self.H, self.W, 3), 244 if self.ink else 0, np.uint8)
         self.set_bg(ground)
-        self.win_load(homes(pa, self.n_win, self.rng), homes(pb, self.n_win, self.rng), 0.5)
+        self.win_load(homes(pa, self.n_win, self.rng), homes(pb, self.n_win, self.rng), 0.35)
         self.win_pic = None
         self.mode = "window"
         self.after = ("hide", None)
@@ -469,7 +472,7 @@ class Realm:
         self.reply, self.reply_due = conn, True
 
     def open_soon(self, con_id):
-        self.pending_open = (time.monotonic() + 0.15, con_id)
+        self.pending_open = (time.monotonic() + 0.08, con_id)
 
     def open_now(self, con_id):
         try:
@@ -637,7 +640,7 @@ class Realm:
                 self.after = None
                 self.hide_now()
                 if then:
-                    start(["i3-msg", "-q", "exec", then])
+                    start(["i3-msg", "-q", "exec --no-startup-id " + then])
                 continue
             self.erase += (self.erase_goal - self.erase) * (0.012 if self.erase_goal else 0.05)
             if now - self.mouse_t > 3:                    # keyboard: the light rests beside the chosen tab
@@ -659,7 +662,7 @@ class Realm:
                 self.ctx.clear(0.0, 0.0, 0.0)
                 self.ctx.blend_func = self.mgl.ONE, self.mgl.ONE
             u = {"t_now": now - self.t0, "fly": fly, "slow": self.slow, "ink": float(self.ink), "fade": fade,
-                 "erase": self.erase, "size": max(1.6, 2.4 * fh / 1080) * (1.5 if self.mode == "window" else 1.0), "aspect": fw / max(1, fh),
+                 "erase": self.erase, "size": max(2.0, 3.0 * fh / 1080) * (1.6 if self.mode == "window" else 1.0), "aspect": fw / max(1, fh),
                  "lamp": tuple(self.lamp), "lamp_on": 0.0 if self.idle or self.mode == "window" else 1.0,
                  "pulse": min(1.0, (now - self.pulse_t0) / 0.6),
                  "line_at": (0.62 * fw / max(1, fh), 0.5), "line_out": (0.94, -0.34)}
@@ -741,7 +744,7 @@ def main():
         if arg not in ("show", "idle"):
             return
         # Not running (it stopped): start it again, as part of the desktop, and then ask again.
-        quiet(["i3-msg", "-q", "exec", "golem-realm --daemon"])
+        quiet(["i3-msg", "-q", "exec --no-startup-id golem-realm --daemon"])
         for _ in range(40):
             time.sleep(0.25)
             try:
