@@ -72,7 +72,8 @@
      Ctrl+Plus / Ctrl+Minus    bigger / smaller letters (remembered)
      Right-click (or Ctrl+Shift+M for a menu bar): Cool Retro Term's own settings
      and screen styles (Amber, Green, IBM DOS, Apple ][...). Your choices stay.
-     "Golem" in its Profiles list brings Golem's look back.
+     "Golem Shadow" and "Golem Negative" in its Profiles list bring Golem's look back.
+     The face you pick in the Control Panel reaches the editor the next time it opens.
 
 
    EXTENSIONS

@@ -70,10 +70,12 @@ opt.pumheight = 8
 --   void, shade, mist, text, pale  +  three code colours: blue, teal, ember
 -------------------------------------------------------------------------------
 local face = 'shadow'
-do
-  local f = io.open(home .. '/.cache/golem/mode', 'r')
+do -- the face set in the Control Panel
+  local f = io.open('/var/lib/golem/settings.conf', 'r')
   if f then
-    if (f:read('*l') or ''):match('negative') then face = 'negative' end
+    for line in f:lines() do
+      if line:match('^face=negative') then face = 'negative' end
+    end
     f:close()
   end
 end

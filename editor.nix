@@ -12,9 +12,10 @@
 #   languages.nix          languages it can run: add names, then golem-rebuild
 #   bin/                   helpers: golem-open, golem-run, golem-preview, golem-ai
 #
-# The look: Cool Retro Term's full CRT glass in Golem's colours (settings.nix). Right-click
-# inside it (or Ctrl+Shift+M) reaches Cool Retro Term's own settings and screen styles; your
-# choices there are kept, and "Golem" in its profiles list brings Golem's look back.
+# The look: Cool Retro Term's full CRT glass in Golem's colours (settings.nix), in the current
+# face (Shadow / Negative, from the Control Panel) each time it opens. Right-click inside it (or
+# Ctrl+Shift+M) reaches Cool Retro Term's own settings and screen styles; your choices there are
+# kept, and "Golem Shadow" / "Golem Negative" in its profiles list bring Golem's look back.
 #
 # Its zone: GREEN with internet (for the AI), sound and USB allowed. This is only its starting
 # setting; after that the Control Panel decides, like for every app.
@@ -22,6 +23,7 @@
 let
   s = import ./settings.nix;
   sh = s.theme;
+  ng = s.themeNegative;
 
   # Code colours: blue, teal, ember (cold, to match the void and pale light).
   hues = { shadow = "#8e9bc0 #9fc3c9 #c46a6a"; };
@@ -73,8 +75,8 @@ let
   '';
 
   # Cool Retro Term keeps its settings in a small database. The first time, Golem's look is
-  # written in; after that your own choices stay. A style named "Golem" is always in its list
-  # (right-click > Profiles) to come back to.
+  # written in; after that your own choices stay. Two styles, "Golem Shadow" and "Golem
+  # Negative", are always in its list (right-click > Profiles) to come back to.
   font = "System: DejaVu Sans Mono";
   profile = bg: fg: chroma: builtins.toJSON {
     backgroundColor = bg; fontColor = fg;
@@ -92,9 +94,12 @@ let
 
   edit = pkgs.writeShellApplication {
     name = "golem-edit";
-    runtimeInputs = [ pkgs.coreutils pkgs.sqlite pkgs.jq pkgs.cool-retro-term inner ];
+    runtimeInputs = [ pkgs.coreutils pkgs.gnugrep pkgs.sqlite pkgs.jq pkgs.cool-retro-term inner ];
     text = ''
-      want='${profile sh.void sh.pale 0.7}'
+      shadow='${profile sh.void sh.pale 0.7}'
+      negative='${profile ng.void ng.pale 0.25}'
+      # the current face, as set in the Control Panel
+      if grep -q '^face=negative' /var/lib/golem/settings.conf 2>/dev/null; then want=$negative; else want=$shadow; fi
 
       dir="''${XDG_DATA_HOME:-$HOME/.local/share}/cool-retro-term/golem-edit/QML/OfflineStorage/Databases"
       db="$dir/27e743fe85b8912a46804fed99e8a9ab"      # Qt's file name for this database
@@ -107,13 +112,27 @@ let
 
       # first time: Golem's look
       [ -n "$(get _CURRENT_SETTINGS)" ] || put _CURRENT_SETTINGS '${firstSettings}'
-      [ -n "$(get _CURRENT_PROFILE)" ] || put _CURRENT_PROFILE "$want"
-      # Golem's style in the profiles list
+      cur=$(get _CURRENT_PROFILE)
+      if [ -z "$cur" ]; then
+        put _CURRENT_PROFILE "$want"
+      else
+        # still in Golem's colours? then follow the face; any other style stays as you chose it
+        colours=$(jq -c '[.backgroundColor, .fontColor]' <<<"$cur" 2>/dev/null || echo)
+        for p in "$shadow" "$negative"; do
+          if [ "$colours" = "$(jq -c '[.backgroundColor, .fontColor]' <<<"$p")" ]; then
+            put _CURRENT_PROFILE "$(jq -c --argjson w "$want" '.backgroundColor = $w.backgroundColor
+              | .fontColor = $w.fontColor | .chromaColor = $w.chromaColor' <<<"$cur")"
+          fi
+        done
+      fi
+      # Golem's two styles in the profiles list
       custom=$(get _CUSTOM_PROFILES); [ -n "$custom" ] || custom='[]'
-      custom=$(jq -c --arg g "$want" '
+      custom=$(jq -c --arg s "$shadow" --arg n "$negative" '
         (if type == "array" then . else [] end)
-        | map(select(.text != "Golem"))
-        + [{text: "Golem", obj_string: $g, builtin: false}]' <<<"$custom" 2>/dev/null) || custom='[]'
+        | map(select(.text != "Golem" and .text != "Golem Shadow" and .text != "Golem Negative"))
+        + [{text: "Golem Shadow", obj_string: $s, builtin: false},
+           {text: "Golem Negative", obj_string: $n, builtin: false}]' <<<"$custom" 2>/dev/null) \
+        || custom='[]'
       put _CUSTOM_PROFILES "$custom"
 
       # Named golem-edit, so the window, Alt+Tab and remembered workspaces call it golem-edit
