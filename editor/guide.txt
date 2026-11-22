@@ -118,7 +118,7 @@
      Ctrl+L                line numbers on / off
      Alt+Z                 word wrap on / off
      Ctrl+Plus / Ctrl+Minus    bigger / smaller letters (remembered)
-     Right-click (or Ctrl+Shift+M for a menu bar): Cool Retro Term's own settings
+     Ctrl+Shift+M: a menu bar with Cool Retro Term's own settings
      and screen styles (Amber, Green, IBM DOS, Apple ][...). Your choices stay.
      "Golem Shadow" and "Golem Negative" in its Profiles list bring Golem's look back.
      The face you pick in the Control Panel reaches the editor the next time it opens.

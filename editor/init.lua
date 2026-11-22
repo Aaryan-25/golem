@@ -747,7 +747,7 @@ _G.Golem = {
   save = save, open_path = open_path, open_ask = open_ask, map = map, all = all, here = here,
   write_buf = write_buf, autosave_now = autosave_all, state = state, quit = quit, guide = guide,
 }
-for _, part in ipairs({ 'mace.lua', 'panels.lua', 'ai.lua', 'writing.lua', 'flow.lua', 'palette.lua', 'dashboard.lua' }) do
+for _, part in ipairs({ 'mace.lua', 'panels.lua', 'ai.lua', 'writing.lua', 'flow.lua', 'palette.lua', 'intro.lua', 'dashboard.lua' }) do
   local ok, err = pcall(dofile, here .. '/' .. part)
   if not ok then vim.schedule(function() say('PART OF THE EDITOR FAILED TO LOAD: ' .. tostring(err)) end) end
 end

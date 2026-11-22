@@ -142,19 +142,31 @@ end
 -- The weapons, around (cx, cy), turned by a (0 = head up), size s (1 = about 22 motes long).
 local FORMS = {}
 
-FORMS.gada = function(put) -- a round, fluted head with a crown, a long handle, a knob
-  for y = -9, 2, 0.25 do put(0, y); put(0.35, y) end
-  for _, d in ipairs({ { -1, -9 }, { 1, -9 }, { 0, -10 }, { 0, -8.5 } }) do put(d[1], d[2]) end
-  put(-1, 1); put(1, 1)
-  for y = -4, 4, 0.25 do
-    for x = -4, 4, 0.25 do
-      local r = x * x + y * y
-      if r <= 16 and (r >= 10.5 or math.abs(x) < 0.3 or math.abs(y) < 0.3
-          or math.abs(math.abs(x) - 2) < 0.2) then put(x, y + 6) end
-    end
+FORMS.gada = function(put) -- Hanuman's gada: a ribbed round head with a band, a crown and a point,
+  --                             a lotus collar, a handle wound with cord, a round pommel
+  local cy, R = 5.5, 4.2
+  for t = 0, 2 * math.pi, 0.03 do put(R * math.cos(t), cy + R * math.sin(t)) end   -- the head
+  for _, k in ipairs({ -0.55, 0, 0.55 }) do                                       -- its ribs
+    for y = -R, R, 0.1 do put(k * math.sqrt(math.max(0, R * R - y * y)), cy + y) end
   end
-  for y = 10.5, 12, 0.25 do put(0, y) end
-  put(-1, 10.5); put(1, 10.5)
+  for _, yb in ipairs({ -0.3, 0.3 }) do                                           -- the band round its middle
+    for x = -R, R, 0.1 do if x * x + yb * yb < R * R then put(x, cy + yb) end end
+  end
+  for x = -1.4, 1.4, 0.1 do put(x, cy + R + 0.25) end                             -- the crown and its point
+  for t = 0, math.pi, 0.06 do put(1.2 * math.cos(t), cy + R + 0.25 + math.sin(t)) end
+  for y = cy + R + 1.25, cy + R + 2.6, 0.1 do put(0, y) end
+  put(-0.3, cy + R + 2); put(0.3, cy + R + 2)
+  for _, c in ipairs({ -1.4, 0, 1.4 }) do                                         -- lotus petals under the head
+    for t = math.pi, 2 * math.pi, 0.12 do put(c + 0.7 * math.cos(t), cy - R + 0.15 + 0.8 * math.sin(t)) end
+  end
+  for y = -8.4, cy - R - 0.6, 0.1 do put(-0.45, y); put(0.45, y) end              -- the handle
+  for _, yb in ipairs({ -1.6, -4.2 }) do for x = -0.9, 0.9, 0.1 do put(x, yb) end end
+  for i = 0, 4 do                                                                  -- the grip, wound with cord
+    local y0 = -4.6 - i * 0.7
+    for u = 0, 1, 0.1 do put(-0.45 + 0.9 * u, y0 - 0.4 * u) end
+  end
+  for t = 0, 2 * math.pi, 0.1 do put(math.cos(t), -9.4 + 0.9 * math.sin(t)) end   -- the pommel
+  put(0, -10.6)
 end
 
 FORMS.vajra = function(put) -- Indra's thunderbolt: a grip with a bead, prongs closing to a point at each end
@@ -740,6 +752,32 @@ local watch = uv.new_timer()
 watch:start(5000, 5000, vim.schedule_wrap(function()
   light()
   if not resting and uv.now() - last_key > 180000 then rest() end
+end))
+
+-------------------------------------------------------------------------------
+-- Company: while you write, a small gada floats in the top-right corner (LOW and up),
+-- breathing slowly; it steps aside while it rests or works elsewhere.
+-------------------------------------------------------------------------------
+NEED.company = 1
+local comp = { t = 0 }
+local CW, CH = 8, 7
+local function comp_hide()
+  close(comp.win)
+  comp.win, comp.buf = nil, nil
+end
+local comp_timer = uv.new_timer()
+comp_timer:start(1500, 240, vim.schedule_wrap(function()
+  local here = can('company') and not resting and not busy_on and S.is_text() and vim.o.columns > 50
+      and api.nvim_get_mode().mode ~= 'c'
+  if not here then return comp_hide() end
+  if not (comp.win and api.nvim_win_is_valid(comp.win)) then
+    comp.buf, comp.win = float(CW, CH, 0, vim.o.columns, 'NE')
+    if not comp.buf then return end
+  end
+  comp.t = comp.t + 1
+  local c = canvas(CW, CH)
+  weapon(c, CW, CH * 2 + math.sin(comp.t * 0.12) * 1.2, 0.35 + math.sin(comp.t * 0.05) * 0.15, 0.75)
+  show(comp.buf, c.lines())
 end))
 
 -------------------------------------------------------------------------------

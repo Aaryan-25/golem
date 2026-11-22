@@ -44,9 +44,10 @@ local ITEMS = {
   { 'Bigger / smaller letters', 'Ctrl+Plus / Ctrl+Minus', function()
     S.say('PRESS CTRL+PLUS OR CTRL+MINUS: THE SCREEN ITSELF DOES THAT (AND REMEMBERS IT)')
   end },
-  { 'Screen style (Cool Retro Term settings)', 'right-click', function()
-    S.say('RIGHT-CLICK ON THE SCREEN (OR CTRL+SHIFT+M): COOL RETRO TERM\'S OWN SETTINGS AND STYLES')
+  { 'Screen style (Cool Retro Term settings)', 'Ctrl+Shift+M', function()
+    S.say('PRESS CTRL+SHIFT+M: A MENU BAR WITH COOL RETRO TERM\'S OWN SETTINGS AND STYLES')
   end },
+  { 'A short tour of the editor', 'W on the dashboard', function() if S.intro then S.intro() end end },
 
   { 'CODE', nil },
   { 'Run this file', 'F5', '<F5>' },

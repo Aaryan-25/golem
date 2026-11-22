@@ -135,7 +135,7 @@ local function right_lines(list, pins, width)
     add(seg('R', 'GolemBright'), seg(string.format('   reopen the files you had open (%d)', #sess)))
   end
   local keys = { { 'N', 'new' }, { 'O', 'open' }, { 'P', 'find' }, { 'B', 'files' }, { 'T', 'terminal' },
-    { 'K', 'AI' }, { 'C', 'codex' }, { 'G', 'settings' }, { 'H', 'guide' }, { 'Q', 'close' } }
+    { 'K', 'AI' }, { 'C', 'codex' }, { 'G', 'settings' }, { 'H', 'guide' }, { 'W', 'tour' }, { 'Q', 'close' } }
   local line, used = {}, 0
   for _, k in ipairs(keys) do
     local w = #k[1] + 1 + #k[2] + 4
@@ -318,6 +318,7 @@ function _G.GolemStart()
   key('c', function() if S.gada then S.gada.codex() end end)
   key('g', function() if S.gada then S.gada.settings() end end)
   key('h', S.guide); key('<F1>', function() S.palette() end)
+  key('w', function() if S.intro then S.intro() end end)
   key('r', function() if S.reopen then S.reopen() end end)
   key('q', S.quit); key('<C-q>', S.quit)
   key('<Esc>', function() end)
@@ -327,4 +328,5 @@ function _G.GolemStart()
       if list[n] then S.open_path(list[n].path) end
     end)
   end
+  if S.intro_first then S.intro_first() end           -- the short tour, the very first time
 end
