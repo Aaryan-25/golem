@@ -116,3 +116,20 @@ Space: the sand flies into the next picture. B: the paper turns over. D: drift o
 - [ ] It opened and drew sand
 - [ ] The number it printed when it closed (frames a second, and how many grains): ______
 - [ ] Does the drift feel like the shadow realm? What's missing? ______
+
+## The shadow realm (Steps A to E, 22 Nov 2026)
+Get it: on the text screen or a terminal, `golem-update`, answer `y`, then `sudo reboot`.
+- [ ] The start menu shows for 3 seconds, with **Golem - text only** as a second line
+- [ ] Start messages scroll by (not a black screen), then the sand gathers into the **Start panel**
+- [ ] ↑↓ or the mouse moves the carved mark; the cursor is a small light; Enter sends a ring
+- [ ] **CONTINUE** (or Esc): the sand flies off and the desktop is there. **Super+Escape** brings it back
+- [ ] **GADA** opens the editor (its dashboard first) · **FATE** the Control Panel · **SUMMON** the app finder
+- [ ] **SLUMBER** shows SLEEP, RESTART, SHUT DOWN, BACK
+- [ ] **B** turns everything over: ink on white paper. B again: back to black
+- [ ] Leave it untouched for 5 minutes: it dims, then the tabs blow away. A key brings them back
+- [ ] A window (Alt+Enter): it gathers out of sand. **Alt+F** flies it to full size and back. **Super+M** blows it
+      down to the bottom; **Super+Shift+M** brings it back. **Alt+Q** (yes): it blows away
+- [ ] The Control Panel (FATE or Super+Z): runes, black and white, tabs SPELL WEAVE MIMIC MEMORIES TRUE NAME;
+      changing page turns the page to sand. MIMIC > WINDOWS turns the window sand off
+- [ ] Choose **Golem - text only** once: a text screen that shows what went wrong last time
+- [ ] Put a picture at `~/zones/settings/scenery.png` and open the Start panel: it's on the right, made of sand

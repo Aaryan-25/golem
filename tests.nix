@@ -329,6 +329,17 @@ pkgs.testers.runNixOSTest {
         assert ask_guard({"do": "backup-load", "name": "test1", "password": "golem"}) == "OK"
         assert "newest 3" in ask_guard({"do": "delete-version", "version": "1", "password": "golem"})
 
+    with subtest("Step E: GADA in the Start panel opens the editor"):
+        machine.send_key("meta_l-esc")
+        machine.wait_until_succeeds(realm_seen, timeout=30)
+        machine.sleep(3)
+        machine.send_key("down")
+        machine.sleep(1)
+        machine.send_key("ret")
+        machine.wait_until_succeeds("journalctl -b -t golem -o cat | grep -q 'Start panel: GADA'", timeout=30)
+        machine.wait_until_fails(realm_seen, timeout=30)
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Opened golem-edit in GREEN'", timeout=60)
+
     with subtest("golem-selftest runs and its machine checks pass (the laptop parts can't, here)"):
         out = machine.execute("su - lilgolemwitch -c 'export DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000; golem-selftest' 2>&1")[1]
         print(out)

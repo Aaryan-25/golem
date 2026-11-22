@@ -1,8 +1,7 @@
 # Plan
 
-**NOW: Steps A to E, the shadow realm look** (asked for on 22 Nov 2026). I build all five, one after another,
-each as its own plain-words change with GitHub's virtual-laptop test. The owner tests the final version on the
-laptop. (On the laptop, Step 9's build gave only a black screen, so Step A makes the screen visible first.)
+**NOW: testing Steps A to E on the laptop** (the shadow realm look, asked for on 22 Nov 2026), with the last
+part of [TESTS.md](TESTS.md). All five are built and pass GitHub's virtual-laptop test. (On the laptop, Step 9's build gave only a black screen, so Step A makes the screen visible first.)
 
 Done: Step 1 (21 Nov 2026). Step 0 was skipped; its hardware checks moved into Step 3's test.
 
