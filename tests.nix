@@ -79,7 +79,7 @@ pkgs.testers.runNixOSTest {
         machine.sleep(3)
         for _ in range(4):
             machine.send_key("down")
-            machine.sleep(0.5)
+            machine.sleep(1)
         machine.send_key("ret")
         machine.sleep(2)
         machine.screenshot("slumber")
