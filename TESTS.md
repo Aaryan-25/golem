@@ -7,6 +7,10 @@ Turn Wi-Fi on (Super+N, then Super+W), open a terminal (Alt+Enter), run `golem-u
 At the Dell logo press F12 and choose **Golem** (or move Golem to the top of the Boot Sequence in F2).
 From now on Golem starts into a dark lock screen: type your password and press Enter.
 
+**First, the machine checks:** connect Wi-Fi, open a terminal (Alt+Enter) and type `golem-selftest`.
+It checks everything a machine can check by itself and prints ✓ or ✗ for each. Send Claude a photo, or the file
+`~/golem-selftest.txt`. The lines below are the things only your eyes and hands can check.
+
 Already proven automatically on GitHub (in a virtual laptop): the lock screen and passwords, the keys and launcher,
 all four zones, the truth log (including an internet connection named by app), and the Control Panel changing a
 zone and a key with the password. What only the real laptop can prove: Wi-Fi, sound, brightness, the lid, battery,

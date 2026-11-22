@@ -292,5 +292,15 @@ pkgs.testers.runNixOSTest {
         machine.succeed("test -s /var/lib/golem/backups/test1.tar")
         assert ask_guard({"do": "backup-load", "name": "test1", "password": "golem"}) == "OK"
         assert "newest 3" in ask_guard({"do": "delete-version", "version": "1", "password": "golem"})
+
+    with subtest("golem-selftest runs and its machine checks pass (the laptop parts can't, here)"):
+        out = machine.execute("su - lilgolemwitch -c 'export DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000; golem-selftest' 2>&1")[1]
+        print(out)
+        for line in ["✓ Wi-Fi was switched off at start", "✓ no clock over the internet", "✓ the firewall is on",
+                     "✓ RED sees none of my files", "✓ RED has no network at all", "✓ OFFLINE has no network at all",
+                     "✓ the truth log writes and reads", "✓ the internet watcher is running", "✓ the settings guard is listening",
+                     "✓ system settings were applied at start", "✓ the window manager is running", "✓ my key list is valid"]:
+            assert line in out, "missing: " + line
+        machine.succeed("test -s /home/lilgolemwitch/golem-selftest.txt")
   '';
 }
