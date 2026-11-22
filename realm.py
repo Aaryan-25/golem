@@ -12,7 +12,7 @@ One program stays running for the whole session, so it answers at once:
 Start panel keys: Up/Down (or the mouse) choose, Enter (or a click) does it, Esc goes back to the desktop,
 B turns the paper over (the yin-yang: the same as Super+I). The cursor is a small light in the sand.
 """
-import os, queue, socket, subprocess, sys, threading, time
+import math, os, queue, socket, subprocess, sys, threading, time
 import numpy as np
 
 SOCK = os.path.join(os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}", "golem-realm.sock")
@@ -45,11 +45,11 @@ void main() {
 
     p = vec2(0.5) + (p - vec2(0.5)) * (1.0 + 0.004 * sin(t_now * 0.7));        // breathing
 
-    // drift: past a wavering line the sand lets go, blows away and comes home; the tabs only shed a little
+    // drift: past a wavering line the sand lets go, blows away and comes home; the words shed sand too
     vec2 q = vec2(p.x * aspect, p.y);
     float along = dot(q - line_at, vec2(-line_out.y, line_out.x));
     float waver = 0.08 * sin(along * 5.0 + t_now * 0.15) + 0.04 * sin(along * 13.0 - t_now * 0.1) + (rnd(5.0) - 0.5) * 0.25;
-    float away = a_more.y > 1.5 ? 0.0 : a_more.y > 0.5 ? smoothstep(0.0, 0.6, dot(q - line_at, line_out) + waver) : 0.12 * step(0.9, rnd(10.0));
+    float away = a_more.y > 1.5 ? 0.0 : a_more.y > 0.5 ? smoothstep(0.0, 0.6, dot(q - line_at, line_out) + waver) : 0.32 * step(0.55, rnd(10.0));
     float alive = 1.0;
     if (away > 0.0) {
         float life = 4.0 + 5.0 * rnd(6.0);
@@ -69,7 +69,7 @@ void main() {
     // the light: grains near it glow (or, on paper, the ink near it lifts); a pulse rings out from it
     vec2 d = vec2((p.x - lamp.x) * aspect, p.y - lamp.y);
     float r = length(d);
-    float lit = lamp_on * exp(-r * r / 0.004) * 1.6;
+    float lit = lamp_on * exp(-r * r / 0.012) * 1.5;
     if (pulse < 1.0) {
         float ring = exp(-pow((r - pulse * 0.45) / 0.03, 2.0)) * (1.0 - pulse);
         lit += ring * 2.0;
@@ -93,6 +93,21 @@ void main() {
 }
 """
 
+LAMP_V = """
+#version 330
+uniform vec2 lamp; uniform float size, beat;
+void main() { gl_Position = vec4(lamp.x * 2.0 - 1.0, 1.0 - lamp.y * 2.0, 0.0, 1.0); gl_PointSize = size * (1.0 + 0.06 * beat); }
+"""
+LAMP_F = """
+#version 330
+uniform float ink, strength; out vec4 c;
+void main() {
+    float r = length(gl_PointCoord * 2.0 - 1.0);
+    float g = (exp(-r * r * 9.0) * 0.9 + exp(-r * r * 60.0)) * strength;   // a soft haze and a bright core
+    // on black the light shines; on paper it lifts the ink back to bare paper
+    c = ink > 0.5 ? vec4(0.957, 0.957, 0.945, min(1.0, g)) : vec4(vec3(1.0, 0.98, 0.94) * g * 0.55, 1.0);
+}
+"""
 QUAD_V = """
 #version 330
 in vec2 p; out vec2 uv;
@@ -246,6 +261,8 @@ class Realm:
         self.win_vbo = self.ctx.buffer(reserve=self.n_win * 8 * 4)
         self.win_vao = self.ctx.vertex_array(self.prog, [(self.win_vbo, "3f 3f 2f", "a_from", "a_to", "a_more")])
         self.quad = self.ctx.program(vertex_shader=QUAD_V, fragment_shader=QUAD_F)
+        self.lamp_prog = self.ctx.program(vertex_shader=LAMP_V, fragment_shader=LAMP_F)
+        self.lamp_vao = self.ctx.vertex_array(self.lamp_prog, [])
         qb = self.ctx.buffer(np.array([-1, -1, 1, -1, -1, 1, 1, 1], "f4").tobytes())
         self.quad_vao = self.ctx.vertex_array(self.quad, [(qb, "2f", "p")])
         self.bg = None
@@ -650,6 +667,15 @@ class Realm:
                 if k in self.prog:
                     self.prog[k].value = v
             (self.win_vao if self.mode == "window" else self.vao).render(self.mgl.POINTS)
+            if self.mode == "panel" and not self.idle:    # the light itself: the cursor of the realm
+                lp = self.lamp_prog
+                lp["lamp"].value, lp["size"].value = tuple(self.lamp), fh * 0.16
+                lp["beat"].value = math.sin((now - self.t0) * 2.2)
+                lp["ink"].value = float(self.ink)
+                lp["strength"].value = fade * (1.0 + 1.5 * max(0.0, 1 - (now - self.pulse_t0) / 0.5))
+                if self.ink:
+                    self.ctx.blend_func = self.mgl.SRC_ALPHA, self.mgl.ONE_MINUS_SRC_ALPHA
+                self.lamp_vao.render(self.mgl.POINTS, vertices=1)
             g.swap_buffers(self.win)
             if self.reply_due:                            # the sand is on the screen: the window may go now
                 try:

@@ -93,28 +93,32 @@ def ring(points):
     return points[::-1] if a > 0 else points
 
 
-def cut(pen, a, b, start_tip, end_tip):
-    """One straight cut from a to b: pointed where the blade enters or leaves, square inside a letter."""
+def cut(pen, a, b, start_tip, end_tip, rng):
+    """One cut from a to b, made like an old carving: where the chisel went in, a wedge-shaped head;
+    the groove narrows as it goes and its edges aren't perfectly even; where it leaves, a point.
+    Inside a letter (where cuts meet) the ends are square, so the corner is solid."""
     (x0, y0), (x1, y1) = a, b
     L = math.hypot(x1 - x0, y1 - y0) or 1
     dx, dy = (x1 - x0) / L, (y1 - y0) / L
-    nx, ny = -dy * CUT / 2, dx * CUT / 2
+    px, py = -dy, dx
     e = CUT / 2
-    pts = []
-    if start_tip:
-        pts += [(x0 - dx * e * 0.2, y0 - dy * e * 0.2)]
-        sx, sy = x0 + dx * e * 0.9, y0 + dy * e * 0.9
-    else:
-        sx, sy = x0 - dx * e * 0.5, y0 - dy * e * 0.5
-    pts += [(sx + nx, sy + ny)]
-    if end_tip:
-        ex, ey = x1 - dx * e * 0.9, y1 - dy * e * 0.9
-        pts += [(ex + nx, ey + ny), (x1 + dx * e * 0.2, y1 + dy * e * 0.2), (ex - nx, ey - ny)]
-    else:
-        ex, ey = x1 + dx * e * 0.5, y1 + dy * e * 0.5
-        pts += [(ex + nx, ey + ny), (ex - nx, ey - ny)]
-    pts += [(sx - nx, sy - ny)]
-    draw(pen, pts)
+    w0, w1 = CUT * 0.55, CUT * 0.38                       # half width: wide at the start, narrower at the end
+    wobble = lambda: 1 + (rng.random() - 0.5) * 0.24      # noqa: E731  a worn edge
+    sx, sy = (x0 - dx * e * 0.5, y0 - dy * e * 0.5) if not start_tip else (x0, y0)
+    ex, ey = (x1 + dx * e * 0.5, y1 + dy * e * 0.5) if not end_tip else (x1 - dx * e * 0.8, y1 - dy * e * 0.8)
+    mx, my = (sx + ex) / 2, (sy + ey) / 2
+    wm = (w0 + w1) / 2
+    left = [(sx + px * w0 * wobble(), sy + py * w0 * wobble()), (mx + px * wm * wobble(), my + py * wm * wobble()),
+            (ex + px * w1, ey + py * w1)]
+    right = [(ex - px * w1, ey - py * w1), (mx - px * wm * wobble(), my - py * wm * wobble()),
+             (sx - px * w0 * wobble(), sy - py * w0 * wobble())]
+    tip = [(x1 + dx * e * 0.35, y1 + dy * e * 0.35)] if end_tip else []
+    draw(pen, left + tip + right)
+    if start_tip:                                         # the wedge head, like a reed pressed into clay
+        hw, hl = CUT * 0.95, CUT * 1.15
+        draw(pen, [(x0 - dx * e * 0.35 + px * hw, y0 - dy * e * 0.35 + py * hw),
+                   (x0 + dx * hl, y0 + dy * hl),
+                   (x0 - dx * e * 0.35 - px * hw, y0 - dy * e * 0.35 - py * hw)])
 
 
 def knot(pen, p):
@@ -132,16 +136,22 @@ def draw(pen, pts):
     pen.closePath()
 
 
-def glyph(cuts):
-    """The glyph, and how wide it is (narrow letters like I take less room)."""
+def glyph(cuts, seed):
+    """The glyph, and how wide it is (narrow letters like I take less room).
+    Each letter's points are nudged a little (the same way every time), as a hand would cut them."""
+    import random
+    rng = random.Random(seed)
+    cuts = [[(x + (rng.random() - 0.5) * 0.14, y + (rng.random() - 0.5) * 0.14) for x, y in line] for line in cuts]
     left = min(x for line in cuts for x, _ in line)
     right = max(x for line in cuts for x, _ in line)
     pen = TTGlyphPen(None)
     for line in cuts:
         pts = [P(x, y, left) for x, y in line]
-        closed = pts[0] == pts[-1]
+        closed = math.dist(pts[0], pts[-1]) < 30
+        if closed:
+            pts[-1] = pts[0]
         for i in range(len(pts) - 1):
-            cut(pen, pts[i], pts[i + 1], i == 0 and not closed, i == len(pts) - 2 and not closed)
+            cut(pen, pts[i], pts[i + 1], i == 0 and not closed, i == len(pts) - 2 and not closed, rng)
         for q in (pts if closed else pts[1:-1]):
             knot(pen, q)
     return pen.glyph(), round((max(right - left, 1.2)) * UNIT + 2 * SIDE)
@@ -161,7 +171,7 @@ def build(out):
     glyphs = {".notdef": TTGlyphPen(None).glyph(), "space": TTGlyphPen(None).glyph()}
     widths = {".notdef": ADV, "space": round(ADV * 0.7)}
     for ch, n in names.items():
-        glyphs[n], widths[n] = glyph(G[ch])
+        glyphs[n], widths[n] = glyph(G[ch], ord(ch))
     fb.setupGlyf(glyphs)
     fb.setupHorizontalMetrics({n: (widths[n], 0) for n in order})
     fb.setupHorizontalHeader(ascent=860, descent=-200)
