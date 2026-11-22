@@ -296,6 +296,7 @@ pkgs.testers.runNixOSTest {
     with subtest("golem-selftest runs and its machine checks pass (the laptop parts can't, here)"):
         out = machine.execute("su - lilgolemwitch -c 'export DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000; golem-selftest' 2>&1")[1]
         print(out)
+        assert "command not found" not in out, "a command inside golem-selftest is missing"
         for line in ["✓ Wi-Fi was switched off at start", "✓ no clock over the internet", "✓ the firewall is on",
                      "✓ RED sees none of my files", "✓ RED has no network at all", "✓ OFFLINE has no network at all",
                      "✓ the truth log writes and reads", "✓ the internet watcher is running", "✓ the settings guard is listening",

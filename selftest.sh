@@ -11,7 +11,12 @@ check() {   # check "what it means" command...
   if "$@" >/dev/null 2>&1; then ok "$what"; else bad "$what"; fi
 }
 is() { local want=$1; shift; [ "$("$@" 2>/dev/null)" = "$want" ]; }   # is "answer" command...
-has() { compgen -G "$1" >/dev/null; }
+has() {    # has 'pattern': does at least one file match it?
+  local found
+  # shellcheck disable=SC2206   # the pattern is meant to be expanded here
+  found=( $1 )
+  [ -e "${found[0]}" ]
+}
 ran() { [ "$(systemctl show -p ExecMainExitTimestampMonotonic --value "$1")" != 0 ] && [ "$(systemctl show -p Result --value "$1")" = success ] && [ "$(systemctl show -p ExecMainStatus --value "$1")" = 0 ]; }   # a one-time start job finished well
 
 say "GOLEM SELF-TEST  $(date '+%d %b %Y %H:%M')  version $(cat /etc/golem/version 2>/dev/null || echo unknown)"
