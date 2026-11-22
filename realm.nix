@@ -2,10 +2,13 @@
 # (the Start panel, the idle screen). See realm.py and runes.py.
 { pkgs, ... }:
 let
-  # Golem Runes: made here from runes.py (heavy broken-stone letters). Nothing is downloaded.
-  runes = pkgs.runCommand "golem-runes" { nativeBuildInputs = [ (pkgs.python3.withPackages (p: [ p.fonttools p.pillow ])) pkgs.potrace ]; } ''
+  # Golem Runes: Cambria's letter shapes (through Caladea, its free twin, Apache 2.0), carved as ancient stone
+  # by runes.py at build time: chipped, cracked, pitted, every curve cut into facets. Nothing is downloaded.
+  runes = pkgs.runCommand "golem-runes" {
+    nativeBuildInputs = [ (pkgs.python3.withPackages (p: [ p.fonttools p.pillow p.numpy ])) pkgs.potrace ];
+  } ''
     mkdir -p $out/share/fonts/truetype
-    python3 ${./runes.py} $out/share/fonts/truetype/GolemRunes.ttf
+    python3 ${./runes.py} ${pkgs.caladea}/share/fonts/truetype/Caladea-Bold.ttf $out/share/fonts/truetype/GolemRunes.ttf
   '';
   py = pkgs.python3.withPackages (p: [ p.moderngl p.glfw p.numpy p.pillow p.i3ipc ]);
   realm = pkgs.writeShellApplication {
