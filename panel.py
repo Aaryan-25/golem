@@ -1,5 +1,5 @@
 # golem-panel: the Control Panel (Super+Z). A game menu for the system. Keyboard only.
-#   Q / E      previous / next group (SYSTEM, CONTROLS, LOOK, YOU, CODEX)
+#   Q / E      previous / next group (SPELL, WEAVE, MIMIC, MEMORIES, TRUE NAME)
 #   ↑ ↓        move        Enter / →  open or change        Esc / ←  back, or leave
 #   A apply the waiting changes (your password, once)        X throw them away
 #   F find anything        I switch the face (Shadow / Negative)
@@ -17,7 +17,8 @@ SCHEMA = json.load(open("/etc/golem/settings-schema.json"))
 APPS = "/var/lib/golem/apps"
 KEYS = "/var/lib/golem/keys.conf"
 SETTINGS = "/var/lib/golem/settings.conf"
-LOOK = ("face", "effects", "motes", "night_light")
+LOOK = ("face", "effects", "motes", "night_light", "window_sand")
+RUNES = os.environ.get("GOLEM_RUNES", "")                 # Golem's own carved letters (realm.nix)
 FIELDS = ["zone", "internet", "camera", "sound", "usb", "ram", "cpu", "folder"]
 CYCLE = {
     "zone": ["red", "offline", "yellow", "green"],
@@ -33,13 +34,27 @@ EXPLAIN = {
     "ram": "The most memory it may use.", "cpu": "The most processor it may use (100% = one core).",
     "folder": "Its folder, inside your home. Empty = ~/zones/<app>. Enter to type.",
 }
+# The groups and their pages, named by me (21-22 Nov 2026)
 GROUPS = [
-    ("SYSTEM", ["RUNNING", "STARTUP", "STORAGE", "SAVE SLOTS", "ABOUT"]),
-    ("CONTROLS", ["APPS", "KEYS", "DRIVERS", "NETWORK", "SOUND & SCREEN", "POWER", "KEYBOARD"]),
-    ("LOOK", ["FACE", "ALERTS"]),
-    ("YOU", ["TRUTH LOG", "PRIVACY", "BACKUPS"]),
-    ("CODEX", ["ZONES", "ALL KEYS", "GOLEM"]),
+    ("SPELL", ["RUNNING", "STARTUP", "STORAGE", "SAVE SLOTS", "ABOUT"]),
+    ("WEAVE", ["APPS", "KEYS", "DRIVERS", "NETWORK", "SOUND & SCREEN", "POWER", "KEYBOARD"]),
+    ("MIMIC", ["FACE", "COLOURS", "ANIMATIONS", "TEXT", "WINDOWS", "NIGHT LIGHT", "RED ALERT",
+               "START SCREEN", "LOCK SCREEN", "WALLPAPER", "TRANSITIONS", "KEYBOARD LIGHT", "WAKING UP"]),
+    ("MEMORIES", ["TRUTH LOG", "PRIVACY", "BACKUPS"]),
+    ("TRUE NAME", ["ZONES", "ALL KEYS", "GOLEM"]),
 ]
+# MIMIC pages still being made: what's there now, and what comes
+IN_PROGRESS = {
+    "COLOURS": [("Black and white", "the shadow realm", "Black ground, everything else white. I (or B in the Start panel) turns it over. Colours come later.")],
+    "TEXT": [("Golem Runes", "my own carved letters", "Readable as English, cut like stone. Sizes and other letters come later.")],
+    "START SCREEN": [("The picture on the right", "~/zones/settings/scenery.png", "Put any picture there (an avatar or scenery). Until then, a moon. Super+Escape opens the Start panel."),
+                     ("Idle screen", "WEAVE > POWER", "After the idle time the tabs blow away and the picture stays.")],
+    "LOCK SCREEN": [("None for now", None, "Decided 22 Nov 2026: Golem starts straight in. A way to lock comes later.")],
+    "WALLPAPER": [("Plain black", None, "Animations or videos take its place later.")],
+    "TRANSITIONS": [("Picture to picture", "on", "The Start panel, windows (WINDOWS) and these pages turn to sand that flies. More kinds later.")],
+    "KEYBOARD LIGHT": [("The Asus keyboard's light", None, "Comes with the Asus.")],
+    "WAKING UP": [("The sand gathers", None, "For now the sand gathers into the Start panel. The real waking-up animation is designed together, later.")],
+}
 CORE = ("dbus", "dbus-broker", "systemd-journald", "systemd-logind", "systemd-udevd", "NetworkManager",
         "polkit", "nix-daemon", "getty@tty1", "golem-netwatch", "golem-helper", "display-manager", "systemd-")
 KINDS = ["all", "apps", "internet", "devices", "passwords", "settings", "system"]
@@ -125,9 +140,9 @@ class Panel:
         root.attributes("-fullscreen", True)
         self.W, self.H = root.winfo_screenwidth(), root.winfo_screenheight()
         self.size = max(11, min(20, self.H // 58))
-        self.f = ("DejaVu Sans", self.size)
-        self.fs = ("DejaVu Sans", max(9, self.size - 3))
-        self.ft = ("DejaVu Sans", max(10, self.size - 1), "bold")
+        self.f = ("Golem Runes", self.size)
+        self.fs = ("Golem Runes", max(9, self.size - 3))
+        self.ft = ("Golem Runes", max(11, self.size + 1))
         self.LH = int(self.size * 2.2)
         self.c = tk.Canvas(root, width=self.W, height=self.H, bg=self.T["void"], highlightthickness=0)
         self.c.pack(fill="both", expand=True)
@@ -279,8 +294,60 @@ class Panel:
                 yield
         self.anim.append(go())
 
+    def picture(self):
+        """What the panel shows now, as a picture for the sand (half size): how far each thing stands out
+        from the ground."""
+        from PIL import Image, ImageDraw, ImageFont
+        import tkinter.font as tkfont
+        W2, H2 = self.W // 2, self.H // 2
+        im = Image.new("L", (W2, H2), 0)
+        d = ImageDraw.Draw(im)
+        ground = sum(int(self.T["void"][i:i + 2], 16) for i in (1, 3, 5)) / 765
+        fonts = {}
+        for i in self.c.find_withtag("ui"):
+            col = self.final.get(i) or self.c.itemcget(i, "fill")
+            if not col.startswith("#"):
+                continue
+            v = int(abs(sum(int(col[j:j + 2], 16) for j in (1, 3, 5)) / 765 - ground) * 255)
+            xy = [c / 2 for c in self.c.coords(i)]
+            kind = self.c.type(i)
+            if kind == "text":
+                size = abs(tkfont.Font(font=self.c.itemcget(i, "font")).actual("size"))
+                if size not in fonts:
+                    try:
+                        fonts[size] = ImageFont.truetype(RUNES, max(6, int(size * 0.67)))
+                    except OSError:
+                        fonts[size] = ImageFont.load_default()
+                anchor = {"w": "lm", "e": "rm", "center": "mm"}.get(self.c.itemcget(i, "anchor"), "lm")
+                d.text((xy[0], xy[1]), self.c.itemcget(i, "text"), font=fonts[size], fill=v, anchor=anchor)
+            elif kind == "rectangle":
+                d.rectangle(xy, fill=v // 3)
+            elif kind == "line":
+                d.line(xy, fill=v)
+        return im
+
+    def sand_turn(self, change):
+        """Picture to picture through the realm: the page now and the next page, as sand that flies."""
+        rt = os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
+        a, b = os.path.join(rt, "golem-page-a.png"), os.path.join(rt, "golem-page-b.png")
+        try:
+            self.picture().save(a)
+        except Exception:
+            return False
+        change()
+        self.draw()
+        try:
+            self.picture().save(b)
+            # the realm covers the screen with the old page's sand before Tk shows the new page underneath
+            subprocess.run(["golem-realm", "page", a, b], timeout=3, capture_output=True)
+        except Exception:
+            pass
+        return True
+
     def melt_then(self, change):
-        """the old page melts into falling particles; the new one gathers in"""
+        """the old page turns to sand that flies into the new one (or, without the realm, melts and gathers)"""
+        if self.st["effects"] == "on" and self.st.get("window_sand") == "on" and not self.busy and self.sand_turn(change):
+            return
         if self.st["effects"] != "on" or self.busy:
             change()
             self.draw()
@@ -416,7 +483,11 @@ class Panel:
             "RUNNING": self.p_running, "STARTUP": self.p_startup, "STORAGE": self.p_storage,
             "SAVE SLOTS": self.p_slots, "ABOUT": self.p_about, "APPS": self.p_apps, "KEYS": self.p_keys,
             "DRIVERS": self.p_drivers, "NETWORK": self.p_network, "SOUND & SCREEN": self.p_sound,
-            "POWER": self.p_power, "KEYBOARD": self.p_keyboard, "FACE": self.p_face, "ALERTS": self.p_alerts,
+            "POWER": self.p_power, "KEYBOARD": self.p_keyboard, "FACE": self.p_face, "RED ALERT": self.p_alerts,
+            "ANIMATIONS": lambda: self.setting_rows("ANIMATIONS"), "WINDOWS": lambda: self.setting_rows("WINDOWS"),
+            "NIGHT LIGHT": lambda: self.setting_rows("NIGHT LIGHT"),
+            **{k: (lambda k=k: [(a, b, None, c) for a, b, c in IN_PROGRESS[k]] + [("IN PROGRESS", None, None, "This page is still being made.")])
+               for k in IN_PROGRESS},
             "TRUTH LOG": self.p_truth, "PRIVACY": self.p_privacy, "BACKUPS": self.p_backups,
             "ZONES": self.p_zones, "ALL KEYS": self.p_allkeys, "GOLEM": self.p_golem, "CERTS": self.p_certs,
         }[name]()
@@ -574,7 +645,7 @@ class Panel:
         return self.setting_rows("FACE")
 
     def p_alerts(self):
-        return self.setting_rows("ALERTS") + [("Show a test alert", None, ("test-alert",), "Enter: shows the red alert now.")]
+        return self.setting_rows("RED ALERT") + [("Show a test alert", None, ("test-alert",), "Enter: shows the red alert now.")]
 
     def p_truth(self):
         out = run("golem-truth", "--text", *(["--kind", self.kind] if self.kind != "all" else []))

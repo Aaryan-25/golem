@@ -250,9 +250,10 @@ pkgs.testers.runNixOSTest {
         machine.wait_until_succeeds("golem-truth --text | grep -q 'Opened golem-panel in GREEN'", timeout=30)
         machine.sleep(4)
         machine.screenshot("panel_open")
-        for key in ["e", "ret", "ret", "down", "ret"]:        # CONTROLS > APPS > bash > zone > next zone
+        for key in ["e", "ret", "ret", "down", "ret"]:        # WEAVE > APPS > bash > zone > next zone
             machine.send_key(key)
             machine.sleep(1)
+        machine.succeed("test -s /run/user/1000/golem-page-b.png")      # the page changes went through the sand
         machine.send_key("a")
         machine.sleep(1)
         machine.send_chars("golem\n")

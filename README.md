@@ -68,18 +68,18 @@ To turn off the laptop: Super+Escape, or type `poweroff` in a terminal.
 ## Control Panel (Super+Z)
 A game menu for the whole system, keyboard only. Behind it, motes of light drift in the dark; between pages the
 old page melts into falling particles and the new one gathers in, with faint tracker lines. **Super+I** (or
-LOOK > FACE) turns the realm inside out: **Shadow** (pale light on black) ⇄ **Negative** (ink on white), for the
+MIMIC > FACE) turns the realm inside out: **Shadow** (pale light on black) ⇄ **Negative** (ink on white), for the
 whole desktop.
 
 **Q / E** switch groups · **↑↓** move · **Enter** open / change · **Esc** back · **F** find anything · **I** face
 
 | Group | Pages |
 |---|---|
-| SYSTEM | RUNNING (apps in zones, memory, close) · STARTUP (everything running, stop with password, core ones warned) · STORAGE (space used, clean unused pieces) · SAVE SLOTS (older versions; the newest 3 always kept) · ABOUT |
-| CONTROLS | APPS (each app's zone and permissions) · KEYS (press new keys) · DRIVERS (camera, microphone, Bluetooth, Wi-Fi card, USB drives, card reader, touchpad: off = not loaded at all; and parts with no driver) · NETWORK (Wi-Fi, Bluetooth, clock once from the internet or by hand) · SOUND & SCREEN (volume, mic, brightness, night light) · POWER (battery, health, dim/lock/sleep times, processor mode, charge limit) · KEYBOARD (repeat, touchpad speed) |
-| LOOK | FACE (Shadow/Negative, effects, motes) · ALERTS (red alert key and presses, battery and drive alerts, test) |
-| YOU | TRUTH LOG (filter: apps, internet, devices, passwords, settings, system) · PRIVACY (tracker and ad blocking, telemetry, sharing, history, hidden name and MAC, certificates) · BACKUPS (save and load your settings by name) |
-| CODEX | ZONES · ALL KEYS · GOLEM (the principles) |
+| SPELL | RUNNING (apps in zones, memory, close) · STARTUP (everything running, stop with password, core ones warned) · STORAGE (space used, clean unused pieces) · SAVE SLOTS (older versions; the newest 3 always kept) · ABOUT |
+| WEAVE | APPS (each app's zone and permissions) · KEYS (press new keys) · DRIVERS (camera, microphone, Bluetooth, Wi-Fi card, USB drives, card reader, touchpad: off = not loaded at all; and parts with no driver) · NETWORK (Wi-Fi, Bluetooth, clock once from the internet or by hand) · SOUND & SCREEN (volume, mic, brightness) · POWER (battery, health, dim/lock/sleep times, processor mode, charge limit) · KEYBOARD (repeat, touchpad speed) |
+| MIMIC | FACE (Shadow/Negative) · COLOURS · ANIMATIONS (effects, motes) · TEXT · WINDOWS (windows as sand) · NIGHT LIGHT · RED ALERT (key and presses, battery and drive alerts, test) · in progress: START SCREEN · LOCK SCREEN · WALLPAPER · TRANSITIONS · KEYBOARD LIGHT · WAKING UP |
+| MEMORIES | TRUTH LOG (filter: apps, internet, devices, passwords, settings, system) · PRIVACY (tracker and ad blocking, telemetry, sharing, history, hidden name and MAC, certificates) · BACKUPS (save and load your settings by name) |
+| TRUE NAME | ZONES · ALL KEYS · GOLEM (the principles) |
 
 Changes wait on a copy: **A** applies them (your password, once), **X** throws them away, Esc with changes
 waiting asks first. At once, without the password: closing an app, volume, brightness, Wi-Fi, Bluetooth, the look.
@@ -89,7 +89,7 @@ Every change goes to the truth log.
 
 ## Red alert
 The only thing that ever covers the screen by itself: a full red screen, dismissed by pressing the chosen key
-several times (LOOK > ALERTS). It comes when the battery runs low and isn't charging, when the drive is almost
+several times (MIMIC > RED ALERT). It comes when the battery runs low and isn't charging, when the drive is almost
 full, or when the Control Panel can't open.
 
 ## Truth log

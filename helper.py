@@ -20,7 +20,7 @@ KEYS = "/var/lib/golem/keys.conf"
 SETTINGS = "/var/lib/golem/settings.conf"
 BACKUPS = "/var/lib/golem/backups"
 SCHEMA = json.load(open("/etc/golem/settings-schema.json"))
-LOOK = ("face", "effects", "motes", "night_light")      # these change at once, without the password
+LOOK = ("face", "effects", "motes", "night_light", "window_sand")      # these change at once, without the password
 CORE = ("dbus", "dbus-broker", "systemd-journald", "systemd-logind", "systemd-udevd", "NetworkManager",
         "polkit", "nix-daemon", "getty@tty1", "golem-netwatch", "systemd-timesyncd")
 ZONES = ("red", "offline", "yellow", "green")

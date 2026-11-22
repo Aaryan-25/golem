@@ -9,7 +9,7 @@ let
     (builtins.readFile file);
   helper = pyw "golem-helper" [ pkgs.python3Packages.python-pam ] ./helper.py;
   keysgen = pyw "golem-keys-gen" [ ] ./keysgen.py;
-  panelPy = (pkgs.python3.withPackages (ps: [ ps.tkinter ]));
+  panelPy = (pkgs.python3.withPackages (ps: [ ps.tkinter ps.pillow ]));
   panel = pkgs.writeShellApplication {
     name = "golem-panel";
     runtimeInputs = with pkgs; [ systemd networkmanager wireplumber brightnessctl procps util-linux i3 pciutils bluez coreutils gawk gnugrep nix ];

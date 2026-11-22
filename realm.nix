@@ -26,6 +26,7 @@ let
   };
 in {
   fonts.packages = [ runes ];
+  environment.variables.GOLEM_RUNES = "${runes}/share/fonts/truetype/GolemRunes.ttf";   # for the Control Panel's sand
   environment.systemPackages = [ realm ];
   hardware.graphics.enable = true;
 }

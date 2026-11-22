@@ -10,21 +10,21 @@
     yellow  = { memory = "2G";    cpu = "150%"; };
     green   = { memory = "2500M"; cpu = "180%"; };
   };
-  # The look: a dark void with pale, cold light.
+  # The look: the shadow realm. Black ground, everything else white (22 Nov 2026).
   theme = {
-    void  = "#050506";   # background everywhere
-    shade = "#14161c";   # selected item, quiet surfaces
-    mist  = "#6f7484";   # dim text, inactive things
-    text  = "#c8ccd8";   # normal text
-    pale  = "#e6e9f2";   # bright text, focus line
+    void  = "#000000";   # background everywhere
+    shade = "#1c1c1c";   # selected item, quiet surfaces
+    mist  = "#8c8c8c";   # dim text, inactive things
+    text  = "#dcdcdc";   # normal text
+    pale  = "#ffffff";   # bright text, focus line
   };
-  # Negative: ink on pale paper (Super+I, or Control Panel > LOOK > FACE).
+  # Negative, the yin-yang turned over: ink on white paper (Super+I, B in the Start panel, MIMIC > FACE).
   themeNegative = {
-    void  = "#eceae4";
-    shade = "#d6d3ca";
-    mist  = "#7a776f";
-    text  = "#26252a";
-    pale  = "#0b0b0d";
+    void  = "#f4f4f1";
+    shade = "#dadad6";
+    mist  = "#707070";
+    text  = "#202020";
+    pale  = "#000000";
   };
   githubRepo = "Aaryan-25/golem";   # where golem-update gets new versions
 }

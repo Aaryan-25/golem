@@ -7,6 +7,7 @@ One program stays running for the whole session, so it answers at once:
   golem-realm hide          back to the desktop
   golem-realm win close|min|full X Y W H    a window turns to sand (golem-win asks, then acts once "ready")
   golem-realm win moved X Y W H             where that window is now (after full)
+  golem-realm page A.png B.png              the Control Panel's page change: picture A flies into picture B
 
 Start panel keys: Up/Down (or the mouse) choose, Enter (or a click) does it, Esc goes back to the desktop,
 B turns the paper over (the yin-yang: the same as Super+I). The cursor is a small light in the sand.
@@ -430,6 +431,26 @@ class Realm:
         self.win_load(here, to, 0.45)
         self.after = ("hide", None)
 
+    def page_turn(self, a, b, conn):
+        """The Control Panel's pages: the old page's sand flies into the new one, over the panel's own ground."""
+        from PIL import Image
+        if (self.visible and self.mode == "panel") or not self.window_sand_on():
+            conn.close()
+            return
+        try:
+            pa, pb = (np.asarray(Image.open(p).convert("L").resize((self.W // 2, self.H // 2)), "f4") / 255.0 for p in (a, b))
+        except OSError:
+            conn.close()
+            return
+        ground = np.full((self.H, self.W, 3), 244 if self.ink else 0, np.uint8)
+        self.set_bg(ground)
+        self.win_load(homes(pa, self.n_win, self.rng), homes(pb, self.n_win, self.rng), 0.5)
+        self.win_pic = None
+        self.mode = "window"
+        self.after = ("hide", None)
+        self.appear(grab=False)
+        self.reply, self.reply_due = conn, True
+
     def open_soon(self, con_id):
         self.pending_open = (time.monotonic() + 0.15, con_id)
 
@@ -512,7 +533,7 @@ class Realm:
             except OSError:
                 c.close()
                 continue
-            if cmd.startswith("win "):
+            if cmd.startswith(("win ", "page ")):
                 self.queue.put((cmd, c))                   # answered once the sand is on the screen
             else:
                 c.close()
@@ -559,6 +580,9 @@ class Realm:
                         self.window_moved(rect, conn)
                     else:
                         self.window_event(word[1], rect, conn)
+                    continue
+                if word[:1] == ["page"] and len(word) == 3:
+                    self.page_turn(word[1], word[2], conn)
                     continue
                 if conn:
                     conn.close()
@@ -672,7 +696,7 @@ def main():
             log(f"The realm could not start: {e}")
             raise
         return
-    if arg == "win":
+    if arg in ("win", "page"):
         s = socket.socket(socket.AF_UNIX)
         s.settimeout(1.5)
         try:

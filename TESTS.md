@@ -96,7 +96,7 @@ Do these, then press **Super+T** and check each shows up in words you understand
 - [ ] **Super+Z** opens it full screen: dark realm, drifting motes, groups at the top (Q / E switch)
 - [ ] Opening a page: the old page melts, the new one gathers in
 - [ ] **I** (or Super+I anywhere): the screen turns inside out to Negative (ink on white), and back
-- [ ] CONTROLS > APPS: change an app's zone; "changes waiting"; **A** asks the password once; Super+T shows it
+- [ ] WEAVE > APPS: change an app's zone; "changes waiting"; **A** asks the password once; Super+T shows it
 - [ ] A wrong password applies nothing, and the truth log says so
 - [ ] KEYS: change a key (Enter, then press the new keys), apply, and the new key works
 - [ ] DRIVERS: camera OFF, apply; the camera can't be used (and ON again)
@@ -105,7 +105,7 @@ Do these, then press **Super+T** and check each shows up in words you understand
 - [ ] POWER: change "Lock after", apply; it locks after the new time
 - [ ] STARTUP lists what runs; SAVE SLOTS lists versions; STORAGE shows space
 - [ ] YOU > PRIVACY: trackers ON (a known ad site doesn't load); BACKUPS: save one, load it
-- [ ] LOOK > ALERTS: "Show a test alert": red screen, gone after pressing Space 3 times
+- [ ] MIMIC > RED ALERT: "Show a test alert": red screen, gone after pressing Space 3 times
 - [ ] **F** finds things (try "battery")
 - [ ] In a terminal, `touch /var/lib/golem/apps/test.conf` is refused (only the panel can change settings)
 
