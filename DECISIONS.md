@@ -58,7 +58,7 @@ The goal: **private, clean, usable.**
 | Screen | No app may see the screen (screenshots, recording, sharing) unless that app is allowed, like the camera. Golem's own screenshot key always works. |
 | Driver switches | On/off (driver not loaded at all) for: camera + microphone, Bluetooth + Wi-Fi, USB ports + card reader, touchpad. |
 | Zone limits | Shilp's limits on the Dell (RED 1G RAM / half a core, OFFLINE 1.5G / 1 core, YELLOW 2G / 1.5 cores, GREEN 2.5G / almost 2 cores), scaled up on the Asus. |
-| History | None: no recent files, no searches remembered. |
+| History | None: no recent files, no searches remembered. **Exception (owner's choice, 22 Nov 2026): the text editor** keeps its recent and pinned files, last session, undo, spelling dictionary and relics, in `~/.local/share/golem-edit` and its own state folder. |
 | Language | English only for now. |
 | Guest | No guest user. |
 | Folders | `documents`, `projects`, `media`, `zones` (each app's own folder; a YELLOW browser's downloads land in its folder there, and I move files out on purpose). |

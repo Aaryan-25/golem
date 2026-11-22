@@ -109,6 +109,36 @@ melt and gather, Shadow/Negative turning inside out, find (F), and every page fr
 Wayland. Not yet: per-app site lists, distrusting certificates, clipboard and screen rules (these need the
 Wayland step).
 
+## Add-on: Text editor (built early, on the `text-editor` branch, at my request, 22 Nov 2026)
+**Goal:** my editor: Notepad-style typing in Cool Retro Term's glass, files panel, running code, live preview,
+the AI (Gemini now, my own later) and the gada animations.
+**Made:** `editor.nix` and the `editor/` folder; Super+E. Its starting zone is GREEN with internet (for the AI),
+sound and USB; after that the Control Panel decides. It joins main when I say so, after the laptop test of Steps 2 to 8.
+
+**Done when:** on the laptop, Super+E opens it; I type, save (SAVED shows), find and replace, open the files panel
+(Ctrl+B), run a Python file (F5), preview an HTML file (F6), and ask Gemini something (Ctrl+K) with my key;
+Alt+G changes the animation level and weapon, and nothing feels slow on LOW; F9 shows a Python file as a flowchart, and F10's
+blocks write a small program that F5 then runs.
+
+### Next for the editor (planned, not built yet)
+**Wires (node programming), like Unreal's Blueprints, Node-RED and LabVIEW.** A program as boxes ("nodes") joined
+by wires. Each box does one thing (read a number, add, show text, repeat); its little sockets on the left take things in
+and the ones on the right give results out; a wire carries a value (or, in Blueprints, the order of steps) from one box
+to the next. A box runs once everything it needs has arrived along its wires. Plan: a wire canvas in a window beside the
+editor (like the F10 blocks), Golem's colours, boxes for Python's basics plus "call a function from my code"; it writes
+the code as you connect, and the wires picture is kept beside the file, like the blocks are.
+
+**The whole program in one 3D picture (a "program map").** Known ideas: CodeCity (each file a district, each function a
+tower, its height = how long it is), call graphs (a light beam from each function to the ones it calls), Gource (the
+project's history grown as an animation). Plan: one key shows the open project as a dark 3D landscape in a window: files
+as districts, functions as towers (taller = longer, brighter = changed recently, ember = has a mistake), beams for calls,
+the gada hovering over the one you are in. Mouse or arrows to fly around; a click on a tower opens that function in the
+editor. Python first (read like F9, never run); other languages through the AI. Drawn with WebGL in a bar-less Firefox
+window, kept small so the Celeron's graphics can turn it smoothly; a flat 2D version for LOW.
+
+**Done when:** on the laptop, I build a small program by wiring boxes and F5 runs it; and the program map of a project
+with a few files shows its towers and beams, turns smoothly, and a click opens the right function.
+
 ---
 
 ## Test tools (22 Nov 2026, asked for by me)

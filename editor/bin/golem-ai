@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# golem-ai FOLDER ID: sends one question to the AI and writes the answer.
+#   FOLDER/ask/ID.json   the question (written by the editor): provider, model, prompt, image
+#   FOLDER/ask/ID.img    a picture to send along (optional)
+#   FOLDER/gemini.key    your Gemini key
+# Writes FOLDER/ask/ID.out (the answer) or FOLDER/ask/ID.err (what went wrong, in plain words).
+set -u
+box=${1:?usage: golem-ai FOLDER ID}; id=${2:?usage: golem-ai FOLDER ID}
+[[ "$id" =~ ^[A-Za-z0-9_-]+$ ]] || exit 2
+req="$box/ask/$id.json"; out="$box/ask/$id.out"; err="$box/ask/$id.err"; img="$box/ask/$id.img"
+fail() { printf '%s\n' "$1" > "$err"; exit 1; }
+[ -f "$req" ] || fail "no question found"
+body=$(mktemp); resp=$(mktemp); b64=$(mktemp); trap 'rm -f "$body" "$resp" "$b64"' EXIT
+
+provider=$(jq -r '.provider // "gemini"' "$req")
+case "$provider" in
+  gemini)
+    [ -s "$box/gemini.key" ] || fail "no Gemini key yet (Ctrl+K, Set my Gemini key)"
+    model=$(jq -r '.model // "gemini-flash-latest"' "$req")
+    if [ -f "$img" ]; then
+      base64 -w0 "$img" > "$b64"
+      jq -n --slurpfile r "$req" --rawfile d "$b64" \
+        '{contents: [{parts: [{text: $r[0].prompt}, {inline_data: {mime_type: $r[0].image_mime, data: $d}}]}]}' > "$body"
+    else
+      jq -n --slurpfile r "$req" '{contents: [{parts: [{text: $r[0].prompt}]}]}' > "$body"
+    fi
+    code=$(curl -sS --max-time 180 -o "$resp" -w '%{http_code}' \
+      -H "x-goog-api-key: $(tr -d '[:space:]' < "$box/gemini.key")" -H 'Content-Type: application/json' \
+      --data-binary @"$body" \
+      "${GOLEM_GEMINI_URL:-https://generativelanguage.googleapis.com/v1beta}/models/$model:generateContent" 2>"$err") \
+      || fail "could not reach Gemini (is Wi-Fi on?): $(head -c 200 "$err")"
+    if [ "$code" != 200 ]; then
+      fail "Gemini said: $(jq -r '.error.message // empty' "$resp" 2>/dev/null | head -c 300) (code $code)"
+    fi
+    jq -r '[.candidates[0].content.parts[]?.text // empty] | join("")' "$resp" > "$out"
+    ;;
+  own)
+    url=$(jq -r '.url // empty' "$req"); [ -n "$url" ] || fail "your own AI has no address yet"
+    if [ -f "$img" ]; then
+      base64 -w0 "$img" > "$b64"
+      jq -n --slurpfile r "$req" --rawfile d "$b64" '{model: $r[0].own_model, messages: [{role: "user", content: [
+        {type: "text", text: $r[0].prompt},
+        {type: "image_url", image_url: {url: ("data:" + $r[0].image_mime + ";base64," + $d)}}]}]}' > "$body"
+    else
+      jq -n --slurpfile r "$req" '{model: $r[0].own_model, messages: [{role: "user", content: $r[0].prompt}]}' > "$body"
+    fi
+    curl -sS --max-time 600 -o "$resp" -H 'Content-Type: application/json' --data-binary @"$body" "$url" 2>"$err" \
+      || fail "could not reach your AI at $url"
+    jq -r '.choices[0].message.content // empty' "$resp" > "$out"
+    ;;
+  *) fail "unknown AI: $provider" ;;
+esac
+[ -s "$out" ] || { rm -f "$out"; fail "the AI sent an empty answer"; }
+rm -f "$err"

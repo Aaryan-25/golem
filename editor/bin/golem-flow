@@ -1,0 +1,178 @@
+#!/usr/bin/env python3
+"""golem-flow [--width N]: draws Python code (read from stdin) as a flowchart in text.
+
+Prints JSON: {"lines": [...], "map": [source line for each row, 0 = none], "error": "..."}
+The editor shows the lines in its flow panel (F9) and uses the map to jump to the code.
+
+    ■ def name(...)      a function (its own little chart below it)
+    ┌───────────┐
+    │ x = 1     │        plain steps, run one after another
+    └───────────┘
+    ◆ if x > 0 ?         a choice:  ├─ yes  /  ├─ else if ...  /  └─ no
+    ⟳ for i in ...:      a loop: its steps, then ↺ back to the loop
+    ⏎ return / ⇥ break / ↻ continue / ⚠ raise
+    ⚑ try                ├─ if it fails (except ...)  └─ at the end, always (finally)
+"""
+import ast
+import json
+import sys
+
+width = 44
+if "--width" in sys.argv:
+    try:
+        width = max(24, int(sys.argv[sys.argv.index("--width") + 1]))
+    except (ValueError, IndexError):
+        pass
+
+source = sys.stdin.read()
+rows, where = [], []
+
+
+def out(text, line=0):
+    rows.append(text)
+    where.append(line)
+
+
+def seg(node):
+    text = ast.get_source_segment(source, node) or ast.dump(node)[:40]
+    return " ".join(text.split())  # one line, single spaces
+
+
+def fit(text, room):
+    return text if len(text) <= room else text[: max(1, room - 1)] + "…"
+
+
+def box(items, prefix):
+    """A box of plain steps. items: [(text, line)]"""
+    room = max(8, width - len(prefix) - 4)
+    texts = [(fit(t, room), ln) for t, ln in items]
+    inner = max(len(t) for t, _ in texts)
+    out(prefix + "┌" + "─" * (inner + 2) + "┐", texts[0][1])
+    for t, ln in texts:
+        out(prefix + "│ " + t.ljust(inner) + " │", ln)
+    out(prefix + "└" + "─" * (inner + 2) + "┘", texts[-1][1])
+
+
+SIMPLE = (ast.Assign, ast.AugAssign, ast.AnnAssign, ast.Expr, ast.Import, ast.ImportFrom,
+          ast.Pass, ast.Global, ast.Nonlocal, ast.Delete, ast.Assert)
+
+
+def flow(stmts, prefix):
+    """Steps in order, an arrow between each."""
+    pending, first = [], True
+
+    def flush():
+        nonlocal pending, first
+        if pending:
+            if not first:
+                out(prefix + "  ▼")
+            for k in range(0, len(pending), 6):  # long runs: one box per six steps
+                if k:
+                    out(prefix + "  ▼")
+                box(pending[k:k + 6], prefix)
+            pending, first = [], False
+
+    for s in stmts:
+        if isinstance(s, SIMPLE):
+            if isinstance(s, ast.Expr) and isinstance(s.value, ast.Constant) and isinstance(s.value.value, str):
+                continue  # a docstring: words, not a step
+            pending.append((seg(s), s.lineno))
+            continue
+        flush()
+        if not first:
+            # functions and classes are separate charts, not the next step
+            out("" if isinstance(s, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)) else prefix + "  ▼")
+        first = False
+        step(s, prefix)
+    flush()
+    if first:
+        out(prefix + "(nothing yet)")
+
+
+def branches(parts, prefix):
+    """parts: [(label, stmts, line)] drawn as ├─ / └─ with their own flows."""
+    for i, (label, stmts, line) in enumerate(parts):
+        last = i == len(parts) - 1
+        out(prefix + ("└─ " if last else "├─ ") + fit(label, width - len(prefix) - 3), line)
+        if stmts:
+            flow(stmts, prefix + ("   " if last else "│  "))
+
+
+def step(s, prefix):
+    room = width - len(prefix) - 4
+    if isinstance(s, (ast.FunctionDef, ast.AsyncFunctionDef)):
+        args = ast.unparse(s.args)
+        out(prefix + "■ def " + fit(f"{s.name}({args})", room), s.lineno)
+        flow(s.body, prefix + "  ")
+    elif isinstance(s, ast.ClassDef):
+        out(prefix + "▣ class " + fit(s.name, room), s.lineno)
+        flow(s.body, prefix + "  ")
+    elif isinstance(s, ast.If):
+        out(prefix + "◆ if " + fit(seg(s.test), room - 5) + " ?", s.lineno)
+        parts = [("yes", s.body, s.lineno)]
+        rest = s.orelse
+        while len(rest) == 1 and isinstance(rest[0], ast.If):  # elif
+            e = rest[0]
+            parts.append(("else if " + seg(e.test) + " ?", e.body, e.lineno))
+            rest = e.orelse
+        parts.append(("no", rest, s.lineno) if rest else ("no: go on", [], s.lineno))
+        branches(parts, prefix)
+    elif isinstance(s, (ast.For, ast.AsyncFor)):
+        out(prefix + "⟳ for " + fit(f"{seg(s.target)} in {seg(s.iter)}", room - 6), s.lineno)
+        flow(s.body, prefix + "│  ")
+        out(prefix + "↺ back to the loop", s.lineno)
+        if s.orelse:
+            branches([("when the loop ends", s.orelse, s.lineno)], prefix)
+    elif isinstance(s, ast.While):
+        out(prefix + "⟳ while " + fit(seg(s.test), room - 8), s.lineno)
+        flow(s.body, prefix + "│  ")
+        out(prefix + "↺ back to the loop", s.lineno)
+    elif isinstance(s, ast.Try) or s.__class__.__name__ == "TryStar":
+        out(prefix + "⚑ try", s.lineno)
+        flow(s.body, prefix + "│  ")
+        parts = []
+        for h in s.handlers:
+            what = seg(h.type) if h.type else "anything"
+            parts.append((f"if it fails ({what})", h.body, h.lineno))
+        if s.orelse:
+            parts.append(("if it worked", s.orelse, s.lineno))
+        if s.finalbody:
+            parts.append(("at the end, always", s.finalbody, s.lineno))
+        branches(parts or [("go on", [], s.lineno)], prefix)
+    elif isinstance(s, (ast.With, ast.AsyncWith)):
+        out(prefix + "◫ with " + fit(", ".join(seg(i) for i in s.items), room - 7), s.lineno)
+        flow(s.body, prefix + "│  ")
+    elif s.__class__.__name__ == "Match":
+        out(prefix + "◆ match " + fit(seg(s.subject), room - 8), s.lineno)
+        branches([("case " + seg(c.pattern), c.body, c.pattern.lineno) for c in s.cases], prefix)
+    elif isinstance(s, ast.Return):
+        out(prefix + "⏎ " + fit(seg(s), room), s.lineno)
+    elif isinstance(s, ast.Break):
+        out(prefix + "⇥ break (leave the loop)", s.lineno)
+    elif isinstance(s, ast.Continue):
+        out(prefix + "↻ continue (next turn of the loop)", s.lineno)
+    elif isinstance(s, ast.Raise):
+        out(prefix + "⚠ " + fit(seg(s), room), s.lineno)
+    else:
+        box([(seg(s), getattr(s, "lineno", 0))], prefix)
+
+
+try:
+    tree = ast.parse(source)
+except SyntaxError as e:
+    print(json.dumps({"lines": [], "map": [], "error": f"line {e.lineno}: {e.msg}"}))
+    sys.exit(0)
+
+# Functions and classes get their own charts; the rest is "the program", in order.
+body = tree.body
+main = [s for s in body if not isinstance(s, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))]
+for s in body:
+    if isinstance(s, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+        step(s, "")
+        out("")
+if main:
+    out("● the program (runs from the top)", main[0].lineno)
+    flow(main, "  ")
+if not rows:
+    out("(no code yet)")
+print(json.dumps({"lines": rows, "map": where, "error": None}, ensure_ascii=False))

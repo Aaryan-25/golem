@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# golem-open FILE|LINK: opens what the editor can't show itself, by the file's contents.
+#   pictures -> imv   music, video -> mpv   PDF -> zathura   links -> Firefox
+#   Word / Excel / PowerPoint (and LibreOffice files) -> Google Drive in Firefox: the file is
+#   copied to ~/Downloads/for-google and Firefox opens Drive, where you upload it (Drive's "New").
+# Prints one line saying what it did. Exit 3 = it is text (the editor opens it itself).
+set -u
+t=${1:?usage: golem-open FILE|LINK}
+
+start() {
+  command -v "$1" >/dev/null || { echo "${1^^} IS MISSING, SO THIS CAN'T OPEN"; exit 5; }
+  setsid -f "$@" >/dev/null 2>&1 </dev/null
+}
+
+case "$t" in
+  http://*|https://*|www.*)
+    start firefox "$t"; echo "OPENING THE LINK IN FIREFOX"; exit 0 ;;
+esac
+
+[ -e "$t" ] || { echo "NOT FOUND: $t"; exit 1; }
+f=$(realpath -- "$t"); b=$(basename -- "$f")
+m=$(file -b --mime-type -- "$f")
+case "$m" in
+  text/*|inode/x-empty|application/json|application/x-ndjson|*xml|*javascript)
+    exit 3 ;;
+  image/*)
+    start imv "$f"; echo "OPENING THE PICTURE $b" ;;
+  audio/*|video/*)
+    start mpv --force-window=yes "$f"; echo "PLAYING $b" ;;
+  application/pdf)
+    start zathura "$f"; echo "OPENING THE PDF $b" ;;
+  application/msword|application/vnd.ms-*|application/vnd.openxmlformats-officedocument.*|application/vnd.oasis.opendocument.*|application/rtf)
+    up="$HOME/Downloads/for-google"; mkdir -p "$up"; cp -f -- "$f" "$up/"
+    logger -t zone "Editor: copied $b to ~/Downloads/for-google to open in Google Docs" 2>/dev/null
+    start firefox "https://drive.google.com/drive/my-drive"
+    echo "GOOGLE DRIVE IS OPENING: UPLOAD $b FROM ~/Downloads/for-google (NEW > FILE UPLOAD)" ;;
+  inode/directory)
+    echo "THAT IS A FOLDER"; exit 1 ;;
+  *)
+    echo "GOLEM CAN'T OPEN THIS KIND OF FILE YET ($m)"; exit 4 ;;
+esac
