@@ -13,6 +13,14 @@ let
     runtimeInputs = with pkgs; [ util-linux i3 ];
     text = ''
       export GOLEM_RUNES=${runes}/share/fonts/truetype/GolemRunes.ttf
+      if [ "''${1:-}" = --daemon ]; then
+        # If the realm ever stops, say why in the truth log (the desktop keeps working without it).
+        err="''${XDG_RUNTIME_DIR:-/tmp}/golem-realm.err"
+        if ! ${py}/bin/python3 ${./realm.py} --daemon 2>"$err"; then
+          logger -t golem "The realm stopped: $(tail -n 4 "$err" | tr '\n' ' ')"
+        fi
+        exit 0
+      fi
       exec ${py}/bin/python3 ${./realm.py} "$@"
     '';
   };
