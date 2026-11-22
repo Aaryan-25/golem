@@ -79,6 +79,9 @@ in
     fi
   '';
   environment.systemPackages = with pkgs; [ xterm xsetroot git ];
+  # Only what we chose. NixOS would also add perl, rsync and strace by itself; nano stays, to fix a file if something breaks.
+  environment.defaultPackages = [ ];
+  programs.nano.enable = true;
 
   # ---- The pendrive image (built by GitHub) ----
   system.build.golemImage = import "${modulesPath}/../lib/make-disk-image.nix" {
