@@ -4,7 +4,7 @@
 --   Ctrl+S save   Ctrl+O open   Ctrl+P find a file   Ctrl+N new   Ctrl+Q close
 --   Ctrl+F find   F3 next   Ctrl+R replace   Ctrl+G go to line   Ctrl+Z / Ctrl+Y undo / redo
 --   Ctrl+A all    Shift+arrows select   Ctrl+C / Ctrl+X / Ctrl+V copy / cut / paste
---   Ctrl+L line numbers   Alt+Z word wrap   F1 the guide
+--   Ctrl+L line numbers   Alt+Z word wrap   F1 the list of everything (and the guide)
 --
 -- Truthful state: the bottom line says SAVED only when the file on disk is exactly what
 -- you see. Autosave writes ~2 s after you stop typing, never over a file that another app
@@ -654,7 +654,7 @@ local function quit()
 end
 
 -------------------------------------------------------------------------------
--- The guide (F1)
+-- The guide (in the F1 list, or H on the dashboard)
 -------------------------------------------------------------------------------
 local here = fn.fnamemodify(debug.getinfo(1, 'S').source:sub(2), ':h') -- the editor's own folder
 local guide_file = here .. '/guide.txt'
@@ -696,7 +696,6 @@ map(all, '<C-p>', cmd(function() _G.GolemFind() end))
 map(all, '<C-e>', cmd(find_open_files))
 map(all, '<C-n>', function() vim.cmd('enew'); vim.cmd('startinsert') end)
 map(all, '<C-q>', cmd(quit))
-map(all, '<F1>', cmd(guide))
 map(all, '<C-g>', cmd(goto_line))
 map(all, '<C-r>', cmd(replace))
 map(all, '<C-l>', function()
@@ -748,7 +747,7 @@ _G.Golem = {
   save = save, open_path = open_path, open_ask = open_ask, map = map, all = all, here = here,
   write_buf = write_buf, autosave_now = autosave_all, state = state, quit = quit, guide = guide,
 }
-for _, part in ipairs({ 'mace.lua', 'panels.lua', 'ai.lua', 'writing.lua', 'flow.lua', 'dashboard.lua' }) do
+for _, part in ipairs({ 'mace.lua', 'panels.lua', 'ai.lua', 'writing.lua', 'flow.lua', 'palette.lua', 'dashboard.lua' }) do
   local ok, err = pcall(dofile, here .. '/' .. part)
   if not ok then vim.schedule(function() say('PART OF THE EDITOR FAILED TO LOAD: ' .. tostring(err)) end) end
 end

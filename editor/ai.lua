@@ -273,3 +273,4 @@ end
 S.map(S.all, '<C-k>', menu)
 -- for other parts (the flowchart of non-Python code)
 S.ask_ai = function(what, prompt, done) request(what, prompt, nil, done) end
+S.ai_actions = actions -- for the F1 list

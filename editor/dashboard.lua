@@ -6,7 +6,7 @@
 --           PINNED   files you pinned with Alt+P           RECENT  files you opened lately
 --           1-9 open one of them; R reopens the files you had open last time
 --           one letter for each thing: N new, O open, P find, B files, T terminal, K AI,
---           C codex, G settings, H guide, Q close
+--           C codex, G settings, H guide, Q close; F1 the list of everything
 --   bottom  a pulse: battery, memory, Wi-Fi, the time (looked at every 5 s, only while
 --           the dashboard is showing), and a line for the day: from
 --           ~/.local/share/golem-edit/daily.txt if you write your own (one per line)
@@ -317,7 +317,7 @@ function _G.GolemStart()
   key('k', function() feed('<C-k>') end)
   key('c', function() if S.gada then S.gada.codex() end end)
   key('g', function() if S.gada then S.gada.settings() end end)
-  key('h', S.guide); key('<F1>', S.guide)
+  key('h', S.guide); key('<F1>', function() S.palette() end)
   key('r', function() if S.reopen then S.reopen() end end)
   key('q', S.quit); key('<C-q>', S.quit)
   key('<Esc>', function() end)

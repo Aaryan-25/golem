@@ -1,6 +1,10 @@
 
    G O L E M   ·   E D I T O R   G U I D E                       Esc or F1 = back
 
+   LOST?  Press F1 anywhere: a list of everything the editor does, each with its
+   key. Type a few letters ("flow", "spell", "pin", "code") and press Enter: it
+   does it for you. This guide is the last line of that list.
+
 
    THE DASHBOARD  (opening the editor without a file)
      A big gada, today's lines and saves, relics found, your pinned and recent
