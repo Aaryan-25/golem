@@ -1,12 +1,18 @@
-"""Golem Runes: Golem's own carved letters, readable as English.
+"""Golem Runes: Golem's own letters, like broken stone, readable as English.
 
-Every letter is a few straight cuts on a 4 x 6 grid, like letters cut into stone with a knife:
-no curves, pointed ends where the blade went in and out. Small letters are the same as capitals.
-Run:  python3 runes.py OUT.ttf   (the build does this; nothing is downloaded)
+Every letter is a few heavy blocks on a 4 x 6 grid, as if cut from a stone slab thousands of years old:
+square and heavy, with chipped corners, a crack or two, and small pits worn into the face.
+The damage is different for each letter but the same every time. Small letters are the same as capitals.
+How it's made: each letter is drawn as a picture, damaged, then traced into straight-edged outlines
+(potrace) and put into a font. Run:  python3 runes.py OUT.ttf   (the build does this; nothing is downloaded)
 """
-import math, sys
+import math, os, random, subprocess, sys, tempfile
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.pens.transformPen import TransformPen
+from fontTools.pens.cu2quPen import Cu2QuPen
+from fontTools.svgLib import SVGPath
+from PIL import Image, ImageDraw
 
 # Each glyph: a list of cuts; each cut is a list of (x, y) points on the grid (x 0..4, y 0..6).
 G = {
@@ -78,83 +84,81 @@ G = {
 }
 
 UNIT = 116           # one grid step, in font units (cap height 6 steps = 696)
-CUT = 125             # how wide a cut is
-SIDE = 90            # space on each side of a letter
+SIDE = 70            # space on each side of a letter
 ADV = 4 * UNIT + 2 * SIDE
+PX = 30              # one grid step in the drawing
+THICK = 40           # how heavy a stroke of stone is, in the drawing
+PAD = 60             # room around the letter in the drawing
 
 
-def P(x, y, left=0):
-    return (SIDE + (x - left) * UNIT, y * UNIT)
-
-
-def ring(points):
-    """Clockwise, as TrueType wants the outside of a shape."""
-    a = sum(x0 * y1 - x1 * y0 for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]))
-    return points[::-1] if a > 0 else points
-
-
-def cut(pen, a, b, start_tip, end_tip, rng):
-    """One cut from a to b, made like an old carving: where the chisel went in, a wedge-shaped head;
-    the groove narrows as it goes and its edges aren't perfectly even; where it leaves, a point.
-    Inside a letter (where cuts meet) the ends are square, so the corner is solid."""
+def block(d, a, b):
+    """One heavy stroke from a to b, square at both ends (ends reach past the points so corners are solid)."""
     (x0, y0), (x1, y1) = a, b
     L = math.hypot(x1 - x0, y1 - y0) or 1
     dx, dy = (x1 - x0) / L, (y1 - y0) / L
-    px, py = -dy, dx
-    e = CUT / 2
-    w0, w1 = CUT * 0.55, CUT * 0.38                       # half width: wide at the start, narrower at the end
-    wobble = lambda: 1 + (rng.random() - 0.5) * 0.24      # noqa: E731  a worn edge
-    sx, sy = (x0 - dx * e * 0.5, y0 - dy * e * 0.5) if not start_tip else (x0, y0)
-    ex, ey = (x1 + dx * e * 0.5, y1 + dy * e * 0.5) if not end_tip else (x1 - dx * e * 0.8, y1 - dy * e * 0.8)
-    mx, my = (sx + ex) / 2, (sy + ey) / 2
-    wm = (w0 + w1) / 2
-    left = [(sx + px * w0 * wobble(), sy + py * w0 * wobble()), (mx + px * wm * wobble(), my + py * wm * wobble()),
-            (ex + px * w1, ey + py * w1)]
-    right = [(ex - px * w1, ey - py * w1), (mx - px * wm * wobble(), my - py * wm * wobble()),
-             (sx - px * w0 * wobble(), sy - py * w0 * wobble())]
-    tip = [(x1 + dx * e * 0.35, y1 + dy * e * 0.35)] if end_tip else []
-    draw(pen, left + tip + right)
-    if start_tip:                                         # the wedge head, like a reed pressed into clay
-        hw, hl = CUT * 0.95, CUT * 1.15
-        draw(pen, [(x0 - dx * e * 0.35 + px * hw, y0 - dy * e * 0.35 + py * hw),
-                   (x0 + dx * hl, y0 + dy * hl),
-                   (x0 - dx * e * 0.35 - px * hw, y0 - dy * e * 0.35 - py * hw)])
+    h = THICK / 2
+    px, py = -dy * h, dx * h
+    x0, y0, x1, y1 = x0 - dx * h, y0 - dy * h, x1 + dx * h, y1 + dy * h
+    corners = [(x0 + px, y0 + py), (x1 + px, y1 + py), (x1 - px, y1 - py), (x0 - px, y0 - py)]
+    d.polygon(corners, fill=0)
+    return corners, (dx, dy)
 
 
-def knot(pen, p):
-    """Where two cuts meet: a small diamond so the corner is solid."""
-    x, y = p
-    r = CUT * 0.55
-    draw(pen, [(x, y + r), (x + r, y), (x, y - r), (x - r, y)])
+def damage(d, blocks, rng, w, h):
+    """Chipped corners, a crack, and a few pits: age."""
+    # chips: a few outside corners lose a wedge of stone
+    for corners, (dx, dy) in rng.sample(blocks, min(len(blocks), 3)):
+        cx, cy = corners[rng.randrange(4)]
+        a, b = rng.uniform(8, 17), rng.uniform(8, 17)
+        ang = rng.uniform(0, math.tau)
+        d.polygon([(cx + math.cos(ang) * 30, cy + math.sin(ang) * 30),
+                   (cx + math.cos(ang + 2.2) * a, cy + math.sin(ang + 2.2) * a),
+                   (cx + math.cos(ang - 2.2) * b, cy + math.sin(ang - 2.2) * b)], fill=255)
+    # a crack: from one edge of a stroke, zigzagging part way across it
+    corners, (dx, dy) = rng.choice(blocks)
+    (ax, ay), (bx, by) = corners[0], corners[1]
+    t = rng.uniform(0.25, 0.75)
+    x, y = ax + (bx - ax) * t, ay + (by - ay) * t
+    nx, ny = dy, -dx                                       # into the stroke
+    pts = [(x - nx * 4, y - ny * 4)]
+    for _ in range(3):
+        x += nx * THICK * 0.22 + dx * rng.uniform(-6, 6)
+        y += ny * THICK * 0.22 + dy * rng.uniform(-6, 6)
+        pts.append((x, y))
+    d.line(pts, fill=255, width=3)
+    # pits worn into the face
+    for corners, _ in rng.sample(blocks, min(len(blocks), 2)):
+        cx = sum(c[0] for c in corners) / 4 + rng.uniform(-8, 8)
+        cy = sum(c[1] for c in corners) / 4 + rng.uniform(-8, 8)
+        r = rng.uniform(2.5, 4.5)
+        d.polygon([(cx + r * math.cos(k * 1.3 + rng.random()), cy + r * math.sin(k * 1.3 + rng.random())) for k in range(5)], fill=255)
 
 
-def draw(pen, pts):
-    pts = ring([(round(x), round(y)) for x, y in pts])
-    pen.moveTo(pts[0])
-    for q in pts[1:]:
-        pen.lineTo(q)
-    pen.closePath()
-
-
-def glyph(cuts, seed):
-    """The glyph, and how wide it is (narrow letters like I take less room).
-    Each letter's points are nudged a little (the same way every time), as a hand would cut them."""
-    import random
+def glyph(cuts, seed, tmp):
+    """The glyph, and how wide it is."""
     rng = random.Random(seed)
-    cuts = [[(x + (rng.random() - 0.5) * 0.14, y + (rng.random() - 0.5) * 0.14) for x, y in line] for line in cuts]
     left = min(x for line in cuts for x, _ in line)
     right = max(x for line in cuts for x, _ in line)
-    pen = TTGlyphPen(None)
+    top, bottom = max(y for line in cuts for _, y in line), min(y for line in cuts for _, y in line)
+    w = int((right - left) * PX + 2 * PAD)
+    h = int((max(top, 6) - min(bottom, 0)) * PX + 2 * PAD)
+    base = PAD + max(top, 6) * PX                          # where y = 0 is in the drawing
+    im = Image.new("L", (w, h), 255)
+    d = ImageDraw.Draw(im)
+    blocks = []
     for line in cuts:
-        pts = [P(x, y, left) for x, y in line]
-        closed = math.dist(pts[0], pts[-1]) < 30
-        if closed:
-            pts[-1] = pts[0]
+        pts = [(PAD + (x - left) * PX, base - y * PX) for x, y in line]
         for i in range(len(pts) - 1):
-            cut(pen, pts[i], pts[i + 1], i == 0 and not closed, i == len(pts) - 2 and not closed, rng)
-        for q in (pts if closed else pts[1:-1]):
-            knot(pen, q)
-    return pen.glyph(), round((max(right - left, 1.2)) * UNIT + 2 * SIDE)
+            blocks.append(block(d, pts[i], pts[i + 1]))
+    damage(d, blocks, rng, w, h)
+    pbm, svg = os.path.join(tmp, "g.pbm"), os.path.join(tmp, "g.svg")
+    im.point(lambda v: 255 if v > 127 else 0).convert("1").save(pbm)
+    subprocess.run(["potrace", "-s", "--alphamax", "0", "--opttolerance", "0.3", "--turdsize", "6", "-o", svg, pbm], check=True)
+    k = UNIT / PX
+    pen = TTGlyphPen(None)
+    # potrace writes tenths of a pixel with y going up from the bottom of the drawing; to font units (baseline at 0)
+    SVGPath(svg).draw(TransformPen(Cu2QuPen(pen, 1.0), (0.1 * k, 0, 0, 0.1 * k, SIDE - PAD * k, (base - h) * k)))
+    return pen.glyph(), round((max(right - left, 1.2)) * UNIT + 2 * SIDE + THICK * k * 0.6)
 
 
 def build(out):
@@ -166,17 +170,18 @@ def build(out):
     for ch, n in names.items():
         cmap[ord(ch)] = n
         if ch.isalpha():
-            cmap[ord(ch.lower())] = n          # small letters are the same runes
+            cmap[ord(ch.lower())] = n          # small letters are the same stones
     fb.setupCharacterMap(cmap)
     glyphs = {".notdef": TTGlyphPen(None).glyph(), "space": TTGlyphPen(None).glyph()}
     widths = {".notdef": ADV, "space": round(ADV * 0.7)}
-    for ch, n in names.items():
-        glyphs[n], widths[n] = glyph(G[ch], ord(ch))
+    with tempfile.TemporaryDirectory() as tmp:
+        for ch, n in names.items():
+            glyphs[n], widths[n] = glyph(G[ch], ord(ch), tmp)
     fb.setupGlyf(glyphs)
     fb.setupHorizontalMetrics({n: (widths[n], 0) for n in order})
-    fb.setupHorizontalHeader(ascent=860, descent=-200)
+    fb.setupHorizontalHeader(ascent=900, descent=-220)
     fb.setupNameTable({"familyName": "Golem Runes", "styleName": "Regular"})
-    fb.setupOS2(sTypoAscender=860, sTypoDescender=-200, usWinAscent=900, usWinDescent=240, sCapHeight=6 * UNIT, sxHeight=6 * UNIT)
+    fb.setupOS2(sTypoAscender=900, sTypoDescender=-220, usWinAscent=960, usWinDescent=260, sCapHeight=6 * UNIT, sxHeight=6 * UNIT)
     fb.setupPost()
     fb.save(out)
 

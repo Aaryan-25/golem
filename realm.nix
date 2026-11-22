@@ -2,8 +2,8 @@
 # (the Start panel, the idle screen). See realm.py and runes.py.
 { pkgs, ... }:
 let
-  # Golem Runes: made here from runes.py (straight cuts on a grid). Nothing is downloaded.
-  runes = pkgs.runCommand "golem-runes" { nativeBuildInputs = [ (pkgs.python3.withPackages (p: [ p.fonttools ])) ]; } ''
+  # Golem Runes: made here from runes.py (heavy broken-stone letters). Nothing is downloaded.
+  runes = pkgs.runCommand "golem-runes" { nativeBuildInputs = [ (pkgs.python3.withPackages (p: [ p.fonttools p.pillow ])) pkgs.potrace ]; } ''
     mkdir -p $out/share/fonts/truetype
     python3 ${./runes.py} $out/share/fonts/truetype/GolemRunes.ttf
   '';
