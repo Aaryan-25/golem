@@ -31,7 +31,7 @@ def sentence(ident, msg):
         m = re.match(r"KEY (\S+) now: (.*)$", msg)
         if m:
             return f"Keys: {m.group(1)} now does: {m.group(2)}"
-        return {"LOCK": "Screen locked", "UNLOCK": "Screen unlocked",
+        return {"LOCK": "Screen locked", "UNLOCK": "Screen unlocked", "IDLE": "Untouched for a while (idle)", "AWAKE": "Touched again",
                 "LOCK failed": "The lock screen failed to start"}.get(msg, msg)
     if ident == "golem-net":
         if msg.startswith(("Camera", "Microphone")):

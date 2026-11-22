@@ -176,8 +176,8 @@ pkgs.testers.runNixOSTest {
             raise Exception("the internet connection was not written down")
         truth = machine.succeed("golem-truth --text")
         print(truth)
-        for words in ["Opened xterm in RED", "Wrong password at the lock screen", "Screen locked",
-                      "Screen unlocked", "Settings: bash: zone YELLOW", "USB plugged in",
+        for words in ["Opened xterm in RED", "Untouched for a while (idle)", "Touched again",
+                      "The realm woke up", "Settings: bash: zone YELLOW", "USB plugged in",
                       "bash (YELLOW) talked to", "out,"]:
             assert words in truth, f"missing from the truth log: {words}"
 
