@@ -136,7 +136,7 @@ let
     [ "Super+Shift+3"     "Send window to 3 (remembered)"              "exec golem-win send 3" ]
     [ "Super+Shift+4"     "Send window to 4 (remembered)"              "exec golem-win send 4" ]
     [ "Super+i"           "Face: Shadow / Negative"                    "exec golem-face" ]
-    [ "Super+Escape"      "Power: sleep, restart, shut down, log out" "exec golem-win power" ]
+    [ "Super+Escape"      "Start panel (CONTINUE, GADA, FATE, SUMMON, SLUMBER)" "exec golem-realm show" ]
     [ "Super+Shift+q"     "Log out (asks first)"                       "exec golem-win logout" ]
     [ "Super+t"           "Truth log: what the system did"             "exec ${term} -e golem-truth" ]
     [ "Super+n"           "Wi-Fi on/off"                               "exec golem-wifi" ]
@@ -177,6 +177,9 @@ let
     # Golem's own panel is the one window that takes focus when it opens (DECISIONS: panels do)
     for_window [class="(?i)^golem-panel$"] fullscreen enable, focus
     for_window [class="(?i)^golem-alert$"] fullscreen enable, focus
+    # The shadow realm (realm.nix): the Start panel at login, Super+Escape, and the idle screen
+    for_window [class="^golem-realm$"] fullscreen enable, focus
+    exec --no-startup-id golem-realm --daemon
   '';
 in {
   services.xserver.windowManager.i3.configFile = lib.mkForce i3config;

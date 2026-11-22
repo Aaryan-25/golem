@@ -61,6 +61,36 @@ pkgs.testers.runNixOSTest {
         out = machine.succeed("su - lilgolemwitch -c golem-why")
         assert "Problems on this start" in out, out
 
+    realm_seen = "su - lilgolemwitch -c 'DISPLAY=:0 xdotool search --onlyvisible --class golem-realm'"
+
+    with subtest("Step B: Golem wakes up into the Start panel; Esc goes to the desktop"):
+        if machine.execute("timeout 120 sh -c 'until journalctl -b -t golem -o cat | grep -q \"The realm woke up\"; do sleep 1; done'")[0] != 0:
+            print(machine.execute("journalctl -b --no-pager | grep -iE 'realm|python|glfw|moderngl' | tail -30")[1])
+            raise Exception("the realm did not wake up")
+        machine.wait_until_succeeds(realm_seen, timeout=30)
+        machine.sleep(5)
+        machine.screenshot("start_panel")
+        machine.send_key("esc")
+        machine.wait_until_fails(realm_seen, timeout=30)
+
+    with subtest("Step B: Super+Escape brings it back; SLUMBER opens its own list; Esc twice leaves"):
+        machine.send_key("meta_l-esc")
+        machine.wait_until_succeeds(realm_seen, timeout=30)
+        machine.sleep(3)
+        for _ in range(4):
+            machine.send_key("down")
+            machine.sleep(0.5)
+        machine.send_key("ret")
+        machine.sleep(2)
+        machine.screenshot("slumber")
+        machine.succeed(realm_seen)
+        machine.send_key("esc")
+        machine.sleep(1)
+        machine.succeed(realm_seen)
+        machine.send_key("esc")
+        machine.wait_until_fails(realm_seen, timeout=30)
+        machine.fail("journalctl -b -t golem -o cat | grep -q 'Start panel: SLEEP'")
+
     def as_me(cmd):
         return machine.succeed(
             "su - lilgolemwitch -c 'export XDG_RUNTIME_DIR=/run/user/1000 "
@@ -106,6 +136,11 @@ pkgs.testers.runNixOSTest {
         machine.send_key("shift")
         machine.wait_until_succeeds("journalctl -b -t golem -o cat | grep -qx AWAKE", timeout=30)
         machine.wait_until_fails("pgrep -u lilgolemwitch -f bin/golem-idle", timeout=30)
+        machine.wait_until_succeeds("journalctl -b -t golem -o cat | grep -q 'The idle screen came'", timeout=30)
+        machine.succeed(realm_seen)
+        machine.sleep(2)
+        machine.send_key("esc")
+        machine.wait_until_fails(realm_seen, timeout=30)
 
     with subtest("Step 4: my folders exist"):
         for d in ["documents", "projects", "media", "zones"]:

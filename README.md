@@ -47,7 +47,7 @@ Super = the Windows key. **Super+H** shows the full list on screen. Every key ca
 | Super+F1 / F2 / F3 | next window beside / below / turn the split around |
 | Super+1…4 / Super+Shift+1…4 | go to a workspace / send the window there (its app opens there from now on) |
 | Super+I | face: Shadow / Negative |
-| Super+Escape | power: sleep, restart, shut down, log out |
+| Super+Escape | the Start panel: CONTINUE, GADA (editor), FATE (Control Panel), SUMMON (apps), SLUMBER (sleep, restart, shut down) |
 | Super+T | truth log: what the system did |
 | Super+N / Super+W | Wi-Fi on/off / choose a network |
 | Super+R | reload keys and windows |
