@@ -65,7 +65,7 @@ pkgs.testers.runNixOSTest {
 
     with subtest("Step B: Golem wakes up into the Start panel; Esc goes to the desktop"):
         if machine.execute("timeout 120 sh -c 'until journalctl -b -t golem -o cat | grep -q \"The realm woke up\"; do sleep 1; done'")[0] != 0:
-            print(machine.execute("journalctl -b -t golem --no-pager | tail -20; cat /run/user/1000/golem-realm.err; ps -u lilgolemwitch -o args; which golem-realm; grep -n realm $(ps -o args= -C i3 | awk '{print $3}') ; su - lilgolemwitch -c 'DISPLAY=:0 timeout 20 golem-realm --daemon; cat /run/user/1000/golem-realm.err' 2>&1 | tail -30")[1])
+            print(machine.execute("set +e +o pipefail; journalctl -b -t golem --no-pager | tail -20; cat /run/user/1000/golem-realm.err; ps -u lilgolemwitch -o args; which golem-realm; grep -n realm $(ps -o args= -C i3 | awk '{print $3}') ; su - lilgolemwitch -c 'DISPLAY=:0 timeout 20 golem-realm --daemon; cat /run/user/1000/golem-realm.err' 2>&1 | tail -30")[1])
             raise Exception("the realm did not wake up")
         machine.wait_until_succeeds(realm_seen, timeout=30)
         machine.sleep(5)
