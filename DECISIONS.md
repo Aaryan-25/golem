@@ -34,14 +34,24 @@ The goal: **private, clean, usable.**
 | Windows | Tiling with an existing engine. No gaps, titles or borders, only a 1 px line on the focused window. Focus moves by keys only. |
 | Close | Closing a window asks for confirmation. This is the one allowed popup. |
 | Notifications | None. Only a full-screen red alert, dismissed by pressing a key several times. |
-| Lock | No username and no box: type the password and press Enter. Wrong tries are logged. |
-| Lid | Closing it sleeps. On wake, Caps Lock ON means no lock, and OFF means lock. |
+| Lock | **None for now** (22 Nov 2026): Golem starts straight in, and idle shows the idle screen. A mechanism comes later. The password is asked only by settings (it may become `arise`). |
+| Lid | Closing it sleeps. (No lock on wake for now.) |
 | Panels | The Control Panel and every system panel run in the GREEN zone. Apply asks the password once. |
-| Look | A dark void with pale, cold light. Game-like, eventually a "shadow realm". |
+| Look | The shadow realm: black background, everything else white; the yin-yang flip turns it over. Everything is sand (drift, picture to picture, the light). |
 | Terminal | A light terminal now, Cool Retro Term later. |
 | BIOS password | No. A PC password, maybe later. |
 | Windows OS | Gets wiped, but only at the very end, after Golem works fully from the pendrive. |
 | Save slots | Two things: SAVE SLOTS are older versions of the whole system (go back if an update breaks; the last 5 kept, the newest 3 never deletable from the panel), BACKUPS are my settings (keys, zones, look, quests) saved and loaded by name. |
+
+## Decided on 22 Nov 2026 (the shadow realm)
+| Topic | Decision |
+|---|---|
+| Letters | My own made-up rune letters, carved-looking, readable as English. |
+| Start panel | Like a game's start menu: tabs on the left (CONTINUE, GADA, FATE, SUMMON, SLUMBER), avatar or scenery on the right (added later). With the tabs blown away it's the idle screen, after a few minutes untouched. |
+| Drift | Everything that isn't inside an app drifts. |
+| Picture to picture | Almost every change: windows opening, closing, maximising, minimising, and page changes. Switches in MIMIC. |
+| The light | The cursor is a small light in the sand; Enter or a click sends a pulse. |
+| Editor | My main editor, opened by GADA, with its dashboard first. |
 
 ## Decided on 21 Nov 2026 (question round)
 | Topic | Decision |

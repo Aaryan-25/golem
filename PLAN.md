@@ -1,7 +1,8 @@
 # Plan
 
-**NOW: testing Steps 2 to 9 on the laptop** with [TESTS.md](TESTS.md). All are built and pass GitHub's
-automated virtual-laptop test (22 Nov 2026). Nothing new gets built until the laptop test is done.
+**NOW: Steps A to E, the shadow realm look** (asked for on 22 Nov 2026). I build all five, one after another,
+each as its own plain-words change with GitHub's virtual-laptop test. The owner tests the final version on the
+laptop. (On the laptop, Step 9's build gave only a black screen, so Step A makes the screen visible first.)
 
 Done: Step 1 (21 Nov 2026). Step 0 was skipped; its hardware checks moved into Step 3's test.
 
@@ -140,6 +141,29 @@ window, kept small so the Celeron's graphics can turn it smoothly; a flat 2D ver
 with a few files shows its towers and beams, turns smoothly, and a click opens the right function.
 
 ---
+
+## Step A: A screen you can see
+No lock screen: Golem starts straight in. Boot messages are shown, not hidden. The start menu waits 3 seconds and
+has a second line, **Golem (text only)**, which never starts the picture and shows what went wrong on the last start.
+**Done when:** the laptop starts into something visible, and the text-only line gives a text login.
+
+## Step B: The Start panel, made of sand
+My own carved rune letters (readable English). Black and white. A game-like start screen: tabs on the left,
+**CONTINUE, GADA, FATE, SUMMON, SLUMBER**, and a space on the right for an avatar or scenery (a picture I put in
+`~/zones/settings/scenery.png`). Everything outside apps drifts; the cursor is a small light; Enter sends a pulse;
+B turns the paper over. After a few minutes untouched, the tabs blow away and it becomes the idle screen.
+**Done when:** the laptop starts into the Start panel and every tab does its job.
+
+## Step C: Windows as sand
+Opening, closing, maximising and minimising a window turn it to sand that flies (picture to picture).
+A switch in MIMIC turns it off. **Done when:** it works and doesn't feel slow, or the switch turns it off.
+
+## Step D: The Control Panel in runes
+The panel in rune letters, pure black and white, page changes as flying sand, I flips it (yin-yang).
+**Done when:** every page still works, and it looks like runes.
+
+## Step E: The editor joins
+The text editor add-on is merged; GADA opens it with its dashboard. **Done when:** GADA opens the editor.
 
 ## Test tools (22 Nov 2026, asked for by me)
 - `golem-selftest`: every check a machine can do on the laptop, as ✓ or ✗.
