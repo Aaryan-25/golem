@@ -61,7 +61,7 @@ if [ "$used" -lt 90 ]; then ok "drive has room (${used}% used)"; else bad "drive
 if [ -n "${DISPLAY:-}" ]; then
   say ""; say "DESKTOP"
   check "the window manager is running" pgrep -x i3
-  check "idle lock is watching" pgrep -x xss-lock
+  check "the idle watcher is running" pgrep -x xss-lock
   check "the red alert watcher is running" pgrep -f 'alert.py --watch'
   check "my key list is valid" i3 -C -c /etc/i3/config
 else

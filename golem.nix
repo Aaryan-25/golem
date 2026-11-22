@@ -4,6 +4,24 @@
 let
   s = import ./settings.nix;
 
+  # golem-why: what went wrong, in short (golem-why = this start, golem-why last = the start before).
+  why = pkgs.writeShellApplication {
+    name = "golem-why";
+    runtimeInputs = with pkgs; [ systemd coreutils gnugrep ];
+    text = ''
+      b=0; when="this start"
+      if [ "''${1:-}" = last ]; then b=-1; when="the start before this one"; fi
+      echo; echo "== Problems on $when =="
+      journalctl -b "$b" -p warning -q --no-pager -o short-monotonic | tail -n 25 || echo "(none written down)"
+      echo; echo "== Golem's own notes on $when =="
+      journalctl -b "$b" -t golem -q --no-pager -o cat | tail -n 12 || true
+      for f in ~/.local/share/xorg/Xorg.0.log ~/.local/share/xorg/Xorg.0.log.old; do
+        if [ -f "$f" ] && grep -q '(EE)' "$f"; then echo; echo "== The picture's errors ($(basename "$f")) =="; grep '(EE)' "$f" | tail -n 8; fi
+      done
+      echo
+    '';
+  };
+
 in
 {
   system.stateVersion = "26.05";
@@ -67,18 +85,28 @@ in
   };
   services.libinput.enable = true;                    # touchpad
   environment.loginShellInit = ''
-    # The windows start after login on the first screen. If the display doesn't come up the first time
-    # (graphics still waking up), try again a few times before falling back to the text login.
+    # The picture starts after login on the first screen. If it doesn't come up (graphics still waking up),
+    # try again a few times, then stay on this text screen and say how to find out why.
     if [ "$(tty)" = /dev/tty1 ] && [ -z "''${DISPLAY:-}" ]; then
-      for golem_try in 1 2 3 4; do
-        startx >/dev/null 2>&1 && exit 0
-        logger -t golem "The display did not start (try $golem_try)"
-        sleep 3
-      done
-      exit 1
+      if [ -e /etc/golem/text-only ]; then
+        echo "GOLEM, TEXT ONLY: the picture is not started."
+        golem-why last
+      else
+        for golem_try in 1 2 3 4; do
+          startx >/dev/null 2>&1 && exit 0
+          logger -t golem "The picture did not start (try $golem_try)"
+          sleep 3
+        done
+        echo "The picture did not start. Type  golem-why  to see why, and send Claude a photo."
+      fi
     fi
   '';
-  environment.systemPackages = with pkgs; [ xterm xsetroot git ];
+  # A second line in the start menu: the same Golem, but only the text screen.
+  specialisation.text-only.configuration = {
+    boot.loader.grub.configurationName = "text only";
+    environment.etc."golem/text-only".text = "The picture is not started on this start.\n";
+  };
+  environment.systemPackages = with pkgs; [ xterm xsetroot git why ];
   # Only what we chose. NixOS would also add perl, rsync and strace by itself; nano stays, to fix a file if something breaks.
   environment.defaultPackages = [ ];
   programs.nano.enable = true;

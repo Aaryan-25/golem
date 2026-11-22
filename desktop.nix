@@ -76,8 +76,7 @@ let
           fi ;;
         switch) exec ${rofi} -show window -window-format '{c}  {t}' -p SWITCH -theme-str '${centre}' ;;
         power)
-          case "$(golem-ask POWER lock sleep restart "shut down" "log out" cancel)" in
-            lock) golem-lock ;;
+          case "$(golem-ask POWER sleep restart "shut down" "log out" cancel)" in
             sleep) systemctl suspend ;;
             restart) systemctl reboot ;;
             "shut down") systemctl poweroff ;;
@@ -136,9 +135,8 @@ let
     [ "Super+Shift+2"     "Send window to 2 (remembered)"              "exec golem-win send 2" ]
     [ "Super+Shift+3"     "Send window to 3 (remembered)"              "exec golem-win send 3" ]
     [ "Super+Shift+4"     "Send window to 4 (remembered)"              "exec golem-win send 4" ]
-    [ "Super+l"           "Lock the screen"                            "exec golem-lock" ]
     [ "Super+i"           "Face: Shadow / Negative"                    "exec golem-face" ]
-    [ "Super+Escape"      "Power: lock, sleep, restart, shut down, log out" "exec golem-win power" ]
+    [ "Super+Escape"      "Power: sleep, restart, shut down, log out" "exec golem-win power" ]
     [ "Super+Shift+q"     "Log out (asks first)"                       "exec golem-win logout" ]
     [ "Super+t"           "Truth log: what the system did"             "exec ${term} -e golem-truth" ]
     [ "Super+n"           "Wi-Fi on/off"                               "exec golem-wifi" ]
@@ -172,10 +170,9 @@ let
     exec --no-startup-id golem-session-apply
     exec --no-startup-id golem-alert --watch
     include ~/zones/settings/i3-placements
-    # Login = lock screen; idle: dim at 4 min, lock at 5; lid: lock before sleep (lock.nix)
-    exec --no-startup-id sh -c 'golem-lock --start || i3-msg exit'      # never leave the start unlocked
+    # No lock: idle dims at 4 min, then the idle screen at 5; the lid sleeps (idle.nix)
     exec --no-startup-id xset s 240 60
-    exec --no-startup-id xss-lock -n /etc/golem/dim --transfer-sleep-lock -- golem-lock --auto
+    exec --no-startup-id xss-lock -n /etc/golem/dim --transfer-sleep-lock -- golem-idle
     include /var/lib/golem/keys.i3
     # Golem's own panel is the one window that takes focus when it opens (DECISIONS: panels do)
     for_window [class="(?i)^golem-panel$"] fullscreen enable, focus

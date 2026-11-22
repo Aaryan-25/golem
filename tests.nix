@@ -47,25 +47,19 @@ pkgs.testers.runNixOSTest {
     with subtest("Step 5: the key and window settings are valid"):
         machine.succeed("i3 -C -c /etc/i3/config")
 
-    with subtest("Step 6: Golem starts straight into the lock screen"):
-        if machine.execute("timeout 180 sh -c 'until pgrep -u lilgolemwitch -x i3lock; do sleep 1; done'")[0] != 0:
+    with subtest("Step A: Golem starts straight in, no lock screen"):
+        if machine.execute("timeout 180 sh -c 'until pgrep -x i3 && pgrep -u lilgolemwitch -x xss-lock; do sleep 1; done'")[0] != 0:
             print(machine.execute("journalctl -b --no-pager -t golem -t login -t systemd-logind | tail -30; tail -30 /home/lilgolemwitch/.local/share/xorg/Xorg.0.log; ps aux | grep -E 'X|i3|startx' | grep -v grep")[1])
-            raise Exception("the lock screen did not start")
+            raise Exception("the desktop did not start")
         machine.wait_for_x()
-        machine.wait_until_succeeds("pgrep -x i3")
-        machine.wait_until_succeeds("pgrep -u lilgolemwitch -x i3lock")
+        machine.fail("pgrep i3lock")
         machine.sleep(3)
 
-    with subtest("Step 6: a wrong password keeps it locked and is logged"):
-        machine.send_chars("wrongpassword\n")
-        machine.sleep(5)
-        machine.succeed("pgrep -u lilgolemwitch -x i3lock")
-        machine.wait_until_succeeds("journalctl -b | grep -iE 'i3lock.*(authentication failure|auth could not)'", timeout=30)
-
-    with subtest("Step 6: the right password unlocks"):
-        machine.send_chars("golem\n")
-        machine.wait_until_fails("pgrep -u lilgolemwitch -x i3lock", timeout=30)
-        machine.succeed("journalctl -b | grep -q 'golem.*UNLOCK'")
+    with subtest("Step A: the text-only start exists, and golem-why answers"):
+        machine.succeed("test -e /run/current-system/specialisation/text-only/etc/golem/text-only")
+        machine.fail("test -e /etc/golem/text-only")
+        out = machine.succeed("su - lilgolemwitch -c golem-why")
+        assert "Problems on this start" in out, out
 
     def as_me(cmd):
         return machine.succeed(
@@ -103,17 +97,15 @@ pkgs.testers.runNixOSTest {
             print(machine.execute("journalctl -b --no-pager | grep -iE 'firejail|zone|xauth' | tail -20; ps -u lilgolemwitch -o args")[1])
             raise Exception("RED xterm did not open")
 
-    with subtest("Step 6: Super+L locks; Caps Lock ON stops the automatic lock"):
-        machine.send_key("meta_l-l")
-        machine.wait_until_succeeds("pgrep -u lilgolemwitch -x i3lock", timeout=30)
-        machine.sleep(3)
-        machine.send_chars("golem\n")
-        machine.wait_until_fails("pgrep -u lilgolemwitch -x i3lock", timeout=30)
-        machine.send_key("caps_lock")
-        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 golem-lock --auto'")
-        machine.succeed("journalctl -b | grep -q 'LOCK skipped: Caps Lock is ON'")
-        machine.fail("pgrep -u lilgolemwitch -x i3lock")
-        machine.send_key("caps_lock")
+    with subtest("Idle: golem-idle starts when untouched and ends on the first touch"):
+        machine.sleep(4)                              # untouched for a moment, as when the idle time comes
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 XSS_SLEEP_LOCK_FD=9 golem-idle 9</dev/null' >/dev/null 2>&1 &")
+        machine.wait_until_succeeds("journalctl -b -t golem -o cat | grep -qx IDLE", timeout=30)
+        machine.sleep(4)
+        machine.succeed("pgrep -u lilgolemwitch -f bin/golem-idle")
+        machine.send_key("shift")
+        machine.wait_until_succeeds("journalctl -b -t golem -o cat | grep -qx AWAKE", timeout=30)
+        machine.wait_until_fails("pgrep -u lilgolemwitch -f bin/golem-idle", timeout=30)
 
     with subtest("Step 4: my folders exist"):
         for d in ["documents", "projects", "media", "zones"]:
@@ -237,14 +229,6 @@ pkgs.testers.runNixOSTest {
         assert ask_guard({"do": "clock-set", "time": "2026-12-25 10:00", "password": "golem"}) == "OK"
         assert machine.succeed("date +%Y-%m-%d").strip() == "2026-12-25"
         machine.wait_until_succeeds("golem-truth --text | grep -q 'Clock set by hand'")
-
-    with subtest("Going to sleep: the lock is on the screen before the laptop sleeps"):
-        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 XSS_SLEEP_LOCK_FD=9 golem-lock --auto 9</dev/null' >/dev/null 2>&1 &")
-        machine.wait_until_succeeds("pgrep -u lilgolemwitch -x i3lock", timeout=30)
-        machine.sleep(3)
-        machine.send_chars("golem\n")
-        machine.wait_until_fails("pgrep -u lilgolemwitch -x i3lock", timeout=30)
-        machine.wait_until_succeeds("journalctl -b -t golem -o cat | grep -E '^(LOCK|UNLOCK)$' | tail -n1 | grep -qx UNLOCK", timeout=60)
 
     with subtest("Settings: the system side runs at start; trackers are blocked by default"):
         machine.succeed("systemctl show -p Result --value golem-settings | grep -q success")

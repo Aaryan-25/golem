@@ -1,6 +1,6 @@
 {
   "idle_dim":       {"page": "POWER", "label": "Dim the screen after", "unit": "min", "values": ["1", "2", "3", "4", "5", "10", "15", "never"], "default": "4", "scope": "user", "help": "Minutes without a key press before the screen dims."},
-  "idle_lock":      {"page": "POWER", "label": "Lock after", "unit": "min", "values": ["2", "3", "5", "10", "15", "30", "never"], "default": "5", "scope": "user", "help": "Minutes without a key press before it locks (not while Caps Lock is ON)."},
+  "idle_lock":      {"page": "POWER", "label": "Idle screen after", "unit": "min", "values": ["2", "3", "5", "10", "15", "30", "never"], "default": "5", "scope": "user", "help": "Minutes without a key press before the idle screen comes (there is no lock)."},
   "idle_sleep":     {"page": "POWER", "label": "Sleep after", "unit": "min", "values": ["10", "15", "30", "60", "never"], "default": "30", "scope": "user", "help": "Minutes without a key press before the laptop sleeps."},
   "power_mode":     {"page": "POWER", "label": "Processor", "values": ["saver", "balanced", "full"], "default": "balanced", "scope": "system", "help": "saver: cooler and longer battery. full: fastest, warmer."},
   "charge_limit":   {"page": "POWER", "label": "Stop charging at", "unit": "%", "values": ["60", "70", "80", "90", "100"], "default": "80", "scope": "system", "help": "Keeps the battery healthy. If the laptop doesn't allow it from Golem, set it in the BIOS (F2 > Power Management > Primary Battery Charge Configuration > Custom)."},

@@ -35,16 +35,12 @@ in {
   # ---- Nothing comes in from outside ----
   networking.firewall = { enable = true; allowPing = false; };
 
-  # ---- Silent start ----
-  # No menu and no text. Hold Shift (or press Esc) at power-on for the menu of older versions.
-  boot.loader.timeout = 1;
-  boot.loader.grub.timeoutStyle = "hidden";
-  boot.consoleLogLevel = lib.mkDefault 0;
-  boot.initrd.verbose = false;
-  boot.kernelParams = [
-    "quiet" "loglevel=3" "systemd.show_status=false" "rd.systemd.show_status=false"
-    "udev.log_level=3" "rd.udev.log_level=3"
-  ];
+  # ---- Start: visible for now (22 Nov 2026) ----
+  # The menu shows for 3 seconds: Golem, "Golem - text only" (no picture; shows what went wrong last time),
+  # and older versions. Start messages are shown, so a stuck start is never just a black screen.
+  boot.loader.timeout = 3;
+  boot.loader.grub.timeoutStyle = "menu";
+  boot.kernelParams = [ "loglevel=4" ];
   services.getty = { greetingLine = ""; helpLine = ""; };
 
   # ---- The name ----
