@@ -50,3 +50,11 @@ Nothing here gets built until I move it into PLAN.md. New ideas from any chat ge
 - Idle scene using my AI's elements (maybe on the lock screen too), after the AI exists
 - Working code for most of this is in Aaryan-25/shilp, branch `graphical-panel` (pull request #6), as reference
 - Technical notes from building it there: the panel's GREEN sandbox blocks the system bus, so Wi-Fi, power and the system service list need a small fixed-list helper outside it; admin actions need a small root helper that checks the password and accepts only a fixed list; the truth log alone can't say which app made a connection
+
+## The sand look (decided with me, 22 Nov 2026, after testing gather.be-of-dao.com)
+- Golem's look is made of sand, like Gather: every picture is thousands of grains.
+- Drift = the shadow realm. One side of a picture holds still and breathes; past a wavy line, grains let go, blow away, and come home again.
+- Yin-yang = light and shadow. Flip between light on black and ink on white; each grain turns into its opposite, with a short dip to nothing in between.
+- Picture to picture = almost every transition. Each grain flies from its place in the old picture to its place in the new one (kick out, drift back in).
+- Used for: waking up, start screen, lock screen, wallpaper, and panel page changes. Details to decide together.
+- The 3D "depth brain" is not needed for any of this.
