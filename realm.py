@@ -12,7 +12,7 @@ B turns the paper over (the yin-yang: the same as Super+I). The cursor is a smal
 import os, queue, socket, subprocess, sys, threading, time
 import numpy as np
 
-SOCK = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "golem-realm.sock")
+SOCK = os.path.join(os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}", "golem-realm.sock")
 SETTINGS = "/var/lib/golem/settings.conf"
 SCENERY = os.path.expanduser("~/zones/settings/scenery.png")
 FONT = os.environ.get("GOLEM_RUNES", "GolemRunes.ttf")
@@ -482,8 +482,17 @@ def main():
     try:
         send(arg)
     except OSError:
-        if arg in ("show", "idle"):                       # not running (first time, or it stopped): start it
-            os.execvp(sys.executable, [sys.executable, os.path.abspath(__file__), "--daemon"])
+        if arg not in ("show", "idle"):
+            return
+        # Not running (it stopped): start it again, as part of the desktop, and then ask again.
+        quiet(["i3-msg", "-q", "exec", "golem-realm --daemon"])
+        for _ in range(40):
+            time.sleep(0.25)
+            try:
+                send(arg)
+                return
+            except OSError:
+                pass
 
 
 if __name__ == "__main__":
