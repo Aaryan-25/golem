@@ -27,7 +27,7 @@ SLUMBER = [("SLEEP", "systemctl suspend"), ("RESTART", "systemctl reboot"), ("SH
 
 VERT = """
 #version 330
-in vec3 a_from; in vec3 a_to; in vec2 a_more;           // a_more: seed, layer (0 = tabs, 1 = scenery, 2 = a window)
+in vec3 a_from; in vec3 a_to; in vec2 a_more;           // a_more: seed, layer (0 = tabs, 1 = scenery, 2 = a window, 3 = dust in the air)
 uniform float t_now, fly, slow, ink, fade, erase, size, aspect;
 uniform vec2 lamp; uniform float lamp_on, pulse;
 uniform vec2 line_at, line_out;
@@ -49,7 +49,9 @@ void main() {
     vec2 q = vec2(p.x * aspect, p.y);
     float along = dot(q - line_at, vec2(-line_out.y, line_out.x));
     float waver = 0.08 * sin(along * 5.0 + t_now * 0.15) + 0.04 * sin(along * 13.0 - t_now * 0.1) + (rnd(5.0) - 0.5) * 0.25;
-    float away = a_more.y > 1.5 ? 0.0 : a_more.y > 0.5 ? smoothstep(0.0, 0.6, dot(q - line_at, line_out) + waver) : 0.32 * step(0.55, rnd(10.0));
+    float away = a_more.y > 1.5 ? 0.0 : a_more.y > 0.5 ? smoothstep(0.0, 0.6, dot(q - line_at, line_out) + waver)
+               : (0.45 + 0.25 * rnd(13.0)) * step(0.35, rnd(10.0));      // the words shed much of their sand
+    if (a_more.y < 0.5) p.y += 0.003 * sin(p.x * 38.0 - t_now * 1.6);  // a slow ripple runs through the words
     float alive = 1.0;
     if (away > 0.0) {
         float life = 4.0 + 5.0 * rnd(6.0);
@@ -59,6 +61,12 @@ void main() {
         vec2 swirl = vec2(sin(p.y * 9.0 + t_now + a_more.x), cos(p.x * 7.0 - t_now * 0.8 + a_more.x));
         p += (vec2(line_out.x / aspect, line_out.y) + 0.3 * swirl * vec2(1.0 / aspect, 1.0)) * 0.9 * away * gone * sqrt(gone) * (0.5 + rnd(8.0));
         alive = smoothstep(0.0, 0.06, ph) * (1.0 - smoothstep(0.35, 1.0, gone));
+    }
+    // dust in the air: always drifting up and across, coming round again
+    if (a_more.y > 2.5) {
+        vec2 v = vec2(0.010 + 0.012 * rnd(14.0), -0.016 - 0.02 * rnd(15.0));
+        p = fract(a_to.xy + v * t_now + 0.01 * vec2(sin(t_now * 0.7 + a_more.x * 9.0), cos(t_now * 0.5 + a_more.x * 7.0)));
+        alive = smoothstep(0.0, 0.08, p.y) * smoothstep(1.0, 0.9, p.y);
     }
     // idle: the tabs blow away, each grain at its own moment, and come back the same way
     if (a_more.y < 0.5 && erase > 0.0) {
@@ -75,8 +83,11 @@ void main() {
         lit += ring * 2.0;
         p += normalize(d + 1e-5) * vec2(1.0 / aspect, 1.0) * ring * 0.012;
     }
+    // a band of light sweeps slowly across the words, again and again
+    if (a_more.y < 0.5) lit += 0.7 * exp(-pow((p.x - (fract(t_now / 7.0) * 1.2 - 0.1)) * aspect, 2.0) / 0.006);
+    float twinkle = 0.95 + 0.4 * sin(t_now * (1.5 + 3.0 * rnd(16.0)) + a_more.x * 40.0);
     v_lit = lit;
-    v_amt = bright * alive * fade;
+    v_amt = bright * alive * fade * twinkle;
     gl_Position = vec4(p.x * 2.0 - 1.0, 1.0 - p.y * 2.0, 0.0, 1.0);
     gl_PointSize = size * (0.7 + 0.8 * rnd(9.0)) * (1.0 + 0.6 * min(lit, 1.0));
 }
@@ -166,7 +177,7 @@ class Pictures:
         for i, (name, _) in enumerate(items):
             im = Image.new("L", (self.w, self.h), 0)
             ImageDraw.Draw(im).text((x, y0 + i * step), name, font=self.font, fill=255)
-            out.append((np.asarray(im, "f4") / 255.0, 1.0 if i == sel else 0.42))
+            out.append((np.asarray(im, "f4") / 255.0, 1.0 if i == sel else 0.55))
         im = Image.new("L", (self.w, self.h), 0)
         c, r = y0 + sel * step + self.font.size * 0.42, self.font.size * 0.22
         m = x - self.font.size * 0.7
@@ -254,9 +265,11 @@ class Realm:
         self.lamp, self.lamp_goal, self.mouse_t, self.pulse_t0 = [0.1, 0.4], [0.1, 0.4], -99.0, -99.0
         self.after = None                                  # what to do when the sand has flown away
         self.queue = queue.Queue()
-        self.vbo = self.ctx.buffer(reserve=(self.n_tabs + self.n_scene) * 8 * 4)
+        self.vbo = self.ctx.buffer(reserve=(self.n_tabs + self.n_scene + 2500) * 8 * 4)
         self.vao = self.ctx.vertex_array(self.prog, [(self.vbo, "3f 3f 2f", "a_from", "a_to", "a_more")])
-        self.seeds = self.rng.random(self.n_tabs + self.n_scene).astype("f4")
+        self.n_dust = 2500
+        self.dust = np.c_[self.rng.random((self.n_dust, 2)), 0.25 + 0.45 * self.rng.random(self.n_dust)].astype("f4")
+        self.seeds = self.rng.random(self.n_tabs + self.n_scene + self.n_dust).astype("f4")
         self.n_win = 14000
         self.win_vbo = self.ctx.buffer(reserve=self.n_win * 8 * 4)
         self.win_vao = self.ctx.vertex_array(self.prog, [(self.win_vbo, "3f 3f 2f", "a_from", "a_to", "a_more")])
@@ -295,7 +308,8 @@ class Realm:
         return p
 
     def load(self, frm, to, length, slow=1.0):
-        layer = np.r_[np.zeros(self.n_tabs, "f4"), np.ones(self.n_scene, "f4")]
+        frm, to = (x if len(x) > self.n_tabs + self.n_scene else np.vstack([x, self.dust]) for x in (frm, to))
+        layer = np.r_[np.zeros(self.n_tabs, "f4"), np.ones(self.n_scene, "f4"), np.full(self.n_dust, 3, "f4")]
         data = np.hstack([frm, to, np.stack([self.seeds, layer], 1)]).astype("f4")
         self.vbo.write(data.tobytes())
         self.cur = to
