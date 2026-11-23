@@ -177,7 +177,17 @@ The text editor add-on is merged; GADA opens it with its dashboard. **Done when:
 5. **Screen and clipboard separation** (the step below).
 6. **Wires** in the editor: boxes that say what they do and how, my own notes on them, copy / paste / delete.
 7. **The 3D map** of a program.
-8. **Later: the optimiser**, a very light background program that keeps everything running smoothly.
+8. **Helpers that come and go:** a file Golem can't open asks "get this for now?" (LibreOffice, Wine in RED for .exe,
+   archives, e-books, languages for F5), and helpers unused for 7 days or when the disk is low are removed. Plus the
+   **reader** (a link as clean text in the editor, no page code runs) and an ad-hiding list in golem-browser.
+9. **The optimiser:** compressed memory, a guard against freezes, the window I work in first, power by charger;
+   sleeps almost all the time, never touches the window I'm in.
+10. **golem-keylight:** a command and file format for the keyboard lights (my AI can drive it); on the Asus,
+   suggestive lights (after a modifier, only the keys that do something light up).
+11. **My AI** (llama.cpp, offline, its own zone): loyal and truthful, talks like me (examples from my chats first,
+   training on the Asus later), codes through wires and the Gate's reader, works with the truth log, FILES, keylight
+   and the editor (asks before acting), fast, the same on both laptops, the phone and the pendrive.
+No disk encryption, no lock (decided 23 Nov 2026).
 
 ## Test tools (22 Nov 2026, asked for by me)
 - `golem-selftest`: every check a machine can do on the laptop, as ✓ or ✗.

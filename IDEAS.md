@@ -5,7 +5,6 @@ Nothing here gets built until I move it into PLAN.md. New ideas from any chat ge
 ## System
 - Install to the SSD and wipe Windows
 - Hibernate after 3 h asleep on battery (needs 4 GB of swap: comes with the SSD install)
-- Disk encryption (one password at boot)
 - BLUE zone for my own offline AI
 - Clipboard manager with real separation between zones
 - The Fetcher (`golem-fetch <link>`): download inside YELLOW, find out what the file really is, and open it in a safe zone
@@ -23,12 +22,11 @@ Nothing here gets built until I move it into PLAN.md. New ideas from any chat ge
 - Living, clickable wallpaper that pauses when covered
 - Shadow and Negative looks
 - A round menu that blooms from the bottom-left corner while Super is held
-- Gate lock screen from my night-palace wallpaper
 - The mace that travels across the UI
 - The shade (my AI's body) with animations for each state
 - Windows that gather and melt, and focus shown by light and shadow
 - Rituals, the Spell voice, the true side, ancestors (older versions), fog of the unexplored, earned techniques
-- Lock screen extras: unlock by a hidden mechanism or by the AI, live space footage, welcome message, boot animation
+- Idle screen extras: live space footage, welcome message, boot animation (no lock: decided 23 Nov 2026)
 
 ## Later
 - Phone as a viewer, reachable from anywhere through an encrypted tunnel I control: see the truth log, status and alerts. See only at first. Not before the laptop side is done.
