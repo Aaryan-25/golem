@@ -13,6 +13,7 @@
   "card_reader":    {"page": "DRIVERS", "label": "Card reader", "values": ["on", "off"], "default": "on", "scope": "system", "help": "OFF: the SD card reader's driver isn't loaded."},
   "touchpad":       {"page": "DRIVERS", "label": "Touchpad", "values": ["on", "off"], "default": "on", "scope": "user", "help": "OFF: the touchpad does nothing."},
 
+  "separate_screens": {"page": "PRIVACY", "label": "Separate screens (rooms)", "values": ["on", "off"], "default": "on", "scope": "system", "help": "RED, OFFLINE and YELLOW apps open in their own sealed room: they can't see my other windows, my keys or my clipboard. Super+C carries my clipboard in, Super+Shift+C carries it out. OFF: they share my screen (faster, less private). Applies to apps opened after the change."},
   "trackers":       {"page": "PRIVACY", "label": "Block trackers and ads", "values": ["on", "off"], "default": "on", "scope": "system", "help": "A built-in list (StevenBlack, about 76,000 sites) blocks them for every app. It changes only when you update Golem."},
 
   "kbd_delay":      {"page": "KEYBOARD", "label": "Key repeat starts after", "unit": "ms", "values": ["200", "250", "300", "400", "500", "660"], "default": "300", "scope": "user", "help": "How long you hold a key before it repeats."},

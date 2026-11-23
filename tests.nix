@@ -17,7 +17,12 @@ pkgs.testers.runNixOSTest {
     virtualisation.memorySize = 2048;
     virtualisation.qemu.options = [ "-device qemu-xhci,id=xhci" ];   # a USB port to plug things into
     networking.networkmanager.unmanaged = [ "eth1" ];               # the test network stays as the test set it
-    environment.systemPackages = [ pkgs.socat pkgs.curl ];
+    environment.systemPackages = [ pkgs.socat pkgs.curl pkgs.xorg.xdpyinfo ];
+    environment.etc."golem-test-room.sh".text = ''
+      if DISPLAY=:0 xdpyinfo >/dev/null 2>&1; then echo SEES-MY-SCREEN; else echo BLIND; fi
+      echo "room=$DISPLAY"
+      if xdpyinfo >/dev/null 2>&1; then echo ROOM-OK; fi
+    '';
     # the test laptop's small disk is always nearly full: no drive alert here
     systemd.tmpfiles.rules = [ "f /var/lib/golem/settings.conf 0644 root root - alert_disk=off"
       # the test's own answer to the Gate, given once in advance: bash in YELLOW may always reach the test web server
@@ -382,6 +387,24 @@ pkgs.testers.runNixOSTest {
         machine.execute("pkill -f golem-view; pkill -f golem-preview")
         out = machine.execute("su - lilgolemwitch -c 'golem-office open /etc/hostname'")[1]
         assert "WORD" in out, out
+
+    with subtest("Rooms: a RED app gets its own sealed screen; the clipboard is carried only by hand"):
+        out = as_me("DISPLAY=:0 zone red bash /etc/golem-test-room.sh")
+        print(out)
+        assert "BLIND" in out and "ROOM-OK" in out and "room=:2" in out, out
+        as_me("DISPLAY=:0 zone red xterm >/dev/null 2>&1 &")
+        machine.wait_until_succeeds("su - lilgolemwitch -c 'DISPLAY=:0 xdotool search --name \"ROOM · RED · xterm\"'", timeout=60)
+        machine.sleep(2)
+        machine.screenshot("room")
+        room = machine.succeed("ls /tmp/.X11-unix | sort | tail -1").strip().replace("X", ":")
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 i3-msg -q \"[title=\\\"ROOM · RED · xterm\\\"] focus\"'")
+        as_me("echo carried-secret | DISPLAY=:0 xclip -selection clipboard -i")
+        assert as_me(f"DISPLAY={room} xclip -selection clipboard -o 2>/dev/null || true") == ""     # not shared by itself
+        as_me("DISPLAY=:0 golem-carry in")
+        machine.sleep(1)
+        assert as_me(f"DISPLAY={room} xclip -selection clipboard -o") == "carried-secret"
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Clipboard carried into the room of RED · xterm'", timeout=30)
+        machine.execute("pkill -f 'bin/xterm'")
 
     with subtest("Step E: GADA in the Start panel opens the editor"):
         machine.send_key("meta_l-esc")

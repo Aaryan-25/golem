@@ -8,9 +8,12 @@
 # Settings: /var/lib/golem/apps/<app>.conf. I can read them; only the Control Panel changes them,
 # after my password (the Control Panel reigns supreme).
 #
-# KNOWN GAP: on this desktop (X11) any app with a window can see other windows and key presses,
-# whatever its zone. Zones lock files, internet, camera, sound and USB. Real screen separation
-# needs each zone in its own nested screen; see PLAN.md (Screen and clipboard separation).
+# ROOMS (screen and clipboard separation): a RED, OFFLINE or YELLOW app with a window gets its own
+# sealed screen, a "room": a window on my desktop (titled ROOM · ZONE · app) with the app inside.
+# From inside, the app sees only its room: not my other windows, not my key presses (keys reach it
+# only while its room is in front), not my clipboard. Super+C carries my clipboard into the room in
+# front; Super+Shift+C carries the room's clipboard out to me. Both are logged.
+# GREEN apps stay on my own screen. MEMORIES > PRIVACY > "Separate screens" turns rooms off.
 { pkgs, ... }:
 let
   s = import ./settings.nix;
@@ -18,7 +21,7 @@ let
 
   zone = pkgs.writeShellApplication {
     name = "zone";
-    runtimeInputs = with pkgs; [ systemd coreutils util-linux gnused socat ];
+    runtimeInputs = with pkgs; [ systemd coreutils util-linux gnused socat xorg.xorgserver i3 ];
     text = ''
       SET=/var/lib/golem/apps
       FJ=/run/wrappers/bin/firejail
@@ -104,12 +107,32 @@ let
       [ "$SND" = on ]      || opts+=(--nosound)
       [ "$USB" = allowed ] || opts+=(--blacklist=/run/media --blacklist=/media --blacklist=/mnt)
 
-      desc="''${Z^^} $name | internet:$NET camera:$CAM sound:$SND usb:$USB | RAM<=$RAM CPU<=$CPU"
+      # A room: its own screen (Xephyr), with a tiny window manager inside, shown as one window on mine.
+      room=""
+      sep=on
+      if grep -q '^separate_screens=off' /var/lib/golem/settings.conf 2>/dev/null; then sep=off; fi
+      if [ -n "''${DISPLAY:-}" ] && [ "$Z" != green ] && [ "$sep" = on ]; then
+        n=20; while [ -e "/tmp/.X11-unix/X$n" ] || [ -e "/tmp/.X$n-lock" ]; do n=$((n + 1)); done
+        Xephyr ":$n" -ac -nolisten tcp -nolisten local -resizeable -no-host-grab -screen 1280x720           -title "ROOM · ''${Z^^} · $name · :$n" >/dev/null 2>&1 &
+        xp=$!
+        for _ in $(seq 50); do [ -e "/tmp/.X11-unix/X$n" ] && break; sleep 0.1; done
+        DISPLAY=":$n" i3 -c /etc/golem/room-i3.config >/dev/null 2>&1 &
+        wm=$!
+        room=":$n"
+        # inside: only its own room's screen; never mine, never another room's
+        for sock in /tmp/.X11-unix/X*; do
+          [ "$sock" = "/tmp/.X11-unix/X$n" ] || opts+=(--blacklist="$sock")
+        done
+        opts+=(--env=DISPLAY=":$n" --blacklist="$HOME/.Xauthority")
+      fi
+
+      desc="''${Z^^} $name | internet:$NET camera:$CAM sound:$SND usb:$USB | RAM<=$RAM CPU<=$CPU''${room:+ | room $room}"
       logger -t zone "START $desc"
       systemd-run --user --scope --quiet --collect --unit="zone-$Z-$name-$$" --description="$desc" \
         -p MemoryMax="$RAM" -p MemorySwapMax=256M -p CPUQuota="$CPU" -p TasksMax=256 \
         -- "$FJ" "''${opts[@]}" -- "$@" && rc=0 || rc=$?
       logger -t zone "END   ''${Z^^} $name (exit $rc)"
+      if [ -n "$room" ]; then kill "$wm" "$xp" 2>/dev/null || true; fi
       exit "$rc"
     '';
   };
@@ -120,9 +143,37 @@ let
     if timeout 8 bash -c 'exec 3<>/dev/tcp/127.0.0.1/3128 && printf "CONNECT 1.1.1.1:443 HTTP/1.1\r\nX-Golem-Probe: 1\r\n\r\n" >&3 && read -r l <&3 && [[ $l == *" 200 "* ]]' 2>/dev/null; then
       echo ONLINE; else echo OFFLINE; fi
   '';
+  # golem-carry: the clipboard, carried by hand between my screen and the room in front.
+  carry = pkgs.writeShellApplication {
+    name = "golem-carry";
+    runtimeInputs = with pkgs; [ xclip xdotool coreutils util-linux gnused ];
+    text = ''
+      # golem-carry in   (Super+C)        my clipboard -> the room in front
+      # golem-carry out  (Super+Shift+C)  the room in front's clipboard -> mine
+      t=$(xdotool getactivewindow getwindowname 2>/dev/null || true)
+      case "$t" in "ROOM · "*) ;; *) exit 0 ;; esac
+      d=''${t##* · }; who=$(echo "$t" | sed 's/^ROOM · //; s/ · :[0-9]*$//')
+      case "''${1:-}" in
+        in)  xclip -selection clipboard -o 2>/dev/null | xclip -display "$d" -selection clipboard -i
+             logger -t zone "Clipboard carried into the room of $who" ;;
+        out) DISPLAY=$d xclip -selection clipboard -o 2>/dev/null | xclip -selection clipboard -i
+             logger -t zone "Clipboard carried out of the room of $who" ;;
+      esac
+    '';
+  };
 in {
   programs.firejail.enable = true;
-  environment.systemPackages = [ zone nettest pkgs.xauth pkgs.alsa-utils ];
+  # Inside a room: no bars, every window filling the room, nothing else.
+  environment.etc."golem/room-i3.config".text = ''
+    default_border none
+    default_floating_border none
+    workspace_layout tabbed
+    for_window [all] border none
+    bar { mode invisible }
+  '';
+  # My own screen listens only on its file (the rooms hide that file), not on a hidden name anyone could reach.
+  services.xserver.displayManager.xserverArgs = [ "-nolisten" "local" ];
+  environment.systemPackages = [ zone nettest carry pkgs.xauth pkgs.alsa-utils pkgs.xclip ];
 
   # My folders (DECISIONS.md): documents, projects, media, zones.
   systemd.tmpfiles.rules = map (d: "d /home/${s.user}/${d} 0700 ${s.user} users -")

@@ -125,6 +125,8 @@ let
     [ "Alt+Return"        "Terminal"                                   "exec ${term}" ]
     [ "Super+e"           "Text editor"                                "exec golem-launch golem-edit" ]
     [ "Super+b"           "Browser (through the Gate)"                 "exec golem-launch golem-browser" ]
+    [ "Super+c"           "Carry my clipboard into the room in front"  "exec golem-carry in" ]
+    [ "Super+Shift+c"     "Carry the room's clipboard out to me"       "exec golem-carry out" ]
     [ "Super+o"           "Find a file and open it in the editor"      "exec golem-launch golem-edit ~" ]
     [ "Alt+Tab"           "Switch window (list of names)"              "exec golem-win switch" ]
     [ "Alt+q"             "Close window (asks first)"                  "exec golem-win close" ]
