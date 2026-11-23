@@ -115,7 +115,7 @@ relics are found along the way. Alt+G: animations HIGH / MEDIUM / LOW / OFF, wea
 spell check and word suggestions. Opening it without a file shows its dashboard (a big gada, today, pinned and recent files,
 battery / memory / Wi-Fi). Super+O opens it with the file finder. F6 also shows Hindi / Sanskrit text with letters joined.
 F9 draws the code as a flowchart beside it (live for Python); F10 opens a block builder that writes Python, JavaScript or Lua as you snap blocks. Pictures, music, video, PDFs and links open in their own
-apps; Word, Excel and PowerPoint go to Google Drive in Firefox.
+apps; Word and Excel open inside the editor, as a document and a table. There is no Firefox in Golem.
 Languages it can run: `editor/languages.nix`. Extensions: `editor/extensions.nix`. Add a name on GitHub, then `golem-update`.
 It starts in GREEN with internet (for the AI), sound and USB allowed; the Control Panel can change that.
 

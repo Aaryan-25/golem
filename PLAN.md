@@ -133,7 +133,7 @@ tower, its height = how long it is), call graphs (a light beam from each functio
 project's history grown as an animation). Plan: one key shows the open project as a dark 3D landscape in a window: files
 as districts, functions as towers (taller = longer, brighter = changed recently, ember = has a mistake), beams for calls,
 the gada hovering over the one you are in. Mouse or arrows to fly around; a click on a tower opens that function in the
-editor. Python first (read like F9, never run); other languages through the AI. Drawn with WebGL in a bar-less Firefox
+editor. Python first (read like F9, never run); other languages through the AI. Drawn with WebGL in a bar-less golem-view
 window, kept small so the Celeron's graphics can turn it smoothly; a flat 2D version for LOW.
 
 **Done when:** on the laptop, I build a small program by wiring boxes and F5 runs it; and the program map of a project

@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # golem-open FILE|LINK: opens what the editor can't show itself, by the file's contents.
-#   pictures -> imv   music, video -> mpv   PDF -> zathura   links -> Firefox
-#   Word / Excel / PowerPoint (and LibreOffice files) -> Google Drive in Firefox: the file is
-#   copied to ~/Downloads/for-google and Firefox opens Drive, where you upload it (Drive's "New").
+#   pictures -> imv   music, video -> mpv   PDF -> zathura
+#   Word (.docx) and Excel (.xlsx) -> inside the editor, as a document or a table (golem-office)
+#   links -> the Gate's browser, once the Gate is built (there is no Firefox in Golem)
 # Prints one line saying what it did. Exit 3 = it is text (the editor opens it itself).
+# Exit 6 = a Word or Excel file: the line printed is the path of the copy the editor opens.
 set -u
 t=${1:?usage: golem-open FILE|LINK}
 
@@ -14,7 +15,8 @@ start() {
 
 case "$t" in
   http://*|https://*|www.*)
-    start firefox "$t"; echo "OPENING THE LINK IN FIREFOX"; exit 0 ;;
+    logger -t zone "Editor: a link was not opened (the Gate isn't built yet): $t" 2>/dev/null
+    echo "LINKS OPEN IN THE GATE'S BROWSER, WHICH ISN'T BUILT YET"; exit 0 ;;
 esac
 
 [ -e "$t" ] || { echo "NOT FOUND: $t"; exit 1; }
@@ -30,10 +32,7 @@ case "$m" in
   application/pdf)
     start zathura "$f"; echo "OPENING THE PDF $b" ;;
   application/msword|application/vnd.ms-*|application/vnd.openxmlformats-officedocument.*|application/vnd.oasis.opendocument.*|application/rtf)
-    up="$HOME/Downloads/for-google"; mkdir -p "$up"; cp -f -- "$f" "$up/"
-    logger -t zone "Editor: copied $b to ~/Downloads/for-google to open in Google Docs" 2>/dev/null
-    start firefox "https://drive.google.com/drive/my-drive"
-    echo "GOOGLE DRIVE IS OPENING: UPLOAD $b FROM ~/Downloads/for-google (NEW > FILE UPLOAD)" ;;
+    golem-office open "$f"; exit $(( $? == 0 ? 6 : 4 )) ;;
   inode/directory)
     echo "THAT IS A FOLDER"; exit 1 ;;
   *)

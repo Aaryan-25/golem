@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""golem-view: a tiny window that shows pages from THIS computer only. It replaces Firefox for the
+live preview (F6) and the block builder (F10).
+
+  golem-view --class NAME URL
+
+It can never reach the internet:
+  * every request goes to a proxy that doesn't exist, except those to this computer (127.0.0.1, localhost);
+  * any attempt to go to another site is refused, and written in the truth log.
+No history, no cookies kept, no bars: just the page. Ctrl+R reloads, Ctrl+Plus/Minus zoom, Esc or Ctrl+W closes.
+"""
+import subprocess
+import sys
+from urllib.parse import urlparse
+
+import gi
+
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+gi.require_version("WebKit", "6.0")
+from gi.repository import Gdk, GLib, Gtk, WebKit  # noqa: E402
+
+LOCAL = ("127.0.0.1", "localhost", "::1")
+
+
+def log(msg):
+    try:
+        subprocess.run(["logger", "-t", "zone", msg], check=False, timeout=3)
+    except OSError:
+        pass
+
+
+def is_local(uri):
+    u = urlparse(uri)
+    return u.scheme in ("about", "data", "blob", "file") or (u.scheme in ("http", "https", "ws") and u.hostname in LOCAL)
+
+
+def main():
+    args = sys.argv[1:]
+    cls = "golem-view"
+    if len(args) >= 2 and args[0] == "--class":
+        cls, args = args[1], args[2:]
+    if not args:
+        sys.exit(__doc__)
+    url = args[0]
+    if not is_local(url):
+        log(f"Local viewer: refused to open {url} (it only shows pages from this computer)")
+        sys.exit("golem-view only shows pages from this computer")
+    GLib.set_prgname(cls)              # the window's class, for the window manager
+    app = Gtk.Application(application_id=None)
+
+    def activate(app):
+        session = WebKit.NetworkSession.new_ephemeral()          # nothing kept after closing
+        session.set_proxy_settings(WebKit.NetworkProxyMode.CUSTOM,
+                                   WebKit.NetworkProxySettings.new("http://127.0.0.1:9", list(LOCAL)))
+        view = WebKit.WebView(network_session=session)
+        s = view.get_settings()
+        s.set_enable_developer_extras(False)
+        s.set_enable_back_forward_navigation_gestures(False)
+
+        def decide(v, decision, kind):
+            if kind in (WebKit.PolicyDecisionType.NAVIGATION_ACTION, WebKit.PolicyDecisionType.NEW_WINDOW_ACTION):
+                target = decision.get_navigation_action().get_request().get_uri()
+                if not is_local(target):
+                    decision.ignore()
+                    log(f"Local viewer: refused to go to {target} (no internet here)")
+                    return True
+            return False
+        view.connect("decide-policy", decide)
+        win = Gtk.ApplicationWindow(application=app, title=cls)
+        win.set_default_size(900, 700)
+        win.set_child(view)
+        keys = Gtk.EventControllerKey()
+
+        def key(ctrl, keyval, code, state):
+            ctrl_on = bool(state & Gdk.ModifierType.CONTROL_MASK)
+            if keyval == Gdk.KEY_Escape or (ctrl_on and keyval in (Gdk.KEY_w, Gdk.KEY_q)):
+                win.close()
+            elif ctrl_on and keyval == Gdk.KEY_r:
+                view.reload()
+            elif ctrl_on and keyval in (Gdk.KEY_plus, Gdk.KEY_equal):
+                view.set_zoom_level(view.get_zoom_level() * 1.1)
+            elif ctrl_on and keyval == Gdk.KEY_minus:
+                view.set_zoom_level(view.get_zoom_level() / 1.1)
+            else:
+                return False
+            return True
+        keys.connect("key-pressed", key)
+        win.add_controller(keys)
+        view.load_uri(url)
+        win.present()
+
+    app.connect("activate", activate)
+    app.run([sys.argv[0]])
+
+
+if __name__ == "__main__":
+    main()

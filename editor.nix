@@ -14,8 +14,8 @@
 #   flow.lua / blocks.html the flowchart view (F9) and the block builder (F10)
 #
 # The look: Cool Retro Term's full CRT glass in Golem's colours (settings.nix), in the current
-# face (Shadow / Negative, from the Control Panel) each time it opens. Right-click inside it (or
-# Ctrl+Shift+M) reaches Cool Retro Term's own settings and screen styles; your choices there are
+# face (Shadow / Negative, from the Control Panel) each time it opens. Ctrl+Shift+M inside it
+# reaches Cool Retro Term's own settings and screen styles; your choices there are
 # kept, and "Golem Shadow" / "Golem Negative" in its profiles list bring Golem's look back.
 #
 # Its zone: GREEN with internet (for the AI), sound and USB allowed. This is only its starting
@@ -62,11 +62,21 @@ let
     exec ${interp} ${./editor/bin}/${name} "$@"
   '';
   golemOpen = helper "golem-open" "${pkgs.bash}/bin/bash"
-    [ pkgs.coreutils pkgs.file pkgs.util-linux pkgs.imv pkgs.mpv pkgs.zathura pkgs.firefox ];
+    [ pkgs.coreutils pkgs.file pkgs.util-linux pkgs.imv pkgs.mpv pkgs.zathura golemOffice ];
+  # Word and Excel inside the editor (python-docx, openpyxl): no Firefox, no Google, no internet.
+  golemOffice = pkgs.writeShellScriptBin "golem-office" ''
+    exec ${pkgs.python3.withPackages (p: [ p.python-docx p.openpyxl ])}/bin/python3 ${./editor/bin}/golem-office "$@"
+  '';
+  # golem-view: the small window for the live preview and the block builder; pages from this computer only.
+  golemView = pkgs.writeShellScriptBin "golem-view" ''
+    export GI_TYPELIB_PATH=${lib.makeSearchPath "lib/girepository-1.0" [ pkgs.gtk4 pkgs.webkitgtk_6_0 pkgs.glib.out pkgs.pango.out pkgs.gdk-pixbuf pkgs.graphene pkgs.harfbuzz pkgs.libsoup_3 pkgs.gobject-introspection ]}
+    export PATH=${lib.makeBinPath [ pkgs.util-linux ]}:$PATH
+    exec ${pkgs.python3.withPackages (p: [ p.pygobject3 ])}/bin/python3 ${./editor/bin}/golem-view "$@"
+  '';
   golemRun = helper "golem-run" "${pkgs.bash}/bin/bash" [ pkgs.coreutils pkgs.gnugrep pkgs.bc ];
   golemAi = helper "golem-ai" "${pkgs.bash}/bin/bash" [ pkgs.coreutils pkgs.curl pkgs.jq ];
   golemPreview = pkgs.writeShellScriptBin "golem-preview" ''
-    export PATH=${lib.makeBinPath [ pkgs.firefox ]}:$PATH
+    export PATH=${lib.makeBinPath [ golemView ]}:$PATH
     export GOLEM_VOID="${sh.void}" GOLEM_MIST="${sh.mist}" GOLEM_TEXT="${sh.text}" GOLEM_PALE="${sh.pale}"
     exec ${pkgs.python3.withPackages (p: [ p.markdown ])}/bin/python3 ${./editor/bin}/golem-preview "$@"
   '';
@@ -90,7 +100,7 @@ let
     cp x/package/LICENSE $out/
   '';
   golemBlocks = pkgs.writeShellScriptBin "golem-blocks" ''
-    export PATH=${lib.makeBinPath [ pkgs.firefox ]}:$PATH
+    export PATH=${lib.makeBinPath [ golemView ]}:$PATH
     export GOLEM_BLOCKLY=${blockly} GOLEM_BLOCKS_PAGE=${./editor/blocks.html}
     exec ${pkgs.python3}/bin/python3 ${./editor/bin}/golem-blocks "$@"
   '';
@@ -176,7 +186,7 @@ let
     '';
   };
 in {
-  environment.systemPackages = [ edit golemOpen golemRun golemPreview ] ++ languages ++ [
+  environment.systemPackages = [ edit golemOpen golemRun golemPreview golemOffice golemView ] ++ languages ++ [
     # so Alt+Space finds it as "Text editor" (or "edit")
     (pkgs.makeDesktopItem { name = "golem-edit"; desktopName = "Text editor (edit)"; exec = "golem-edit"; })
     # so text files opened from anywhere (a link, another app) open in it, through its zone

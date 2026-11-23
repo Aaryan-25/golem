@@ -329,6 +329,18 @@ pkgs.testers.runNixOSTest {
         assert ask_guard({"do": "backup-load", "name": "test1", "password": "golem"}) == "OK"
         assert "newest 3" in ask_guard({"do": "delete-version", "version": "1", "password": "golem"})
 
+    with subtest("Firefox out: none in Golem; the preview window shows this computer only; Word/Excel helper"):
+        machine.fail("su - lilgolemwitch -c 'command -v firefox'")
+        machine.fail("su - lilgolemwitch -c 'DISPLAY=:0 golem-view https://example.com'")
+        machine.succeed("su - lilgolemwitch -c 'echo \"<h1>LOCAL</h1>\" > /tmp/p.html'")
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 XDG_RUNTIME_DIR=/run/user/1000 golem-preview /tmp/p.html >/tmp/preview.log 2>&1 &'")
+        if machine.execute("timeout 90 sh -c 'until su - lilgolemwitch -c \"DISPLAY=:0 xdotool search --class golem-preview\"; do sleep 2; done'")[0] != 0:
+            print(machine.execute("cat /tmp/preview.log")[1])
+            raise Exception("the preview window did not open")
+        machine.execute("pkill -f golem-view; pkill -f golem-preview")
+        out = machine.execute("su - lilgolemwitch -c 'golem-office open /etc/hostname'")[1]
+        assert "WORD" in out, out
+
     with subtest("Step E: GADA in the Start panel opens the editor"):
         machine.send_key("meta_l-esc")
         machine.wait_until_succeeds(realm_seen, timeout=30)

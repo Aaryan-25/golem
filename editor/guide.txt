@@ -46,9 +46,11 @@
                            Esc or Ctrl+B = back to your text
      Ctrl+Q                close the editor (asks only if something is not saved)
 
+     Alt+E                 FILES: explore everything (copy, move, rename, the Bin)
      Other kinds open in their own app: pictures (imv), music and video (mpv), PDF
-     (zathura), links (Firefox). Word, Excel and PowerPoint files are copied to
-     ~/Downloads/for-google and Google Drive opens in Firefox to upload them.
+     (zathura). Word (.docx) and Excel (.xlsx) open right here, as a document and as
+     a table; saving writes them back (the untouched file is kept as NAME.orig.docx).
+     Links will open in the Gate's browser (there is no Firefox in Golem).
 
 
    CODE
@@ -58,7 +60,8 @@
      Ctrl+J                the bottom panel: your own terminal (Ctrl+J again = back)
      Alt+S                 (in that panel) switch shell: bash, python, node, lua...
      F6                    live preview on the right for HTML, Markdown and SVG: it
-                           follows your typing (a Firefox window with no bars).
+                           follows your typing (a small window that only shows
+                           pages from this computer, never the internet).
                            Any other text file is shown as text there, with Hindi
                            and Sanskrit letters joined properly (the CRT screen
                            can't join them)

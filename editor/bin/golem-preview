@@ -2,19 +2,17 @@
 """golem-preview FILE: a live preview of an HTML, Markdown or SVG file, or any text file
 (shown as text, with Hindi / Sanskrit letters joined properly).
 
-A tiny web server on this computer only (127.0.0.1) shows the file's folder; a Firefox
-window of its own (a fresh, empty profile with every bar hidden) shows the page. Whenever the file changes on disk (the
+A tiny web server on this computer only (127.0.0.1) shows the file's folder; a small
+window of its own (golem-view: pages from this computer only, no bars) shows the page. Whenever the file changes on disk (the
 editor autosaves ~2 s after you stop typing), the page reloads by itself, keeping its
 scroll position. Closing the window stops the server.
 """
 import html
 import http.server
 import os
-import shutil
 import socketserver
 import subprocess
 import sys
-import tempfile
 import threading
 import time
 import urllib.parse
@@ -147,34 +145,10 @@ class Server(socketserver.ThreadingMixIn, http.server.HTTPServer):
 server = Server(("127.0.0.1", 0), Handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 url = f"http://127.0.0.1:{server.server_address[1]}/{urllib.parse.quote(NAME)}"
-USER_JS = """
-user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
-user_pref("browser.shell.checkDefaultBrowser", false);
-user_pref("browser.startup.homepage_override.mstone", "ignore");
-user_pref("startup.homepage_welcome_url", "");
-user_pref("browser.aboutwelcome.enabled", false);
-user_pref("datareporting.policy.dataSubmissionEnabled", false);
-user_pref("datareporting.healthreport.uploadEnabled", false);
-user_pref("toolkit.telemetry.enabled", false);
-user_pref("app.update.enabled", false);
-user_pref("browser.tabs.inTitlebar", 0);
-user_pref("network.proxy.type", 0);
-user_pref("browser.sessionstore.resume_from_crash", false);
-"""
-USER_CHROME = "#navigator-toolbox, #TabsToolbar, #nav-bar, #PersonalToolbar { visibility: collapse !important; }"
-
-profile = tempfile.mkdtemp(prefix="golem-preview-")
-os.makedirs(os.path.join(profile, "chrome"))
-with open(os.path.join(profile, "user.js"), "w") as fh:
-    fh.write(USER_JS)
-with open(os.path.join(profile, "chrome", "userChrome.css"), "w") as fh:
-    fh.write(USER_CHROME)
-browser = os.environ.get("GOLEM_PREVIEW_BROWSER", "firefox")
+# golem-view: a tiny window that can only show pages from this computer (never the internet)
 try:
-    subprocess.run([browser, "--no-remote", "--new-instance", "--profile", profile,
-                    "--class", "golem-preview", "--name", "golem-preview", url])
+    subprocess.run(["golem-view", "--class", "golem-preview", url])
 except FileNotFoundError:
-    sys.exit(f"golem-preview: the browser '{browser}' is missing")
+    sys.exit("golem-preview: golem-view is missing")
 finally:
     server.shutdown()
-    shutil.rmtree(profile, ignore_errors=True)

@@ -62,12 +62,12 @@ in **that new window**, then close it with Alt+Q.
 
 ## Step 5: keys and windows
 - [ ] **Super+H** shows the key list
-- [ ] **Alt+Space** opens the launcher at the bottom left; typing "firfox" (with a typo) still finds Firefox
+- [ ] **Alt+Space** opens the launcher at the bottom left; typing "xtrem" (with a typo) still finds xterm
 - [ ] An app opened for the first time asks for its zone once, and not the second time
 - [ ] New windows open beside the old one without taking focus; **Alt+Tab** shows a list of names to switch to
 - [ ] **Super+arrows** move the focus, the focused window has a thin pale line, there are no bars or titles
 - [ ] **Alt+Q** asks "CLOSE …?" before closing
-- [ ] **Super+Shift+2** on Firefox sends it to workspace 2, and next time Firefox opens there by itself
+- [ ] **Super+Shift+2** on a terminal sends it to workspace 2, and next time it opens there by itself
 - [ ] **Super+Escape** shows the power menu
 - [ ] Volume, mute and brightness keys work
 

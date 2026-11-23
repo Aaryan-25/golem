@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""golem-office: Word and Excel files, opened inside the editor (no Firefox, no Google, no internet).
+
+  golem-office open FILE    makes a text copy the editor can show, and prints its path:
+                              Word (.docx)  -> a document: # headings, - lists, plain paragraphs, | tables |
+                              Excel (.xlsx) -> a table: one line per row, cells split by commas (CSV);
+                                               formulas stay as formulas (=SUM(A1:A3))
+  golem-office save COPY    writes the copy back into the Word or Excel file (the editor does this
+                            each time it saves). The first time, the untouched file is kept beside it
+                            as NAME.orig.docx / NAME.orig.xlsx, because fonts, colours and pictures
+                            can't come back from plain text.
+"""
+import csv
+import hashlib
+import io
+import os
+import shutil
+import subprocess
+import sys
+
+BOX = os.path.expanduser("~/.local/share/golem-edit/office")
+
+
+def log(msg):
+    try:
+        subprocess.run(["logger", "-t", "zone", "Editor: " + msg], check=False, timeout=3)
+    except OSError:
+        pass
+
+
+def copy_path(original, ext):
+    h = hashlib.sha1(os.path.realpath(original).encode()).hexdigest()[:8]
+    base = os.path.splitext(os.path.basename(original))[0]
+    return os.path.join(BOX, f"{base}.{h}{ext}")
+
+
+def docx_to_text(path):
+    import docx
+    d = docx.Document(path)
+    out = []
+    body = d.element.body
+    paras = {p._p: p for p in d.paragraphs}
+    tables = {t._tbl: t for t in d.tables}
+    for child in body.iterchildren():
+        if child in paras:
+            p = paras[child]
+            style = (p.style.name if p.style is not None else "") or ""
+            t = p.text
+            if style.startswith("Heading") and style[-1:].isdigit():
+                out.append("#" * int(style[-1]) + " " + t)
+            elif style == "Title":
+                out.append("# " + t)
+            elif "List" in style:
+                out.append("- " + t)
+            else:
+                out.append(t)
+            out.append("")
+        elif child in tables:
+            for row in tables[child].rows:
+                out.append("| " + " | ".join(c.text.replace("\n", " ") for c in row.cells) + " |")
+            out.append("")
+    return "\n".join(out).rstrip() + "\n"
+
+
+def text_to_docx(text, original, target):
+    import docx
+    d = docx.Document()
+    for block in text.split("\n"):
+        line = block.rstrip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            n = len(line) - len(line.lstrip("#"))
+            d.add_heading(line[n:].strip(), level=min(n, 9))
+        elif line.startswith(("- ", "* ")):
+            d.add_paragraph(line[2:], style="List Bullet")
+        elif line.startswith("|") and line.endswith("|"):
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            t = d.add_table(rows=1, cols=len(cells))
+            for c, v in zip(t.rows[0].cells, cells):
+                c.text = v
+        else:
+            d.add_paragraph(line)
+    d.save(target)
+
+
+def xlsx_to_text(path):
+    import openpyxl
+    wb = openpyxl.load_workbook(path, data_only=False)
+    ws = wb.worksheets[0]
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    for row in ws.iter_rows(values_only=True):
+        w.writerow(["" if v is None else v for v in row])
+    note = "" if len(wb.worksheets) == 1 else f"(only the first sheet, \"{ws.title}\", is shown here)\n"
+    return note + buf.getvalue()
+
+
+def text_to_xlsx(text, original, target):
+    import openpyxl
+    wb = openpyxl.load_workbook(original)
+    ws = wb.worksheets[0]
+    lines = text.splitlines()
+    if lines and lines[0].startswith("(only the first sheet"):
+        lines = lines[1:]
+    for row in ws.iter_rows():
+        for c in row:
+            c.value = None
+    for r, row in enumerate(csv.reader(lines), start=1):
+        for c, v in enumerate(row, start=1):
+            if v == "":
+                continue
+            try:
+                val = int(v)
+            except ValueError:
+                try:
+                    val = float(v)
+                except ValueError:
+                    val = v
+            ws.cell(row=r, column=c, value=val)
+    wb.save(target)
+
+
+KINDS = {".docx": (".md", docx_to_text, text_to_docx), ".xlsx": (".csv", xlsx_to_text, text_to_xlsx)}
+
+
+def main():
+    if len(sys.argv) != 3 or sys.argv[1] not in ("open", "save"):
+        sys.exit(__doc__)
+    what, path = sys.argv[1], os.path.realpath(sys.argv[2])
+    os.makedirs(BOX, exist_ok=True)
+    if what == "open":
+        ext = os.path.splitext(path)[1].lower()
+        if ext not in KINDS:
+            print(f"GOLEM CAN OPEN WORD (.docx) AND EXCEL (.xlsx) FILES; NOT {ext or 'THIS KIND'} YET")
+            sys.exit(4)
+        cext, read, _ = KINDS[ext]
+        cp = copy_path(path, cext)
+        with open(cp, "w") as f:
+            f.write(read(path))
+        with open(cp + ".original", "w") as f:
+            f.write(path)
+        log(f"opened {os.path.basename(path)} as text")
+        print(cp)
+        return
+    link = path + ".original"
+    if not os.path.exists(link):
+        sys.exit("golem-office: that isn't a copy of a Word or Excel file")
+    original = open(link).read().strip()
+    ext = os.path.splitext(original)[1].lower()
+    keep = os.path.splitext(original)[0] + ".orig" + ext
+    if not os.path.exists(keep) and os.path.exists(original):
+        shutil.copy2(original, keep)
+        log(f"kept the untouched {os.path.basename(original)} as {os.path.basename(keep)}")
+    tmp = original + ".golem-tmp"
+    KINDS[ext][2](open(path).read(), keep if os.path.exists(keep) else original, tmp)
+    os.replace(tmp, original)
+    print("SAVED INTO " + os.path.basename(original))
+
+
+if __name__ == "__main__":
+    main()

@@ -2,7 +2,7 @@
 """golem-blocks FILE: the block builder for FILE (.py, .js or .lua).
 
 A tiny web server on this computer only (127.0.0.1) serves the block page and Blockly; a
-Firefox window of its own (fresh profile, no bars) shows it. As you snap blocks together, the
+small window of its own (golem-view: pages from this computer only) shows it. As you snap blocks together, the
 page sends the code here and it is written into FILE (the editor shows it at once). The blocks
 themselves are kept next to it in FILE.blocks.json, so F10 later brings the same picture back.
 
@@ -13,11 +13,9 @@ import hashlib
 import http.server
 import json
 import os
-import shutil
 import socketserver
 import subprocess
 import sys
-import tempfile
 import threading
 
 LANGS = {".py": "python", ".js": "javascript", ".mjs": "javascript", ".lua": "lua"}
@@ -119,31 +117,10 @@ server = Server(("127.0.0.1", 0), Handler)
 threading.Thread(target=server.serve_forever, daemon=True).start()
 url = f"http://127.0.0.1:{server.server_address[1]}/"
 
-USER_JS = """
-user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
-user_pref("browser.shell.checkDefaultBrowser", false);
-user_pref("browser.startup.homepage_override.mstone", "ignore");
-user_pref("browser.aboutwelcome.enabled", false);
-user_pref("datareporting.policy.dataSubmissionEnabled", false);
-user_pref("datareporting.healthreport.uploadEnabled", false);
-user_pref("toolkit.telemetry.enabled", false);
-user_pref("app.update.enabled", false);
-user_pref("browser.sessionstore.resume_from_crash", false);
-"""
-USER_CHROME = "#navigator-toolbox, #TabsToolbar, #nav-bar, #PersonalToolbar { visibility: collapse !important; }"
-
-profile = tempfile.mkdtemp(prefix="golem-blocks-")
-os.makedirs(os.path.join(profile, "chrome"))
-with open(os.path.join(profile, "user.js"), "w") as fh:
-    fh.write(USER_JS)
-with open(os.path.join(profile, "chrome", "userChrome.css"), "w") as fh:
-    fh.write(USER_CHROME)
-browser = os.environ.get("GOLEM_PREVIEW_BROWSER", "firefox")
+# golem-view: a tiny window that can only show pages from this computer (never the internet)
 try:
-    subprocess.run([browser, "--no-remote", "--new-instance", "--profile", profile,
-                    "--class", "golem-blocks", "--name", "golem-blocks", url])
+    subprocess.run(["golem-view", "--class", "golem-blocks", url])
 except FileNotFoundError:
-    sys.exit(f"golem-blocks: the browser '{browser}' is missing")
+    sys.exit("golem-blocks: golem-view is missing")
 finally:
     server.shutdown()
-    shutil.rmtree(profile, ignore_errors=True)

@@ -30,8 +30,8 @@ function S.is_text_file(path)
       or m == 'application/x-ndjson' or m:match('xml') or m:match('javascript') or m == 'application/x-empty'
 end
 
--- Pictures, music, video, PDF -> their own app; Word/Excel/PowerPoint -> Google Docs in
--- Firefox; links -> Firefox. golem-open decides and says what it did.
+-- Pictures, music, video, PDF -> their own app; Word/Excel -> inside the editor (golem-office);
+-- links -> the Gate (not built yet). golem-open decides and says what it did.
 function S.open_other(target)
   if not have('golem-open') then return say('GOLEM-OPEN IS MISSING') end
   local out = {}
@@ -45,6 +45,10 @@ function S.open_other(target)
       vim.schedule(function()
         if code == 3 then
           vim.cmd('edit ' .. fn.fnameescape(target)) -- it was text after all
+        elseif code == 6 and msg ~= '' then          -- Word or Excel: its text copy, written back on each save
+          vim.cmd('edit ' .. fn.fnameescape(msg))
+          vim.b.golem_office = target
+          say('A TEXT COPY OF ' .. tilde(target) .. ': SAVING WRITES IT BACK (THE UNTOUCHED FILE IS KEPT AS .orig)')
         else
           say(msg ~= '' and msg or ('OPENING ' .. tilde(target)))
         end
@@ -52,6 +56,18 @@ function S.open_other(target)
     end,
   })
 end
+
+-- Word and Excel copies: each save of the copy is written back into the real file.
+vim.api.nvim_create_autocmd('BufWritePost', {
+  pattern = vim.env.HOME .. '/.local/share/golem-edit/office/*',
+  callback = function(a)
+    fn.jobstart({ 'golem-office', 'save', a.file }, {
+      on_exit = function(_, code)
+        if code ~= 0 then vim.schedule(function() say('COULD NOT WRITE BACK INTO THE WORD OR EXCEL FILE') end) end
+      end,
+    })
+  end,
+})
 
 -------------------------------------------------------------------------------
 -- The files panel (left). Extension: nvim-tree.
