@@ -114,10 +114,24 @@ while things work, strikes when you save, and reacts to finds, replaces, undo, d
 relics are found along the way. Alt+G: animations HIGH / MEDIUM / LOW / OFF, weapon (gada, vajra, trishul), sound, codex,
 spell check and word suggestions. Opening it without a file shows its dashboard (a big gada, today, pinned and recent files,
 battery / memory / Wi-Fi). Super+O opens it with the file finder. F6 also shows Hindi / Sanskrit text with letters joined.
-F9 draws the code as a flowchart beside it (live for Python); F10 opens a block builder that writes Python, JavaScript or Lua as you snap blocks. Pictures, music, video, PDFs and links open in their own
+F9 draws the code as a flowchart beside it (live for Python); F10 opens a block builder that writes Python, JavaScript or Lua as you snap blocks. F11: wires (join boxes, the Python is written after your own code). F12: the program map (the project in 3D; a click opens a function). Pictures, music, video, PDFs and links open in their own
 apps; Word and Excel open inside the editor, as a document and a table. There is no Firefox in Golem.
 Languages it can run: `editor/languages.nix`. Extensions: `editor/extensions.nix`. Add a name on GitHub, then `golem-update`.
 It starts in GREEN with internet (for the AI), sound and USB allowed; the Control Panel can change that.
+
+## Echo (my AIs)
+ECHO in the Start panel. Each Echo is its own person: a name, a description of its personality and quirks, and the way
+it talks, learned only from chats I feed it (FEEDING: WhatsApp exports in `~/zones/golem-echo/feed`, voice notes too).
+It runs offline in the OFFLINE zone (llama.cpp, Llama 3.2). Fetch its brain once: `golem-echo-brain` in a terminal.
+It can only talk. Anything else goes through extensions in `~/.local/share/golem-echo/extensions`, and the first time
+an Echo wants one I am asked (only this time / always / never). ACTIONS shows everything it did. **Super+Shift+E stops
+every Echo at once.** `golem-keylight` lights the keyboard; `golem-keylight extension` lets Echo ask to use it.
+
+## Reports to GitHub (so Claude can see how Golem is doing without photos)
+Once: make a private repo called `golem-reports`, then a fine-grained token on GitHub that can write **Contents** of
+that one repo only, then `golem-report setup` and paste it. After that every update sends a report (self-test, errors,
+version, hardware, truth log); `golem-report --screen` adds a picture of the screen. Delete the repo or the token and it stops.
+Super+V: the last 10 things copied (in memory only; Super+Shift+V forgets them).
 
 ## Updating (no reinstalling)
 Turn Wi-Fi on, open a terminal and type `golem-update`.
