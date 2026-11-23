@@ -194,8 +194,10 @@ The text editor add-on is merged; GADA opens it with its dashboard. **Done when:
    *Part 3 built:* Echo's hands (outside its zone: they ask me before any extension runs, and run it in its own
    zone), PERMISSIONS, EXTENSIONS, ACTIONS, AVATAR (an emote for each mood), CARRY. Echo is complete.
    The brain runs on any processor for now; a faster one for the Asus comes when Golem moves there.
-12. **golem-keylight:** colours per key where the keyboard allows (the Asus FX506LH, as an experiment), the Dell's
+12. *(built)* **golem-keylight:** colours per key where the keyboard allows (the Asus FX506LH, as an experiment), the Dell's
    backlight now; a command and file format Echo's extensions can use.
+   The FX506LH most likely shows one colour for the whole keyboard (`golem-keylight what` will tell for sure);
+   patterns are kept per key anyway, for a keyboard that can.
 13. **Wires and the 3D map**, inside GADA (my graphical editor).
 14. **The final image**, once everything passes on GitHub (and I say yes).
 No disk encryption, no lock, no Wine, no reader (decided 23 Nov 2026). Later: a software manager through Echo's extensions.

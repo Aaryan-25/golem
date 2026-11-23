@@ -473,6 +473,14 @@ pkgs.testers.runNixOSTest {
         machine.execute("pkill -f echo/echo.py")
         machine.sleep(2)
 
+    with subtest("golem-keylight: says plainly there is no keyboard light here; keeps the pattern; makes Echo's extension"):
+        assert "No keyboard light found" in as_me("golem-keylight what")
+        out = machine.execute("su - lilgolemwitch -c 'golem-keylight key W red' 2>&1")
+        assert out[0] == 1 and "no keyboard light" in out[1], out
+        machine.succeed("grep -q 'W red' /home/lilgolemwitch/.config/golem-keylight/now.lights")
+        as_me("golem-keylight extension")
+        machine.succeed("test -x /home/lilgolemwitch/.local/share/golem-echo/extensions/keylight/keylight")
+
     with subtest("Step E: GADA in the Start panel opens the editor"):
         machine.send_key("meta_l-esc")
         machine.wait_until_succeeds(realm_seen, timeout=30)
