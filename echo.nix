@@ -126,7 +126,7 @@ in {
       # The trainer: OFFLINE, Echo's folder, the NVIDIA card allowed, most of the memory and processor.
       f=/var/lib/golem/apps/golem-echo-train.conf
       [ -e "$f" ] || printf '%s\n' zone=offline ram=6G cpu=800% internet=never camera=never usb=never sound=off \
-        nvidia=allowed folder=~/zones/golem-echo > "$f"
+        nvidia=allowed 'folder=~/zones/golem-echo' > "$f"   # ~ stays ~ (my home, not root's)
       chmod 644 "$f"
     '';
   };
