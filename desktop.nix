@@ -201,6 +201,7 @@ let
     # The shadow realm (realm.nix): the Start panel at login, Super+Escape, the idle screen, windows as sand
     exec --no-startup-id golem-realm --daemon
     exec --no-startup-id golem-gate ask          # the Gate asks me through this (gate.nix)
+    exec --no-startup-id golem-tune              # the window I'm in gets the computer's attention (optimiser.nix)
   '';
 in {
   services.xserver.windowManager.i3.configFile = lib.mkForce i3config;

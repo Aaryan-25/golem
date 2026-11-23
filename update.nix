@@ -63,6 +63,7 @@ let
         { echo "$(date '+%F %R')  ''${now:0:7} -> ''${new:0:7}"; echo "$changes"; echo; } >> "$log"
         logger -t golem "Golem updated from version ''${now:0:7} to ''${new:0:7}"
         say "Done. Golem is now version ''${new:0:7}."
+        if [ -s ~/.config/golem-report/token ]; then (golem-report --quiet "after the update to ''${new:0:7}" &); fi
         echo "The old version stays in the boot menu, in case you need it."
         echo "Every update is listed in ~/golem-updates.txt"
         echo "Some changes (like a new kernel) show only after a restart."

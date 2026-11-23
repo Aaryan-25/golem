@@ -406,6 +406,14 @@ pkgs.testers.runNixOSTest {
         machine.wait_until_succeeds("golem-truth --text | grep -q 'Clipboard carried into the room of RED xterm'", timeout=30)
         machine.execute("pkill -f 'bin/xterm'")
 
+    with subtest("The optimiser: compressed memory, the freeze guard, the window I'm in first; reports need a key"):
+        machine.succeed("swapon --show | grep -q zram")
+        machine.wait_for_unit("earlyoom.service")
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -f bin/golem-tune", timeout=30)
+        assert "by charger" in machine.succeed("cat /etc/golem/settings-schema.json")
+        out = machine.execute("su - lilgolemwitch -c golem-report")[1]
+        assert "golem-report setup" in out, out
+
     with subtest("Step E: GADA in the Start panel opens the editor"):
         machine.send_key("meta_l-esc")
         machine.wait_until_succeeds(realm_seen, timeout=30)

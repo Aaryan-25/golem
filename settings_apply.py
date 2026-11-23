@@ -72,10 +72,14 @@ def main():
         n = card[len("/proc/asound/card"):]
         sh("amixer", "-q", "-c", n, "set", "Capture", "cap" if c["microphone"] == "on" else "nocap")
     # Processor
-    gov = {"saver": "powersave", "balanced": "schedutil", "full": "performance"}[c["power_mode"]]
+    mode = c["power_mode"]
+    if mode == "by charger":       # the optimiser: saver on battery, balanced on the charger (udev re-runs this)
+        plugged = any(open(p).read().strip() == "1" for p in glob.glob("/sys/class/power_supply/*/online"))
+        mode = "balanced" if plugged else "saver"
+    gov = {"saver": "powersave", "balanced": "schedutil", "full": "performance"}[mode]
     for p in glob.glob("/sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_governor"):
         avail = open(p.replace("scaling_governor", "scaling_available_governors")).read().split()
-        write(p, gov if gov in avail else ("powersave" if c["power_mode"] != "full" else "performance"))
+        write(p, gov if gov in avail else ("powersave" if mode != "full" else "performance"))
     # Battery charge limit, where the laptop allows it
     for p in glob.glob("/sys/class/power_supply/BAT*/charge_control_end_threshold"):
         write(p, c["charge_limit"])

@@ -8,7 +8,7 @@ import subprocess
 import sys
 import time
 
-SOURCES = ["zone", "golem", "golem-net", "golem-gate", "golem-usb", "sudo", "i3lock", "login", "su", "NetworkManager", "systemd-coredump"]
+SOURCES = ["zone", "golem", "golem-net", "golem-gate", "earlyoom", "golem-usb", "sudo", "i3lock", "login", "su", "NetworkManager", "systemd-coredump"]
 
 
 def sentence(ident, msg):
@@ -35,6 +35,9 @@ def sentence(ident, msg):
                 "LOCK failed": "The lock screen failed to start"}.get(msg, msg)
     if ident == "golem-gate":
         return "Gate: " + msg
+    if ident == "earlyoom":
+        m = re.search(r'sending SIG\w+ to process \d+ uid \d+ "([^"]+)"', msg)
+        return f"Memory was nearly full: closed {m.group(1)} to keep the laptop from freezing" if m else None
     if ident == "golem-net":
         if msg.startswith(("Camera", "Microphone")):
             return msg
