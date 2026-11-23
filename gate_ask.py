@@ -13,7 +13,8 @@ import sys
 import time
 
 RUN = "/run/golem-gate"
-CHOICES = {"once": "ONCE: just this time", "always": "ALWAYS: remember yes", "never": "NEVER: remember no"}
+CHOICES = {"once": "ONCE: just this time", "always": "ALWAYS: this site, remember yes", "never": "NEVER: remember no",
+           "anywhere": "ALWAYS: any site, for this app (each is still written down)"}
 
 
 def ask_loop():
@@ -29,8 +30,7 @@ def ask_loop():
                 r = subprocess.run(["golem-ask", title, *CHOICES.values()], capture_output=True, text=True)
                 pick = r.stdout.strip()
                 answer = next((k for k, v in CHOICES.items() if v == pick), "never_now")
-                f.write(json.dumps({"id": q["id"], "answer": "once" if answer == "once" else
-                                    answer if answer in ("always", "never") else "deny"}) + "\n")
+                f.write(json.dumps({"id": q["id"], "answer": answer if answer in CHOICES else "deny"}) + "\n")
                 f.flush()
         except (OSError, ValueError, KeyError):
             pass

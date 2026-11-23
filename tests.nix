@@ -22,7 +22,7 @@ pkgs.testers.runNixOSTest {
     systemd.tmpfiles.rules = [ "f /var/lib/golem/settings.conf 0644 root root - alert_disk=off"
       # the test's own answer to the Gate, given once in advance: bash in YELLOW may always reach the test web server
       "d /var/lib/golem-gate 0755 golem-gate golem-gate -"
-      "f /var/lib/golem-gate/rules.json 0644 golem-gate golem-gate - {\"bash|YELLOW|web\": \"always\"}" ];
+      "f /var/lib/golem-gate/rules.json 0644 golem-gate golem-gate - {\"bash|YELLOW|web\": \"always\", \"golem-browser|YELLOW|web\": \"always\"}" ];
     # through the Gate, the only way out (gate.nix)
     environment.etc."golem-test-long.sh".text = ''
       exec 3<>/dev/tcp/127.0.0.1/3128
@@ -296,6 +296,16 @@ pkgs.testers.runNixOSTest {
         assert as_me("golem-gate off") == "off"
         assert as_me("zone bash -c \"curl -s -o /dev/null -w %{http_code} http://web/\"") == "403"
         assert as_me("golem-gate on") == "normal"
+
+    with subtest("The browser: in YELLOW, through the Gate, a page from the test web server"):
+        as_me("DISPLAY=:0 golem-launch golem-browser http://web/ >/dev/null 2>&1 &")
+        if machine.execute("timeout 120 sh -c 'until grep -q golem-browser /var/lib/golem-gate/feed.jsonl; do sleep 2; done'")[0] != 0:
+            print(machine.execute("journalctl -b -t zone -t golem-gate --no-pager | tail -20; tail -5 /var/lib/golem-gate/feed.jsonl")[1])
+            raise Exception("the browser did not reach the page through the Gate")
+        machine.sleep(3)
+        machine.screenshot("browser")
+        assert "YELLOW" in machine.succeed("grep golem-browser /var/lib/golem-gate/feed.jsonl | tail -1")
+        machine.execute("pkill -f browser.py")
 
     with subtest("The clock can be set by hand from the Control Panel, with the password, and it is logged"):
         assert "wrong password" in ask_guard({"do": "clock-set", "time": "2026-12-25 10:00", "password": "nope"})

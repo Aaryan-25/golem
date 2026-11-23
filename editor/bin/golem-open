@@ -2,7 +2,7 @@
 # golem-open FILE|LINK: opens what the editor can't show itself, by the file's contents.
 #   pictures -> imv   music, video -> mpv   PDF -> zathura
 #   Word (.docx) and Excel (.xlsx) -> inside the editor, as a document or a table (golem-office)
-#   links -> the Gate's browser, once the Gate is built (there is no Firefox in Golem)
+#   links -> golem-browser, in its zone, through the Gate (there is no Firefox in Golem)
 # Prints one line saying what it did. Exit 3 = it is text (the editor opens it itself).
 # Exit 6 = a Word or Excel file: the line printed is the path of the copy the editor opens.
 set -u
@@ -15,8 +15,7 @@ start() {
 
 case "$t" in
   http://*|https://*|www.*)
-    logger -t zone "Editor: a link was not opened (the Gate isn't built yet): $t" 2>/dev/null
-    echo "LINKS OPEN IN THE GATE'S BROWSER, WHICH ISN'T BUILT YET"; exit 0 ;;
+    start golem-launch golem-browser "$t"; echo "OPENING THE LINK IN THE BROWSER (THROUGH THE GATE)"; exit 0 ;;
 esac
 
 [ -e "$t" ] || { echo "NOT FOUND: $t"; exit 1; }

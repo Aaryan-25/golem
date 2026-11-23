@@ -31,7 +31,7 @@ function S.is_text_file(path)
 end
 
 -- Pictures, music, video, PDF -> their own app; Word/Excel -> inside the editor (golem-office);
--- links -> the Gate (not built yet). golem-open decides and says what it did.
+-- links -> golem-browser (through the Gate). golem-open decides and says what it did.
 function S.open_other(target)
   if not have('golem-open') then return say('GOLEM-OPEN IS MISSING') end
   local out = {}

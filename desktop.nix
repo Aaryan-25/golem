@@ -124,6 +124,7 @@ let
     [ "Alt+space"         "Open an app (asks its zone the first time)" "exec golem-launch" ]
     [ "Alt+Return"        "Terminal"                                   "exec ${term}" ]
     [ "Super+e"           "Text editor"                                "exec golem-launch golem-edit" ]
+    [ "Super+b"           "Browser (through the Gate)"                 "exec golem-launch golem-browser" ]
     [ "Super+o"           "Find a file and open it in the editor"      "exec golem-launch golem-edit ~" ]
     [ "Alt+Tab"           "Switch window (list of names)"              "exec golem-win switch" ]
     [ "Alt+q"             "Close window (asks first)"                  "exec golem-win close" ]

@@ -50,7 +50,7 @@
      Other kinds open in their own app: pictures (imv), music and video (mpv), PDF
      (zathura). Word (.docx) and Excel (.xlsx) open right here, as a document and as
      a table; saving writes them back (the untouched file is kept as NAME.orig.docx).
-     Links will open in the Gate's browser (there is no Firefox in Golem).
+     Links open in golem-browser, in its own zone, through the Gate (no Firefox in Golem).
 
 
    CODE

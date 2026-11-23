@@ -134,13 +134,19 @@ async def decide(app, zone, site):
     r = rules.get(f"{app}|{zone}|{site}")
     if r in ("always", "never"):
         return r == "always", r
+    if rules.get(f"{app}|{zone}|*") == "always":
+        return True, "any site, for this app"
     a = await ask(app, zone, site)
-    if a == "always" or a == "never":
+    if a in ("always", "never", "anywhere"):
         rules = load(RULES, {})
-        rules[f"{app}|{zone}|{site}"] = a
+        if a == "anywhere":
+            rules[f"{app}|{zone}|*"] = "always"
+            say(f"I decided: {app} ({zone}) may reach any site (each one is still written down)")
+        else:
+            rules[f"{app}|{zone}|{site}"] = a
+            say(f"I decided: {app} ({zone}) may {'always' if a == 'always' else 'never'} reach {site}")
         save_rules(rules)
-        say(f"I decided: {app} ({zone}) may {'always' if a == 'always' else 'never'} reach {site}")
-    return a in ("once", "always"), a
+    return a in ("once", "always", "anywhere"), a
 
 
 async def pipe(src, dst, count):
@@ -261,7 +267,7 @@ async def asker_conn(reader, writer):
                 continue
             fut = pending.get(a.get("id"))
             if fut and not fut.done():
-                fut.set_result(a.get("answer") if a.get("answer") in ("once", "always", "never") else "no, this time")
+                fut.set_result(a.get("answer") if a.get("answer") in ("once", "always", "never", "anywhere") else "no, this time")
     finally:
         if asker and asker[1] is writer:
             asker = None
