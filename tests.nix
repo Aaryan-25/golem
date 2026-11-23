@@ -449,7 +449,7 @@ pkgs.testers.runNixOSTest {
             machine.send_key(k)
             machine.sleep(1)
         machine.wait_until_succeeds("golem-truth --text | grep -q 'Opened golem-echo in OFFLINE'", timeout=60)
-        machine.wait_until_succeeds("su - lilgolemwitch -c 'DISPLAY=:0 xdotool search --onlyvisible --class golem-echo'", timeout=60)
+        machine.wait_until_succeeds("su - lilgolemwitch -c 'DISPLAY=:0 xdotool search --onlyvisible --name \"OFFLINE . golem-echo\"'", timeout=60)   # in its own room
         machine.screenshot("echo")
         machine.send_key("meta_l-shift-e")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'STOP pressed'", timeout=30)
