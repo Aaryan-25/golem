@@ -165,13 +165,13 @@ The panel in rune letters, pure black and white, page changes as flying sand, I 
 The text editor add-on is merged; GADA opens it with its dashboard. **Done when:** GADA opens the editor.
 
 ## The road after the shadow realm (agreed 23 Nov 2026, in this order)
-1. **FILES inside the editor:** a full file explorer (Alt+E, or E on the dashboard): places, files with size, date
+1. **(built)** **FILES inside the editor:** a full file explorer (Alt+E, or E on the dashboard): places, files with size, date
    and kind, a look inside, copy / cut / paste, rename, a Bin that gives things back, new folder, details (who can see
    it), hidden files. Pins (files or folders) go into groups on the dashboard. **Done when:** I manage a folder of
    my files only through FILES, and nothing surprises me.
-2. **Firefox out.** The live preview and the block builder get a tiny viewer that can only show pages from this
+2. **(built)** **Firefox out.** The live preview and the block builder get a tiny viewer that can only show pages from this
    computer. Word and Excel files open inside the editor (as a document, as a table). Links wait for the Gate.
-3. **The Gate:** the only way to the internet for the whole system. The first time an app or a site uses it, it asks
+3. **(built: the Gate, `golem-gate`, and golem-browser; a Control Panel page for its rules is next)** **The Gate:** the only way to the internet for the whole system. The first time an app or a site uses it, it asks
    me; everything goes into the truth log, ready for my AI to watch. Its own browser, in YELLOW, behind it.
 4. **HIDDEN mode (Tor)** in the Gate, saying plainly what it hides and what it can't.
 5. **Screen and clipboard separation** (the step below).
