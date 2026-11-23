@@ -397,7 +397,7 @@ pkgs.testers.runNixOSTest {
         machine.sleep(2)
         machine.screenshot("room")
         room = machine.succeed("ls /tmp/.X11-unix | sort | tail -1").strip().replace("X", ":")
-        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 i3-msg -q \"[title=\\\"ROOM | RED | xterm\\\"] focus\"'")
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 i3-msg -q \"[title=\\\"ROOM . RED . xterm\\\"] focus\"'")
         as_me("echo carried-secret | DISPLAY=:0 xclip -selection clipboard -i")
         assert as_me(f"DISPLAY={room} xclip -selection clipboard -o 2>/dev/null || true") == ""     # not shared by itself
         as_me("DISPLAY=:0 golem-carry in")
