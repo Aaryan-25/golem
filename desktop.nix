@@ -159,6 +159,7 @@ let
     [ "Alt+Return"        "Terminal"                                   "exec ${term}" ]
     [ "Super+e"           "Text editor"                                "exec golem-launch golem-edit" ]
     [ "Super+b"           "Browser (through the Gate)"                 "exec golem-launch golem-browser" ]
+    [ "Super+Shift+e"     "STOP every Echo at once"                    "exec golem-echo stop" ]
     [ "Super+v"           "Clipboard history: copy one again"         "exec golem-clip pick" ]
     [ "Super+Shift+v"     "Clipboard history: forget it all"          "exec golem-clip forget" ]
     [ "Super+c"           "Carry my clipboard into the room in front"  "exec golem-carry in" ]
@@ -233,6 +234,7 @@ let
     include /var/lib/golem/keys.i3
     # Golem's own panel is the one window that takes focus when it opens (DECISIONS: panels do)
     for_window [class="(?i)^golem-panel$"] fullscreen enable, focus
+    for_window [class="(?i)^golem-echo$"] fullscreen enable, focus
     for_window [class="(?i)^golem-alert$"] fullscreen enable, focus
     # The shadow realm (realm.nix): the Start panel at login, Super+Escape, the idle screen, windows as sand
     exec --no-startup-id golem-realm --daemon

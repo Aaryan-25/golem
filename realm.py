@@ -20,10 +20,16 @@ SETTINGS = "/var/lib/golem/settings.conf"
 SCENERY = os.path.expanduser("~/zones/settings/scenery.png")
 FONT = os.environ.get("GOLEM_RUNES", "GolemRunes.ttf")
 
-TABS = [("CONTINUE", "continue"), ("GADA", "golem-launch golem-edit"), ("FATE", "golem-panel-start"),
+TABS = [("CONTINUE", "continue"), ("GADA", "golem-launch golem-edit"), ("ECHO", "golem-launch golem-echo"),
+        ("FATE", "golem-panel-start"),
         ("SUMMON", "golem-launch"), ("SLUMBER", "slumber")]
 SLUMBER = [("SLEEP", "systemctl suspend"), ("RESTART", "systemctl reboot"), ("SHUT DOWN", "systemctl poweroff"),
            ("BACK", "back")]
+
+def spacing(items):
+    """Where the first tab sits and how far apart they are (as parts of the screen's height); six tabs sit closer."""
+    return (0.30, 0.11) if len(items) <= 5 else (0.24, 0.10)
+
 
 VERT = """
 #version 330
@@ -172,7 +178,8 @@ class Pictures:
         Each word keeps its own share of grains, so moving the choice only brightens and dims words in place,
         and the mark flies from one tab to the next."""
         from PIL import Image, ImageDraw
-        x, y0, step = int(self.w * 0.09), int(self.h * 0.30), int(self.h * 0.11)
+        fy0, fstep = spacing(items)
+        x, y0, step = int(self.w * 0.09), int(self.h * fy0), int(self.h * fstep)
         out = []
         for i, (name, _) in enumerate(items):
             im = Image.new("L", (self.w, self.h), 0)
@@ -186,7 +193,8 @@ class Pictures:
         return out
 
     def tab_box(self, items, i):
-        y0, step = 0.30 + i * 0.11, 0.11
+        fy0, step = spacing(items)
+        y0 = fy0 + i * step
         return 0.04, y0 - 0.02, 0.5, y0 + step - 0.02
 
     def scenery(self):

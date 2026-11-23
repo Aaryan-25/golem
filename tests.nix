@@ -426,6 +426,27 @@ pkgs.testers.runNixOSTest {
         as_me("golem-clip forget")
         machine.fail(f"test -e {d}/1")
 
+    with subtest("Echo: Echos are made and listed; without a brain it says so; ECHO opens it OFFLINE; STOP works"):
+        as_me("golem-echo new Mitra a calm friend")
+        assert "Mitra: a calm friend" in as_me("golem-echo list")
+        machine.succeed("test -s /home/lilgolemwitch/zones/golem-echo/echo/echos/mitra/profile.json")
+        out = machine.execute("su - lilgolemwitch -c 'golem-echo say Mitra hello' 2>&1")[1]
+        assert "no brain yet" in out, out
+        machine.succeed("grep -q zone=offline /var/lib/golem/apps/golem-echo.conf")
+        machine.send_key("meta_l-esc")
+        machine.wait_until_succeeds(realm_seen, timeout=30)
+        machine.sleep(3)
+        for k in ["down", "down", "ret"]:
+            machine.send_key(k)
+            machine.sleep(1)
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Opened golem-echo in OFFLINE'", timeout=60)
+        machine.wait_until_succeeds("su - lilgolemwitch -c 'DISPLAY=:0 xdotool search --onlyvisible --class golem-echo'", timeout=60)
+        machine.screenshot("echo")
+        machine.send_key("meta_l-shift-e")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'STOP pressed'", timeout=30)
+        machine.execute("pkill -f -- -echo.py")
+        machine.sleep(2)
+
     with subtest("Step E: GADA in the Start panel opens the editor"):
         machine.send_key("meta_l-esc")
         machine.wait_until_succeeds(realm_seen, timeout=30)

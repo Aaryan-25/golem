@@ -24,8 +24,8 @@ CYCLE = {
     "zone": ["red", "offline", "yellow", "green"],
     "internet": ["never", "allowed"], "camera": ["never", "allowed"], "usb": ["never", "allowed"],
     "sound": ["off", "on"],
-    "ram": ["512M", "1G", "1500M", "2G", "2500M", "3G"],
-    "cpu": ["25%", "50%", "100%", "150%", "180%", "200%"],
+    "ram": ["512M", "1G", "1500M", "2G", "2500M", "3G", "4G", "6G"],
+    "cpu": ["25%", "50%", "100%", "150%", "180%", "200%", "400%", "800%"],
 }
 EXPLAIN = {
     "zone": "RED: nothing, wiped on close.  OFFLINE: no internet, own folder.  YELLOW: internet, own folder.  GREEN: trusted, my files.",
