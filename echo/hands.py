@@ -129,6 +129,33 @@ def use(echo, name, give):
     return {"ok": ok, "out": out, "why": why}
 
 
+def train(slug):
+    """I pressed TRAIN: the trainer runs in its own zone (OFFLINE, NVIDIA allowed) and writes its progress."""
+    if not slug.replace("-", "").isalnum() or not os.path.isdir(os.path.join(D, "echos", slug)):
+        return {"ok": False, "why": "no such Echo"}
+    if subprocess.run(["golem-echo-trainer", "check"], capture_output=True).returncode:
+        return {"ok": False, "why": "the trainer isn't set up yet: in a terminal, type golem-echo-trainer"}
+    with lock:
+        if any(getattr(p, "golem_train", None) for p in running.values()):
+            return {"ok": False, "why": "an Echo is already training"}
+    env = dict(os.environ)
+    env.pop("DISPLAY", None)                      # no window, no room
+    p = subprocess.Popen(["zone", "golem-echo-train", slug], env=env, stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL, start_new_session=True)
+    p.golem_train = slug
+    with lock:
+        running[p.pid] = p
+
+    def wait():
+        p.wait()
+        with lock:
+            running.pop(p.pid, None)
+    threading.Thread(target=wait, daemon=True).start()
+    action({"echo": slug, "use": "TRAIN", "give": "", "ok": True, "out": "started on the NVIDIA card"})
+    log(f"training {slug} started")
+    return {"ok": True}
+
+
 def stop():
     with lock:
         for p in list(running.values()):
@@ -153,6 +180,8 @@ def serve(conn):
                 mirror()
                 log(f"permission forgotten: {req['forget']}")
                 res = {"ok": True}
+            elif "train" in req:
+                res = train(str(req["train"]))
             elif "use" in req:
                 res = use(str(req.get("echo", "?"))[:40], str(req["use"]), str(req.get("give", ""))[:4000])
             else:

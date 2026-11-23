@@ -153,5 +153,9 @@ Password is now **arise**. First, once: `golem-report setup` (see README), then 
 - [ ] `golem-keylight extension`, then ask an Echo to light the keyboard red: I am asked first (only this time /
       always / never), the light changes, and ACTIONS shows it. **Super+Shift+E** stops everything
 - [ ] `golem-keylight what` on the Dell (white light) and on the Asus (colour?); `golem-keylight all orange`
+- [ ] Asus: `nvidia-smi` shows the card. Control Panel > APPS > golem-echo-train says nvidia: allowed
+- [ ] Asus: `golem-echo-trainer` in a terminal finishes with "PyTorch sees the NVIDIA card: True"
+- [ ] Asus: FEEDING, Ctrl+T on an Echo with lots of messages: the bar fills; at the end "Trained voice"
+- [ ] COMPARE, Ctrl+T: with its trained voice, does it sound more like the person than without?
 - [ ] GADA: open a .py file, **F11** wires: two numbers into ADD into SHOW; F5 runs it
 - [ ] GADA: **F12** the program map turns smoothly; a click on a tower opens that function

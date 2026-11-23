@@ -29,6 +29,7 @@ pkgs.testers.runNixOSTest {
       echo '{"Mitra/say-hi": "always"}' > "$HOME/.config/golem-echo/permissions.json"
       echo '{"echo": "Mitra", "use": "say-hi", "give": "abc"}' | socat -t 60 - UNIX-CONNECT:"$HOME/zones/golem-echo/echo/hands.sock"
       echo '{"echo": "Mitra", "use": "nothing-here", "give": ""}' | socat -t 10 - UNIX-CONNECT:"$HOME/zones/golem-echo/echo/hands.sock"
+      echo '{"train": "mitra"}' | socat -t 10 - UNIX-CONNECT:"$HOME/zones/golem-echo/echo/hands.sock"
     '';
     # Wires: a file with my own function; the wires' code goes after it and uses it; the file then runs
     environment.etc."golem-test-wires.sh".text = ''
@@ -480,6 +481,13 @@ pkgs.testers.runNixOSTest {
         out = as_me("bash /etc/golem-test-echo.sh")
         print(out)
         assert "hi from Mitra, got: abc" in out and "no extension called nothing-here" in out, out
+        assert "the trainer isn't set up yet" in out, out
+        # Training: no NVIDIA card in this virtual laptop, so it says so plainly; too few messages, so it says so
+        machine.succeed("grep -q nvidia=allowed /var/lib/golem/apps/golem-echo-train.conf")
+        out = machine.execute("su - lilgolemwitch -c 'golem-echo-trainer' 2>&1")
+        assert out[0] == 1 and "no NVIDIA card" in out[1], out
+        machine.fail("su - lilgolemwitch -c 'golem-echo-train mitra'")
+        machine.succeed("grep -q 'only 1 messages fed' /home/lilgolemwitch/zones/golem-echo/echo/echos/mitra/train.json")
         machine.succeed("grep -q say-hi /home/lilgolemwitch/zones/golem-echo/echo/actions.jsonl")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'Mitra used say-hi'", timeout=30)
         machine.send_key("meta_l-shift-e")

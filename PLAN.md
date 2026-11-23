@@ -193,6 +193,9 @@ The text editor add-on is merged; GADA opens it with its dashboard. **Done when:
    from the chats (Ctrl+A in ECHOS), MEMORY, RULES, COMPARE.
    *Part 3 built:* Echo's hands (outside its zone: they ask me before any extension runs, and run it in its own
    zone), PERMISSIONS, EXTENSIONS, ACTIONS, AVATAR (an emote for each mood), CARRY. Echo is complete.
+   *Training built (24 Nov):* on the Asus's NVIDIA card. Each Echo gets its own voice layer (a LoRA) trained on its
+   fed messages: FEEDING, Ctrl+T. 3B brain if it fits on the card, else 1B (and it says so). COMPARE, Ctrl+T: the
+   same Echo with and without its voice. The NVIDIA card is only for apps I mark (Control Panel > APPS > nvidia).
    The brain runs on any processor for now; a faster one for the Asus comes when Golem moves there.
 12. *(built)* **golem-keylight:** colours per key where the keyboard allows (the Asus FX506LH, as an experiment), the Dell's
    backlight now; a command and file format Echo's extensions can use.

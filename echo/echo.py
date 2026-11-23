@@ -92,8 +92,16 @@ def new(name, about=""):
 
 # ---------------------------------------------------------------- the brain (llama.cpp, offline)
 def brain_file():
-    files = sorted(f for f in os.listdir(BRAIN) if f.endswith(".gguf")) if os.path.isdir(BRAIN) else []
-    return os.path.join(BRAIN, files[0]) if files else None
+    """The brain Echos talk with: the biggest one here (3B on the Asus, 1B on the Dell)."""
+    files = [os.path.join(BRAIN, f) for f in os.listdir(BRAIN) if f.endswith(".gguf")] if os.path.isdir(BRAIN) else []
+    return max(files, key=os.path.getsize) if files else None
+
+
+def voice(e):
+    """An Echo's trained voice layer (from the NVIDIA trainer), if it has one and its brain is here."""
+    v = (e or {}).get("voice") or {}
+    f, b = os.path.join(ECHOS, (e or {}).get("slug", "?"), v.get("file", "?")), os.path.join(BRAIN, v.get("brain_file", "?"))
+    return (f, b) if v and os.path.exists(f) and os.path.exists(b) else None
 
 
 def brain_up():
@@ -104,20 +112,30 @@ def brain_up():
         return False
 
 
-def wake_brain():
-    """Start the brain if it isn't running. It stays loaded while the app is open, so replies start fast."""
-    if brain_up():
-        return
-    model = brain_file()
+def wake_brain(e=None):
+    """Start the brain Echo e needs, with every trained voice for that brain loaded (switched off until asked for).
+    It stays loaded while the app is open, so replies start fast. Returns the number of e's voice, or None."""
+    v = voice(e)
+    model = v[1] if v else brain_file()
     if not model:
         raise RuntimeError("Echo has no brain yet. Open a terminal (Super+Enter) and type: golem-echo-brain")
+    voices = [voice(x)[0] for x in all_echos() if voice(x) and voice(x)[1] == model]
+    want = json.dumps([model, voices])
+    sig = os.path.join(BRAIN, "running.json")
+    if brain_up() and read(sig) == want:
+        return voices.index(v[0]) if v else None
+    subprocess.run(["pkill", "-f", f"llama-server.*--port {PORT}"], check=False)
+    time.sleep(0.5)
     os.makedirs(BRAIN, exist_ok=True)
+    extra = sum((["--lora", f] for f in voices), []) + (["--lora-init-without-apply"] if voices else [])
     with open(os.path.join(BRAIN, "brain.log"), "ab") as lf:
         subprocess.Popen(["llama-server", "-m", model, "--host", "127.0.0.1", "--port", str(PORT), "-c", "4096",
-                          "-t", str(os.cpu_count() or 2), "--no-webui"], stdout=lf, stderr=lf, start_new_session=True)
+                          "-t", str(os.cpu_count() or 2), "--no-webui"] + extra, stdout=lf, stderr=lf, start_new_session=True)
     for _ in range(240):
         if brain_up():
-            return
+            with open(sig, "w") as f:
+                f.write(want)
+            return voices.index(v[0]) if v else None
         time.sleep(0.5)
     raise RuntimeError("The brain did not wake up. Its notes are in " + os.path.join(BRAIN, "brain.log"))
 
@@ -194,10 +212,13 @@ def messages(e, text):
     return msgs + [{"role": "user", "content": text}]
 
 
-def ask(msgs, piece=lambda s: None, stop=None, max_tokens=400):
+def ask(msgs, piece=lambda s: None, stop=None, max_tokens=400, e=None, own_voice=True):
     """Send messages to the brain; each new piece of the answer goes to piece() as it is written."""
-    wake_brain()
-    body = json.dumps({"messages": msgs, "stream": True, "temperature": 0.7, "max_tokens": max_tokens}).encode()
+    n = wake_brain(e)
+    req = {"messages": msgs, "stream": True, "temperature": 0.7, "max_tokens": max_tokens}
+    if n is not None:      # this Echo's own trained voice on (or off, to compare)
+        req["lora"] = [{"id": n, "scale": 1.0 if own_voice else 0.0}]
+    body = json.dumps(req).encode()
     req = urllib.request.Request(URL + "/v1/chat/completions", body, {"Content-Type": "application/json"})
     out = []
     with LOCAL.open(req, timeout=600) as r:
@@ -221,7 +242,7 @@ def reply(e, text, piece=lambda s: None, stop=None, mood=lambda m: None):
     If it asks for an extension, its hands ask me, and the result goes back to it (at most 3 times)."""
     mood("thinking")
     msgs = messages(e, text)
-    answer = last = ask(msgs, piece, stop)
+    answer = last = ask(msgs, piece, stop, e=e)
     for _ in range(3):
         m = USE.search(last)
         if not m or (stop is not None and stop.is_set()):
@@ -233,7 +254,7 @@ def reply(e, text, piece=lambda s: None, stop=None, mood=lambda m: None):
         result = r.get("out", "").strip() if r.get("ok") else "It did not happen: " + r.get("why", "?")
         piece(f"[{m.group(1)}: {result[:300]}]\n")
         msgs += [{"role": "assistant", "content": last}, {"role": "user", "content": f"Result of {m.group(1)}: {result}"}]
-        last = ask(msgs, piece, stop)
+        last = ask(msgs, piece, stop, e=e)
         answer += f"\n[{m.group(1)}: {result[:300]}]\n" + last
     mood("stopped" if stop is not None and stop.is_set() else "talking")
     with open(os.path.join(ECHOS, e["slug"], "talk.jsonl"), "a", encoding="utf-8") as f:
@@ -357,8 +378,8 @@ def app():
         name = e["name"] if e else "no Echo yet"
         more = {"TALK": "Enter talk   Esc stop the reply",
                 "ECHOS": "Enter (with a name) a new Echo\nCtrl+S keep the description\nCtrl+A describe it from its chats",
-                "FEEDING": "type a number, Enter", "MEMORY": "Ctrl+S keep   Ctrl+W forget our talks",
-                "RULES": "Ctrl+S keep", "COMPARE": "Enter ask both", "AVATAR": "Ctrl+S keep",
+                "FEEDING": "type a number, Enter\nCtrl+T train its voice (NVIDIA)\nCtrl+X stop the training", "MEMORY": "Ctrl+S keep   Ctrl+W forget our talks",
+                "RULES": "Ctrl+S keep", "COMPARE": "Enter ask both\nCtrl+T: two Echos / one Echo,\nwith and without its voice", "AVATAR": "Ctrl+S keep",
                 "PERMISSIONS": "type a number, Enter: forget it", "CARRY": "Ctrl+C copy its last reply\nCtrl+V talk with my clipboard"}.get(sec, "")
         face.configure(text=faces(e)["face"] if e else "")
         keys.configure(text=f"\n{more}\n\nCtrl+↑↓ section   Ctrl+←→ Echo\nSuper+Shift+E STOP all\nCtrl+Q leave")
@@ -375,6 +396,10 @@ def app():
                 box.insert("1.0", e.get("about") or "")
         elif sec == "FEEDING":
             head.configure(text="FEEDING  ·  " + name + (f"  ·  {len(feed.load(path(e, 'samples.jsonl')))} messages known" if e else ""))
+            say(training_line(e) + "\n\n", "me")
+            if st["training"] and not st.get("ticking"):     # watch it while this page is open
+                st["ticking"] = True
+                root.after(3000, tick)
             if st["chat"]:
                 say(f"Who in {os.path.basename(st['chat'])} is {name}?\n\n")
                 for i, (who, n) in enumerate(st["people"], 1):
@@ -392,7 +417,12 @@ def app():
             box.insert("1.0", read(path(e, "memory.txt")) if sec == "MEMORY" and e else read(RULES))
         elif sec == "COMPARE":
             o = current(1)
-            head.configure(text=f"COMPARE  ·  {name}  and  {o['name'] if o else '?'}")
+            if st.get("cmp_voice"):
+                head.configure(text=f"COMPARE  ·  {name}, with and without its trained voice")
+                if not voice(e):
+                    say(f"{name} has no trained voice yet (FEEDING, Ctrl+T).\n", "me")
+            else:
+                head.configure(text=f"COMPARE  ·  {name}  and  {o['name'] if o else '?'}")
         elif sec == "PERMISSIONS":
             head.configure(text="PERMISSIONS  ·  every Echo")
             say("An Echo may only use an extension after I say yes. The first time, I am asked on my own screen\n"
@@ -474,9 +504,13 @@ def app():
             say("\n" + text + "\n", "me")
 
             def both():
-                for x in (e, o):
-                    root.after(0, say, f"\n{x['name']}:\n", "me")
-                    ask(messages(x, text), lambda s: root.after(0, say, s), st["stop"])
+                if st.get("cmp_voice") and voice(e):      # one Echo, with and without its trained voice
+                    pairs = [(e, True, f"{e['name']}, trained voice"), (e, False, f"{e['name']}, without it")]
+                else:
+                    pairs = [(e, True, e["name"]), (o, True, o["name"])]
+                for x, on, label in pairs:
+                    root.after(0, say, f"\n{label}:\n", "me")
+                    ask(messages(x, text), lambda s: root.after(0, say, s), st["stop"], e=x, own_voice=on)
                     root.after(0, say, "\n")
             busy(both)
         elif sec == "PERMISSIONS" and text.isdigit() and 1 <= int(text) <= len(st.get("perms", [])):
@@ -501,6 +535,47 @@ def app():
                 if 1 <= n <= len(cs):
                     st["chat"], st["people"] = cs[n - 1], feed.people(feed.parse(cs[n - 1]))[:30]
                     show()
+
+    def training_line(e):
+        t = load_json(path(e, "train.json"), {}) if e else {}
+        v = e.get("voice") if e else None
+        st["training"] = t.get("state") in ("starting", "loading", "training", "smaller", "saving")
+        if t.get("state") == "training":
+            n = int(30 * t["step"] / max(1, t["of"]))
+            return f"TRAINING on the NVIDIA card ({t['size']})  [{'■' * n}{'·' * (30 - n)}]  {t['step']}/{t['of']}  about {t['minutes_left']} min left"
+        if st["training"]:
+            return "TRAINING: " + {"starting": "starting", "loading": f"loading the {t.get('size')} brain onto the card",
+                                   "smaller": t.get("why", ""), "saving": "saving its voice"}[t["state"]]
+        if t.get("state") == "failed":
+            return "Training did not finish: " + t.get("why", "?")
+        if v:
+            return f"Trained voice: {v['messages']} messages, {v['made']} ({v['brain']} brain). Ctrl+T trains it again."
+        return "No trained voice yet. Ctrl+T trains one on the NVIDIA card (the Asus; at least 30 messages)."
+
+    def train(_ev=None):
+        e, sec = current(), SECTIONS[st["sec"]]
+        if sec == "COMPARE":
+            st["cmp_voice"] = not st.get("cmp_voice")
+            return show()
+        if sec != "FEEDING" or not e or st["busy"]:
+            return
+        subprocess.run(["pkill", "-f", f"llama-server.*--port {PORT}"], check=False)   # give the trainer the memory
+        r = hands({"train": e["slug"]}, timeout=30)
+        say(("\nTraining started. You can keep using Golem; this page shows how far it is.\n" if r.get("ok")
+             else f"\nCould not start training: {r.get('why', '?')}\n"), "me")
+        st["ticking"] = True
+        root.after(2000, tick)
+
+    def untrain(_ev=None):
+        e = current()
+        if SECTIONS[st["sec"]] == "FEEDING" and e and st.get("training"):
+            open(path(e, "train.stop"), "w").close()
+            say("\nStopping the training...\n", "me")
+
+    def tick():
+        st["ticking"] = False
+        if SECTIONS[st["sec"]] == "FEEDING" and not st["busy"] and not st["chat"]:
+            show()
 
     def describe(_ev=None):
         e = current()
@@ -555,13 +630,15 @@ def app():
     root.bind("<Control-a>", describe)
     root.bind("<Control-w>", forget)
     root.bind("<Control-c>", copy)
+    root.bind("<Control-t>", train)
+    root.bind("<Control-x>", untrain)
     root.bind("<Control-v>", paste)
     root.bind("<Escape>", lambda e: st["stop"].set())
     root.bind("<Control-q>", lambda e: root.destroy())
     show()
     entry.focus_set()
     root.after(400, lambda: (root.focus_force(), entry.focus_set()))
-    threading.Thread(target=lambda: brain_file() and wake_brain(), daemon=True).start()   # warm up quietly
+    threading.Thread(target=lambda: brain_file() and wake_brain(current()), daemon=True).start()   # warm up quietly
     root.mainloop()
     subprocess.run(["pkill", "-f", f"llama-server.*--port {PORT}"], check=False)   # free the memory on leaving
 

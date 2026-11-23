@@ -128,7 +128,10 @@ it talks, learned only from chats I feed it (FEEDING: WhatsApp exports in `~/zon
 It runs offline in the OFFLINE zone (llama.cpp, Llama 3.2). Fetch its brain once: `golem-echo-brain` in a terminal.
 It can only talk. Anything else goes through extensions in `~/.local/share/golem-echo/extensions`, and the first time
 an Echo wants one I am asked (only this time / always / never). ACTIONS shows everything it did. **Super+Shift+E stops
-every Echo at once.** `golem-keylight` lights the keyboard; `golem-keylight extension` lets Echo ask to use it.
+every Echo at once.** **Training (the Asus):** once, `golem-echo-trainer` in a terminal (about 7 GB, through the Gate);
+then FEEDING, Ctrl+T trains the Echo's own voice on the NVIDIA card (half an hour to a few hours), and COMPARE, Ctrl+T
+asks it with and without that voice. The NVIDIA card wakes only for apps marked in the Control Panel (APPS > nvidia).
+`golem-keylight` lights the keyboard; `golem-keylight extension` lets Echo ask to use it.
 
 ## Reports to GitHub (so Claude can see how Golem is doing without photos)
 Once: make a private repo called `golem-reports`, then a fine-grained token on GitHub that can write **Contents** of
