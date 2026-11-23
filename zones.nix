@@ -9,7 +9,7 @@
 # after my password (the Control Panel reigns supreme).
 #
 # ROOMS (screen and clipboard separation): a RED, OFFLINE or YELLOW app with a window gets its own
-# sealed screen, a "room": a window on my desktop (titled ROOM · ZONE · app) with the app inside.
+# sealed screen, a "room": a window on my desktop (titled ROOM | ZONE | app) with the app inside.
 # From inside, the app sees only its room: not my other windows, not my key presses (keys reach it
 # only while its room is in front), not my clipboard. Super+C carries my clipboard into the room in
 # front; Super+Shift+C carries the room's clipboard out to me. Both are logged.
@@ -113,7 +113,7 @@ let
       if grep -q '^separate_screens=off' /var/lib/golem/settings.conf 2>/dev/null; then sep=off; fi
       if [ -n "''${DISPLAY:-}" ] && [ "$Z" != green ] && [ "$sep" = on ]; then
         n=20; while [ -e "/tmp/.X11-unix/X$n" ] || [ -e "/tmp/.X$n-lock" ]; do n=$((n + 1)); done
-        Xephyr ":$n" -ac -nolisten tcp -nolisten local -resizeable -no-host-grab -screen 1280x720           -title "ROOM · ''${Z^^} · $name · :$n" >/dev/null 2>&1 &
+        Xephyr ":$n" -ac -nolisten tcp -nolisten local -resizeable -no-host-grab -screen 1280x720           -title "ROOM | ''${Z^^} | $name | :$n" >/dev/null 2>&1 &
         xp=$!
         for _ in $(seq 50); do [ -e "/tmp/.X11-unix/X$n" ] && break; sleep 0.1; done
         DISPLAY=":$n" i3 -c /etc/golem/room-i3.config >/dev/null 2>&1 &
@@ -151,8 +151,8 @@ let
       # golem-carry in   (Super+C)        my clipboard -> the room in front
       # golem-carry out  (Super+Shift+C)  the room in front's clipboard -> mine
       t=$(xdotool getactivewindow getwindowname 2>/dev/null || true)
-      case "$t" in "ROOM · "*) ;; *) exit 0 ;; esac
-      d=''${t##* · }; who=$(echo "$t" | sed 's/^ROOM · //; s/ · :[0-9]*$//')
+      case "$t" in "ROOM | "*) ;; *) exit 0 ;; esac
+      d=''${t##* | }; who=$(echo "$t" | sed 's/^ROOM | //; s/ | :[0-9]*$//; s/ | / /')
       case "''${1:-}" in
         in)  xclip -selection clipboard -o 2>/dev/null | xclip -display "$d" -selection clipboard -i
              logger -t zone "Clipboard carried into the room of $who" ;;

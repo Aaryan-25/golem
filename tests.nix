@@ -393,17 +393,17 @@ pkgs.testers.runNixOSTest {
         print(out)
         assert "BLIND" in out and "ROOM-OK" in out and "room=:2" in out, out
         as_me("DISPLAY=:0 zone red xterm >/dev/null 2>&1 &")
-        machine.wait_until_succeeds("su - lilgolemwitch -c 'DISPLAY=:0 xdotool search --name \"ROOM · RED · xterm\"'", timeout=60)
+        machine.wait_until_succeeds("su - lilgolemwitch -c 'DISPLAY=:0 xdotool search --name \"ROOM | RED | xterm\"'", timeout=60)
         machine.sleep(2)
         machine.screenshot("room")
         room = machine.succeed("ls /tmp/.X11-unix | sort | tail -1").strip().replace("X", ":")
-        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 i3-msg -q \"[title=\\\"ROOM · RED · xterm\\\"] focus\"'")
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 i3-msg -q \"[title=\\\"ROOM | RED | xterm\\\"] focus\"'")
         as_me("echo carried-secret | DISPLAY=:0 xclip -selection clipboard -i")
         assert as_me(f"DISPLAY={room} xclip -selection clipboard -o 2>/dev/null || true") == ""     # not shared by itself
         as_me("DISPLAY=:0 golem-carry in")
         machine.sleep(1)
         assert as_me(f"DISPLAY={room} xclip -selection clipboard -o") == "carried-secret"
-        machine.wait_until_succeeds("golem-truth --text | grep -q 'Clipboard carried into the room of RED · xterm'", timeout=30)
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Clipboard carried into the room of RED xterm'", timeout=30)
         machine.execute("pkill -f 'bin/xterm'")
 
     with subtest("Step E: GADA in the Start panel opens the editor"):
