@@ -26,6 +26,9 @@ This is a fresh start. The old attempt lives in `Aaryan-25/shilp`, and it's kept
 2. Unplug every USB drive except the pendrive. In Rufus, pick the pendrive (check it says about 64 GB),
    press SELECT, choose `golem.img.xz`, then Start. If Rufus asks, choose "DD image".
 3. Restart the laptop, press **F12** at the Dell logo, and pick the pendrive.
+   **On the Asus:** first, once: press **F2** at the ASUS logo, go to Advanced mode (F7) > Security >
+   **Secure Boot Control: Disabled**, and Boot > **Fast Boot: Disabled**; save with F10. Then restart, press **Esc**
+   at the ASUS logo, and pick the pendrive (the line with UEFI in it).
 4. Golem starts straight in (no lock screen). Open a terminal
    (Alt+Enter) and type `passwd` to set your own password (the first one is **arise**).
 

@@ -216,7 +216,8 @@ in {
     deps = [ "golem-settings" ];
     text = ''
       f=/var/lib/golem/apps/golem-edit.conf
-      [ -e "$f" ] || printf '%s\n' zone=green ram=${s.limits.green.memory} cpu=${s.limits.green.cpu} \
+      ${s.bigger}
+      [ -e "$f" ] || printf '%s\n' zone=green ram=$(bigger ${s.limits.green.memory}) cpu=$(bigger ${s.limits.green.cpu}) \
         internet=allowed camera=never usb=allowed sound=on folder= > "$f"
       chmod 644 "$f"
     '';

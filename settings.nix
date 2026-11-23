@@ -4,6 +4,16 @@
   timeZone = "Asia/Kolkata";
   keyboardLayout = "us";
   # Hard limits per zone (RAM, CPU). 100% CPU = one full core; the Dell has 2.
+  # On a computer with 6 GB of memory or more (the Asus), every limit is doubled: see `bigger` below.
+  # bigger 1500M -> 3000M on a big computer (6 GB or more), unchanged on the Dell. Also works on 50%.
+  bigger = ''
+    bigger() {
+      local k v _ gb=0
+      while read -r k v _; do [ "$k" = MemTotal: ] && gb=$(( (v + 524288) / 1048576 )); done < /proc/meminfo
+      if [ "$gb" -lt 6 ]; then echo "$1"; return; fi
+      case "$1" in *M) echo "$(( ''${1%M} * 2 ))M" ;; *G) echo "$(( ''${1%G} * 2 ))G" ;; *%) echo "$(( ''${1%\%} * 2 ))%" ;; *) echo "$1" ;; esac
+    }
+  '';
   limits = {
     red     = { memory = "1G";    cpu = "50%";  };
     offline = { memory = "1500M"; cpu = "100%"; };

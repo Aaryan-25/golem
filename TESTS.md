@@ -135,6 +135,9 @@ Get it: on the text screen or a terminal, `golem-update`, answer `y`, then `sudo
 - [ ] Put a picture at `~/zones/settings/scenery.png` and open the Start panel: it's on the right, made of sand
 
 ## The final version (23 Nov 2026)
+**On the Asus:** Secure Boot and Fast Boot off once (README, "Put Golem on the pendrive"), then Esc at the ASUS logo.
+- [ ] Asus: Wi-Fi, sound, screen brightness keys, touchpad, and `golem-keylight what`
+- [ ] Asus: `cat /sys/class/power_supply/BAT*/charge_control_end_threshold` says 80
 Password is now **arise**. First, once: `golem-report setup` (see README), then every report goes to GitHub by itself.
 - [ ] The Start panel: CONTINUE, GADA, **ECHO**, FATE, SUMMON, SLUMBER
 - [ ] **Super+V**: the last things I copied; pick one and paste it. **Super+Shift+V** forgets them

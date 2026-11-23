@@ -18,7 +18,8 @@ in {
     deps = [ "golem-settings" ];
     text = ''
       f=/var/lib/golem/apps/golem-browser.conf
-      [ -e "$f" ] || printf '%s\n' zone=yellow ram=${s.limits.yellow.memory} cpu=${s.limits.yellow.cpu} \
+      ${s.bigger}
+      [ -e "$f" ] || printf '%s\n' zone=yellow ram=$(bigger ${s.limits.yellow.memory}) cpu=$(bigger ${s.limits.yellow.cpu}) \
         internet=allowed camera=never usb=never sound=on folder= > "$f"
       chmod 644 "$f"
     '';

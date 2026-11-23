@@ -42,20 +42,37 @@ in
   # Lets GitHub's boot test read the screen (start-up menu and messages also go to a serial line).
   boot.kernelParams = [ "console=ttyS0,115200" "console=tty1" ];
   boot.loader.grub.extraConfig = "serial --unit=0 --speed=115200; terminal_input serial console; terminal_output serial console";
-  boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "usb_storage" "uas" "sd_mod" "sdhci_pci" "virtio_pci" "virtio_blk" ];
-  # Only the firmware this laptop needs (Wi-Fi, Bluetooth, graphics, sound), not the 1 GB+ full set.
+  boot.initrd.availableKernelModules = [ "xhci_pci" "ehci_pci" "ahci" "nvme" "usb_storage" "uas" "sd_mod" "sdhci_pci" "virtio_pci" "virtio_blk" ];
+  # Only the firmware my two laptops need (Wi-Fi, Bluetooth, graphics, wired network), not the 1 GB+ full set.
+  # Dell Latitude 3180: Intel 7265 Wi-Fi, Apollo Lake graphics. Asus TUF FX506LH: Comet Lake graphics, and either
+  # a Realtek or an Intel AX201 Wi-Fi card (both kinds are sold), Realtek wired network.
   hardware.firmware = [
     (pkgs.runCommand "golem-firmware" { } ''
       f=${pkgs.linux-firmware}/lib/firmware
-      mkdir -p $out/lib/firmware/intel $out/lib/firmware/i915
-      cp -aL $f/iwlwifi-7265* $out/lib/firmware/
-      cp -aL $f/intel/ibt-* $out/lib/firmware/intel/ 2>/dev/null || true
-      cp -aL $f/i915/bxt_* $out/lib/firmware/i915/
+      o=$out/lib/firmware
+      mkdir -p $o/intel $o/i915 $o/rtl_nic
+      cp -aL $f/iwlwifi-7265* $f/iwlwifi-Qu-* $f/iwlwifi-QuZ-* $o/
+      cp -aL $f/intel/ibt-* $o/intel/ 2>/dev/null || true
+      cp -aL $f/i915/bxt_* $f/i915/kbl_* $f/i915/cml_* $o/i915/
+      cp -aL $f/rtw88 $f/rtl_bt $o/
+      cp -aL $f/rtl_nic/rtl8168* $o/rtl_nic/
+      # If a name changes upstream, stop here rather than make an image with no Wi-Fi.
+      ls $o/iwlwifi-7265D-* $o/iwlwifi-QuZ-a0-hr-b0-* $o/rtw88/rtw8822c_fw.bin* $o/rtw88/rtw8821c_fw.bin* >/dev/null
     '')
     pkgs.wireless-regdb
     pkgs.sof-firmware          # sound on this processor family (Apollo Lake) may need it
   ];
   hardware.cpu.intel.updateMicrocode = true;
+
+  # ---- The Asus's NVIDIA card (GTX 1650) ----
+  # The Intel graphics run the screen. The NVIDIA card is left alone: no driver (the open one, nouveau, can freeze
+  # these laptops), and the kernel may put it to sleep to save battery. Its HDMI port won't work this way.
+  boot.blacklistedKernelModules = [ "nouveau" ];
+  services.udev.extraRules = ''
+    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{power/control}="auto"
+    # Stop charging at 80% where the laptop allows it (the Asus does), so the battery lasts more years.
+    ACTION=="add", SUBSYSTEM=="power_supply", KERNEL=="BAT[0-9]", TEST=="charge_control_end_threshold", ATTR{charge_control_end_threshold}="80"
+  '';
 
   # On the first start Golem grows to fill the whole pendrive.
   boot.growPartition = true;

@@ -25,6 +25,7 @@ let
     text = ''
       SET=/var/lib/golem/apps
       FJ=/run/wrappers/bin/firejail
+      ${s.bigger}
       is_zone() { case "$1" in red|offline|yellow|green) return 0 ;; esac; return 1; }
       usage() {
         echo "zone <app>                          run with the app's settings (RED if none)"
@@ -42,6 +43,7 @@ let
           yellow)  RAM=${L.yellow.memory};  CPU=${L.yellow.cpu};  NET=allowed; CAM=never; USB=never; SND=on ;;
           green)   RAM=${L.green.memory};   CPU=${L.green.cpu};   NET=never;   CAM=never; USB=never; SND=on ;;
         esac
+        RAM=$(bigger "$RAM"); CPU=$(bigger "$CPU")
       }
       load() {       # zone defaults, then the app's own settings
         local f="$SET/$1.conf" k v z=""
