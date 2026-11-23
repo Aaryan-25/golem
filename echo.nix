@@ -13,6 +13,12 @@ let
       exec ${py}/bin/python3 ${./echo}/echo.py "$@"
     '';
   };
+  # Echo's hands: outside the zone, asks me before any extension runs (echo/hands.py). Started with i3.
+  hands = pkgs.writeShellApplication {
+    name = "golem-echo-hands";
+    runtimeInputs = with pkgs; [ util-linux coreutils ];
+    text = "exec ${pkgs.python3}/bin/python3 ${./echo}/hands.py";
+  };
   # Run from a terminal, outside any zone, so it goes through the Gate (which asks about each site once).
   brain = pkgs.writeShellApplication {
     name = "golem-echo-brain";
@@ -45,7 +51,7 @@ let
     '';
   };
 in {
-  environment.systemPackages = [ echo brain ];
+  environment.systemPackages = [ echo brain hands ];
   # Its zone: OFFLINE (no internet at all). More memory and both cores, so replies come faster.
   system.activationScripts.golem-echo-zone = {
     deps = [ "golem-settings" ];

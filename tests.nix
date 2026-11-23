@@ -18,6 +18,17 @@ pkgs.testers.runNixOSTest {
     virtualisation.qemu.options = [ "-device qemu-xhci,id=xhci" ];   # a USB port to plug things into
     networking.networkmanager.unmanaged = [ "eth1" ];               # the test network stays as the test set it
     environment.systemPackages = [ pkgs.socat pkgs.curl pkgs.xorg.xdpyinfo ];
+    # Echo's hands: a tiny extension, allowed in advance, used once through the socket
+    environment.etc."golem-test-echo.sh".text = ''
+      x=$HOME/.local/share/golem-echo/extensions/say-hi
+      mkdir -p "$x" "$HOME/.config/golem-echo"
+      echo '{"does": "says hi", "needs": [], "zone": "red"}' > "$x/extension.json"
+      printf '#!/bin/sh\necho "hi from $ECHO_NAME, got: $(cat)"\n' > "$x/say-hi"
+      chmod +x "$x/say-hi"
+      echo '{"Mitra/say-hi": "always"}' > "$HOME/.config/golem-echo/permissions.json"
+      echo '{"echo": "Mitra", "use": "say-hi", "give": "abc"}' | socat -t 60 - UNIX-CONNECT:"$HOME/zones/golem-echo/echo/hands.sock"
+      echo '{"echo": "Mitra", "use": "nothing-here", "give": ""}' | socat -t 10 - UNIX-CONNECT:"$HOME/zones/golem-echo/echo/hands.sock"
+    '';
     environment.etc."golem-test-room.sh".text = ''
       if DISPLAY=:0 xdpyinfo >/dev/null 2>&1; then echo SEES-MY-SCREEN; else echo BLIND; fi
       echo "room=$DISPLAY"
@@ -451,6 +462,12 @@ pkgs.testers.runNixOSTest {
         machine.wait_until_succeeds("golem-truth --text | grep -q 'Opened golem-echo in OFFLINE'", timeout=60)
         machine.wait_until_succeeds("su - lilgolemwitch -c 'DISPLAY=:0 xdotool search --onlyvisible --name \"OFFLINE . golem-echo\"'", timeout=60)   # in its own room
         machine.screenshot("echo")
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -f echo/hands.py", timeout=30)
+        out = as_me("bash /etc/golem-test-echo.sh")
+        print(out)
+        assert "hi from Mitra, got: abc" in out and "no extension called nothing-here" in out, out
+        machine.succeed("grep -q say-hi /home/lilgolemwitch/zones/golem-echo/echo/actions.jsonl")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Mitra used say-hi'", timeout=30)
         machine.send_key("meta_l-shift-e")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'STOP pressed'", timeout=30)
         machine.execute("pkill -f echo/echo.py")

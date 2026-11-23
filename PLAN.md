@@ -191,6 +191,8 @@ The text editor add-on is merged; GADA opens it with its dashboard. **Done when:
    *Part 1 built:* the app, ECHOS, TALK, the STOP key (Super+Shift+E), `golem-echo-brain` to fetch the brain once
    through the Gate. *Part 2 built:* FEEDING (WhatsApp exports, voice notes heard offline), the description written
    from the chats (Ctrl+A in ECHOS), MEMORY, RULES, COMPARE.
+   *Part 3 built:* Echo's hands (outside its zone: they ask me before any extension runs, and run it in its own
+   zone), PERMISSIONS, EXTENSIONS, ACTIONS, AVATAR (an emote for each mood), CARRY. Echo is complete.
    The brain runs on any processor for now; a faster one for the Asus comes when Golem moves there.
 12. **golem-keylight:** colours per key where the keyboard allows (the Asus FX506LH, as an experiment), the Dell's
    backlight now; a command and file format Echo's extensions can use.

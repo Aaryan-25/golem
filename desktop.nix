@@ -241,6 +241,7 @@ let
     exec --no-startup-id golem-gate ask          # the Gate asks me through this (gate.nix)
     exec --no-startup-id golem-tune              # the window I'm in gets the computer's attention (optimiser.nix)
     exec --no-startup-id golem-clip watch        # clipboard history, in memory only
+    exec --no-startup-id golem-echo-hands        # the only way an Echo can do more than talk (echo.nix)
   '';
 in {
   services.xserver.windowManager.i3.configFile = lib.mkForce i3config;
