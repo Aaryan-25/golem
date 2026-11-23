@@ -37,6 +37,40 @@ let
       -theme-str '${centre} listview { lines: '"$#"'; }'
   '';
 
+  # Clipboard history: the last 10 things copied on my own screen, kept in memory only (a RAM folder that is
+  # gone at shutdown). Super+V picks one to copy again; Super+Shift+V forgets them all. Rooms have their own.
+  clip = pkgs.writeShellApplication {
+    name = "golem-clip";
+    runtimeInputs = with pkgs; [ clipnotify xclip coreutils util-linux ];
+    text = ''
+      d="''${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/golem-clip"
+      mkdir -p "$d"; chmod 700 "$d"
+      case "''${1:-}" in
+        watch)
+          while clipnotify -s clipboard; do
+            t=$(xclip -o -selection clipboard 2>/dev/null) || continue
+            [ -n "$t" ] || continue
+            [ -f "$d/1" ] && [ "$(cat "$d/1")" = "$t" ] && continue
+            for i in 9 8 7 6 5 4 3 2 1; do [ -f "$d/$i" ] && mv "$d/$i" "$d/$((i + 1))"; done
+            printf '%s' "$t" > "$d/1"
+          done ;;
+        pick)
+          list=""
+          for i in 1 2 3 4 5 6 7 8 9 10; do
+            [ -f "$d/$i" ] || break
+            line=$(head -c 300 "$d/$i" | tr '\n\t' '  ' | cut -c1-70)
+            list+="$i  $line"$'\n'
+          done
+          [ -n "$list" ] || exit 0
+          n=$(printf '%s' "$list" | ${rofi} -dmenu -i -no-custom -p "COPY AGAIN" -theme-str '${centre} window { width: 640px; }' | cut -d' ' -f1)
+          if [ -n "$n" ] && [ -f "$d/$n" ]; then xclip -selection clipboard -i < "$d/$n" >/dev/null 2>&1; fi ;;
+        forget)
+          rm -f "$d"/[0-9]*; logger -t golem "Clipboard history forgotten" ;;
+        *) echo "golem-clip watch | pick | forget"; exit 2 ;;
+      esac
+    '';
+  };
+
   launch = pkgs.writeShellApplication {
     name = "golem-launch";
     runtimeInputs = [ pkgs.rofi ask ];
@@ -125,6 +159,8 @@ let
     [ "Alt+Return"        "Terminal"                                   "exec ${term}" ]
     [ "Super+e"           "Text editor"                                "exec golem-launch golem-edit" ]
     [ "Super+b"           "Browser (through the Gate)"                 "exec golem-launch golem-browser" ]
+    [ "Super+v"           "Clipboard history: copy one again"         "exec golem-clip pick" ]
+    [ "Super+Shift+v"     "Clipboard history: forget it all"          "exec golem-clip forget" ]
     [ "Super+c"           "Carry my clipboard into the room in front"  "exec golem-carry in" ]
     [ "Super+Shift+c"     "Carry the room's clipboard out to me"       "exec golem-carry out" ]
     [ "Super+o"           "Find a file and open it in the editor"      "exec golem-launch golem-edit ~" ]
@@ -202,10 +238,11 @@ let
     exec --no-startup-id golem-realm --daemon
     exec --no-startup-id golem-gate ask          # the Gate asks me through this (gate.nix)
     exec --no-startup-id golem-tune              # the window I'm in gets the computer's attention (optimiser.nix)
+    exec --no-startup-id golem-clip watch        # clipboard history, in memory only
   '';
 in {
   services.xserver.windowManager.i3.configFile = lib.mkForce i3config;
   environment.etc."golem/keys.default".text = keyList;
-  environment.systemPackages = [ ask launch win sound pkgs.rofi pkgs.brightnessctl pkgs.xdotool pkgs.xprop ];
+  environment.systemPackages = [ ask launch win sound clip pkgs.rofi pkgs.brightnessctl pkgs.xdotool pkgs.xprop ];
   services.udev.packages = [ pkgs.brightnessctl ];   # brightness without admin rights
 }

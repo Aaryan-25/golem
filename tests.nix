@@ -414,6 +414,18 @@ pkgs.testers.runNixOSTest {
         out = machine.execute("su - lilgolemwitch -c golem-report")[1]
         assert "golem-report setup" in out, out
 
+    with subtest("Clipboard history keeps the last 10 in memory, and forgets on request"):
+        machine.wait_until_succeeds("pgrep -u lilgolemwitch -f 'golem-clip watch'", timeout=30)
+        for i in range(12):
+            as_me(f"echo copied-{i} | DISPLAY=:0 xclip -selection clipboard -i >/dev/null 2>&1")
+            machine.sleep(1)
+        d = "/run/user/1000/golem-clip"
+        machine.wait_until_succeeds(f"grep -q copied-11 {d}/1", timeout=30)
+        machine.succeed(f"grep -q copied-2 {d}/10")
+        machine.fail(f"test -e {d}/11")
+        as_me("golem-clip forget")
+        machine.fail(f"test -e {d}/1")
+
     with subtest("Step E: GADA in the Start panel opens the editor"):
         machine.send_key("meta_l-esc")
         machine.wait_until_succeeds(realm_seen, timeout=30)
