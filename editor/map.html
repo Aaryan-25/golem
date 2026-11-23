@@ -1,0 +1,168 @@
+<!doctype html>
+<!-- Golem editor: the program map (F12). Files are districts, functions are towers, calls are beams.
+     Drag or arrows: turn · wheel or +/-: closer · click a tower: open it in the editor. Served by golem-map. -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>MAP</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #ddd; overflow: hidden; font-family: "DejaVu Sans Mono", monospace; }
+  canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #tip { position: absolute; pointer-events: none; padding: 3px 8px; background: #000c; border: 1px solid #555; font-size: 12px; display: none; white-space: pre; }
+  #note { position: absolute; left: 12px; bottom: 8px; font-size: 12px; color: #777; letter-spacing: .06em; }
+  #note b { color: #eee; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="tip"></div>
+<div id="note"><b>MAP</b> · <span id="what"></span> · drag / arrows turn · wheel / + - closer · click a tower to open it</div>
+<script>
+const M = __MAP__;   // {root, districts, towers, beams, here, low}
+const cv = document.getElementById("c"), tip = document.getElementById("tip");
+document.getElementById("what").textContent = `${M.root}: ${M.districts.length} files, ${M.towers.length} functions, ${M.beams.length} calls` +
+  (M.districts.some((d) => d.mistake) ? " · ember = a file with a mistake" : "");
+
+// ---- where everything stands: each file a square district, laid out in rows
+const place = [];   // per tower: [x, z, height]
+let rowX = 0, rowZ = 0, rowDepth = 0;
+const total = M.towers.length, rowWidth = Math.max(8, Math.sqrt(total) * 2.2);
+const floors = [];
+for (const d of M.districts) {
+  const n = d.towers.length, side = Math.ceil(Math.sqrt(n));
+  if (rowX > 0 && rowX + side > rowWidth) { rowX = 0; rowZ += rowDepth + 2; rowDepth = 0; }
+  d.towers.forEach((id, i) => {
+    const t = M.towers[id];
+    place[id] = [rowX + (i % side) + 0.5, rowZ + Math.floor(i / side) + 0.5, 0.3 + Math.sqrt(t.length) * 0.55];
+  });
+  floors.push([rowX - 0.3, rowZ - 0.3, side + 0.6, Math.ceil(n / side) + 0.6, d]);
+  rowX += side + 2; rowDepth = Math.max(rowDepth, Math.ceil(n / side));
+}
+const W = Math.max(...floors.map((f) => f[0] + f[2]), 1), D = Math.max(...floors.map((f) => f[1] + f[3]), 1);
+function colour(t) {
+  if (t.id === M.here) return [1, 1, 1];
+  if (M.districts[t.district].mistake) return [0.85, 0.48, 0.28];
+  const v = 0.32 + 0.6 * t.fresh;
+  return [v, v, v];
+}
+function open(id) { fetch("/", { method: "POST", body: JSON.stringify({ tower: id }) }); }
+function label(id) { const t = M.towers[id]; return `${t.name}  ·  ${M.districts[t.district].name}:${t.line}  ·  ${t.length} lines` +
+  (t.calls.length ? `\ncalls: ${t.calls.slice(0, 8).join(", ")}` : "") + (M.districts[t.district].mistake ? `\nmistake: ${M.districts[t.district].mistake}` : ""); }
+
+let gl = M.low ? null : cv.getContext("webgl", { antialias: true });
+if (!gl) flat(); else deep();
+
+// ---- the flat map (LOW, or no 3D): seen from above
+function flat() {
+  const x = cv.getContext("2d");
+  let s = 1, ox = 0, oy = 0;
+  function draw() {
+    cv.width = innerWidth; cv.height = innerHeight;
+    s = Math.min(cv.width / (W + 2), cv.height / (D + 2)); ox = (cv.width - W * s) / 2; oy = (cv.height - D * s) / 2;
+    x.fillStyle = "#000"; x.fillRect(0, 0, cv.width, cv.height);
+    x.font = "11px DejaVu Sans Mono"; x.fillStyle = "#777";
+    for (const f of floors) { x.strokeStyle = f[4].mistake ? "#a65" : "#333"; x.strokeRect(ox + f[0] * s, oy + f[1] * s, f[2] * s, f[3] * s);
+      x.fillText(f[4].name.slice(-Math.max(6, Math.floor(f[2] * s / 7))), ox + f[0] * s, oy + f[1] * s - 3); }
+    M.towers.forEach((t, i) => { const c = colour(t).map((v) => Math.round(v * 255)), p = place[i], r = Math.min(0.42, p[2] / 8) * s;
+      x.fillStyle = `rgb(${c})`; x.fillRect(ox + p[0] * s - r, oy + p[1] * s - r, 2 * r, 2 * r); });
+  }
+  function hit(e) { let best = -1, bd = 0.6; place.forEach((p, i) => { const d = Math.hypot((e.clientX - ox) / s - p[0], (e.clientY - oy) / s - p[1]); if (d < bd) { bd = d; best = i; } }); return best; }
+  cv.onmousemove = (e) => { const i = hit(e); tip.style.display = i < 0 ? "none" : "block"; if (i >= 0) { tip.textContent = label(i); tip.style.left = e.clientX + 14 + "px"; tip.style.top = e.clientY + 10 + "px"; } };
+  cv.onclick = (e) => { const i = hit(e); if (i >= 0) open(i); };
+  onresize = draw; draw();
+}
+
+// ---- the 3D map
+function deep() {
+  const vs = `attribute vec3 p; attribute vec3 n; attribute vec3 c; uniform mat4 m; uniform float pick; varying vec3 vc;
+    void main() { gl_Position = m * vec4(p, 1.0); float l = 0.45 + 0.55 * max(dot(n, normalize(vec3(0.4, 1.0, 0.3))), 0.0);
+      vc = pick > 0.5 ? c : c * l; }`;
+  const fs = `precision mediump float; varying vec3 vc; uniform float a; void main() { gl_FragColor = vec4(vc, a); }`;
+  function sh(t, s) { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o); return o; }
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr); gl.useProgram(pr);
+  const U = { m: gl.getUniformLocation(pr, "m"), pick: gl.getUniformLocation(pr, "pick"), a: gl.getUniformLocation(pr, "a") };
+  const A = { p: gl.getAttribLocation(pr, "p"), n: gl.getAttribLocation(pr, "n"), c: gl.getAttribLocation(pr, "c") };
+
+  // boxes: [x0,y0,z0,x1,y1,z1], colour, pick colour
+  const draw = [], pick = [];
+  const FACES = [[[0, 1, 0], [[0, 1, 0], [1, 1, 0], [1, 1, 1], [0, 1, 1]]], [[0, 0, -1], [[0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0]]],
+    [[0, 0, 1], [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]]], [[-1, 0, 0], [[0, 0, 0], [0, 1, 0], [0, 1, 1], [0, 0, 1]]], [[1, 0, 0], [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]]]];
+  function box(b, col, pc) {
+    for (const [nrm, q] of FACES) for (const k of [0, 1, 2, 0, 2, 3]) {
+      const v = q[k].map((s, j) => (s ? b[j + 3] : b[j]));
+      draw.push(...v, ...nrm, ...col); pick.push(...v, ...nrm, ...pc);
+    }
+  }
+  const idc = (i) => [((i + 1) & 255) / 255, (((i + 1) >> 8) & 255) / 255, 0];
+  for (const f of floors) box([f[0], -0.05, f[1], f[0] + f[2], 0, f[1] + f[3]], f[4].mistake ? [0.2, 0.1, 0.06] : [0.07, 0.07, 0.07], [0, 0, 0]);
+  M.towers.forEach((t, i) => { const p = place[i]; box([p[0] - 0.35, 0, p[1] - 0.35, p[0] + 0.35, p[2], p[1] + 0.35], colour(t), idc(i)); });
+  const beams = [];
+  for (const [a, b] of M.beams) { const p = place[a], q = place[b]; beams.push(p[0], p[2], p[1], 0, 1, 0, 0.7, 0.7, 0.75, q[0], q[2], q[1], 0, 1, 0, 0.7, 0.7, 0.75); }
+  function buf(arr) { const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(arr), gl.STATIC_DRAW); return [b, arr.length / 9]; }
+  const B = { draw: buf(draw), pick: buf(pick), beams: buf(beams) };
+  function use(b) {
+    gl.bindBuffer(gl.ARRAY_BUFFER, b[0]);
+    gl.vertexAttribPointer(A.p, 3, gl.FLOAT, false, 36, 0); gl.vertexAttribPointer(A.n, 3, gl.FLOAT, false, 36, 12); gl.vertexAttribPointer(A.c, 3, gl.FLOAT, false, 36, 24);
+    gl.enableVertexAttribArray(A.p); gl.enableVertexAttribArray(A.n); gl.enableVertexAttribArray(A.c);
+  }
+  let gada = null;   // the gada: a small white diamond floating over the function I'm in
+  if (M.here !== null && M.here !== undefined) {
+    const g = [], tp = [[0, 0.35, 0], [0.2, 0, 0], [0, 0, 0.2], [-0.2, 0, 0], [0, 0, -0.2], [0, -0.35, 0]];
+    for (const [a, b, c] of [[0, 1, 2], [0, 2, 3], [0, 3, 4], [0, 4, 1], [5, 2, 1], [5, 3, 2], [5, 4, 3], [5, 1, 4]]) for (const k of [a, b, c]) g.push(...tp[k], 0, 1, 0, 1, 1, 1);
+    gada = buf(g);
+  }
+
+  // the camera, turning round the middle of the map
+  const cam = { yaw: 0.7, pitch: 0.75, dist: Math.max(W, D) * 1.1 + 6 }, mid = [W / 2, 0, D / 2];
+  function matrix(extra) {
+    const asp = cv.width / cv.height, f = 1 / Math.tan(0.45), nr = 0.5, fr = 2000;
+    const ex = mid[0] + cam.dist * Math.cos(cam.pitch) * Math.sin(cam.yaw), ey = cam.dist * Math.sin(cam.pitch), ez = mid[2] + cam.dist * Math.cos(cam.pitch) * Math.cos(cam.yaw);
+    let zx = ex - mid[0], zy = ey - mid[1], zz = ez - mid[2]; const zl = Math.hypot(zx, zy, zz); zx /= zl; zy /= zl; zz /= zl;
+    let xx = zz, xz = -zx; const xl = Math.hypot(xx, xz); xx /= xl; xz /= xl;
+    const yx = zy * xz, yy = zz * xx - zx * xz, yz = -zy * xx;
+    const t = extra || [0, 0, 0];
+    const v = [xx, yx, zx, 0, 0, yy, zy, 0, xz, yz, zz, 0, -(xx * (ex - t[0]) + xz * (ez - t[2])), -(yx * (ex - t[0]) + yy * (ey - t[1]) + yz * (ez - t[2])), -(zx * (ex - t[0]) + zy * (ey - t[1]) + zz * (ez - t[2])), 1];
+    const p = [f / asp, 0, 0, 0, 0, f, 0, 0, 0, 0, (fr + nr) / (nr - fr), -1, 0, 0, 2 * fr * nr / (nr - fr), 0];
+    const o = new Array(16).fill(0);
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) o[c * 4 + r] += p[k * 4 + r] * v[c * 4 + k];
+    return new Float32Array(o);
+  }
+  gl.enable(gl.DEPTH_TEST);
+  function frame(picking) {
+    cv.width = innerWidth; cv.height = innerHeight; gl.viewport(0, 0, cv.width, cv.height);
+    gl.clearColor(0, 0, 0, 1); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    gl.uniformMatrix4fv(U.m, false, matrix()); gl.uniform1f(U.pick, picking ? 1 : 0); gl.uniform1f(U.a, 1);
+    gl.disable(gl.BLEND); use(picking ? B.pick : B.draw); gl.drawArrays(gl.TRIANGLES, 0, B.draw[1]);
+    if (picking) return;
+    if (B.beams[1]) { gl.enable(gl.BLEND); gl.blendFunc(gl.SRC_ALPHA, gl.ONE); gl.uniform1f(U.a, 0.22); use(B.beams); gl.drawArrays(gl.LINES, 0, B.beams[1]); }
+    if (gada) { const p = place[M.here]; gl.uniform1f(U.a, 1); gl.disable(gl.BLEND);
+      gl.uniformMatrix4fv(U.m, false, matrix([p[0], p[2] + 0.8 + 0.15 * Math.sin(Date.now() / 400), p[1]])); use(gada); gl.drawArrays(gl.TRIANGLES, 0, gada[1]); }
+  }
+  function which(e) {
+    frame(true); const px = new Uint8Array(4);
+    gl.readPixels(e.clientX, cv.height - e.clientY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+    frame(false); return px[0] + px[1] * 256 - 1;
+  }
+  let down = null, moved = false, dirty = true;
+  cv.onmousedown = (e) => { down = [e.clientX, e.clientY]; moved = false; };
+  onmouseup = (e) => { if (down && !moved) { const i = which(e); if (i >= 0) open(i); } down = null; };
+  onmousemove = (e) => {
+    if (down) { const dx = e.clientX - down[0], dy = e.clientY - down[1]; if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+      cam.yaw -= dx * 0.008; cam.pitch = Math.min(1.5, Math.max(0.15, cam.pitch + dy * 0.006)); down = [e.clientX, e.clientY]; dirty = true; tip.style.display = "none"; return; }
+    if (Date.now() - (onmousemove.last || 0) < 120) return; onmousemove.last = Date.now();   // look under the mouse now and then
+    const i = which(e); tip.style.display = i < 0 ? "none" : "block";
+    if (i >= 0) { tip.textContent = label(i); tip.style.left = e.clientX + 14 + "px"; tip.style.top = e.clientY + 10 + "px"; }
+  };
+  onwheel = (e) => { cam.dist = Math.min(400, Math.max(4, cam.dist * (e.deltaY > 0 ? 1.1 : 0.9))); dirty = true; };
+  onkeydown = (e) => {
+    const k = { ArrowLeft: () => (cam.yaw += 0.08), ArrowRight: () => (cam.yaw -= 0.08), ArrowUp: () => (cam.pitch = Math.min(1.5, cam.pitch + 0.05)),
+      ArrowDown: () => (cam.pitch = Math.max(0.15, cam.pitch - 0.05)), "+": () => (cam.dist *= 0.9), "=": () => (cam.dist *= 0.9), "-": () => (cam.dist *= 1.1) }[e.key];
+    if (k) { k(); dirty = true; }
+  };
+  onresize = () => (dirty = true);
+  // draw only when something changed (and slowly for the gada's float), so the Celeron stays cool
+  (function loop() { if (dirty || gada) { frame(false); dirty = false; } setTimeout(() => requestAnimationFrame(loop), gada ? 50 : 100); })();
+}
+</script>
+</body>
+</html>

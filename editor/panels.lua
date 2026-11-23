@@ -8,6 +8,7 @@
 --   F7           a picture of this code (PNG), saved in ~/media/code
 --   F10          the block builder: snap blocks together, the code is written as you build
 --   F11          wires: join boxes; the Python is written between two marker lines, the rest stays mine
+--   F12          the program map: this project's Python as a 3D landscape; a click opens a function
 --   Alt+Shift+F  tidy the code now (Ctrl+S also tidies before saving)
 
 local api, fn = vim.api, vim.fn
@@ -339,6 +340,39 @@ local function wires()
 end
 
 -------------------------------------------------------------------------------
+-- The program map (F12): files as districts, functions as towers, calls as beams, the gada over where I am.
+-- The project is the git folder this file is in (or just its folder). A click on a tower comes back here.
+-------------------------------------------------------------------------------
+local map_job = nil
+
+local function program_map()
+  local name = api.nvim_buf_get_name(0)
+  if name == '' then return say('OPEN A PYTHON FILE OF THE PROJECT FIRST') end
+  if map_job then return say('THE MAP IS ALREADY OPEN') end
+  local dir = fn.fnamemodify(name, ':p:h')
+  local ok, top = pcall(fn.systemlist, { 'git', '-C', dir, 'rev-parse', '--show-toplevel' })
+  if ok and vim.v.shell_error == 0 and top[1] and top[1] ~= '' then dir = top[1] end
+  local args = { 'golem-map', dir, '--here', name .. ':' .. fn.line('.') }
+  if S.anim_level and S.anim_level() <= 1 then table.insert(args, '--low') end
+  map_job = fn.jobstart(args, {
+    on_stdout = function(_, lines)
+      for _, l in ipairs(lines) do
+        local file, ln = l:match('^OPEN (.+):(%d+)$')
+        if file then vim.schedule(function()
+          vim.cmd('edit ' .. fn.fnameescape(file)); pcall(api.nvim_win_set_cursor, 0, { tonumber(ln), 0 })
+          vim.cmd('normal! zz')
+        end) end
+      end
+    end,
+    on_exit = function() map_job = nil end,
+  })
+  if map_job <= 0 then map_job = nil; return say('THE MAP (golem-map) IS MISSING') end
+  local stop = S.busy and S.busy() or function() end
+  vim.defer_fn(stop, 6000)
+  say('THE MAP OPENS ON THE RIGHT: DRAG TO TURN, CLICK A TOWER TO OPEN IT HERE.')
+end
+
+-------------------------------------------------------------------------------
 -- A picture of the code (F7): PNG in ~/Pictures/code, then shown in the picture viewer.
 -------------------------------------------------------------------------------
 local function picture()
@@ -439,6 +473,7 @@ map(all, '<F6>', preview)
 map(all, '<F7>', picture)
 map(all, '<F10>', blocks)
 map(all, '<F11>', wires)
+map(all, '<F12>', program_map)
 map(all, '<M-F>', function() S.tidy(nil, true) end)
 
 -- Alt+arrows move between the panels and your text.

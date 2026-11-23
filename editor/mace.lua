@@ -66,6 +66,7 @@ local function can(what) return LEVEL[cfg.level] >= (NEED[what] or 2) end
 local function lvl() return LEVEL[cfg.level] end
 local function every(ms) return math.floor(ms * ({ 1.8, 1.25, 1 })[math.max(1, lvl())]) end -- slower frames on LOW
 local function motes(n) return math.max(2, math.floor(n * ({ 0.4, 0.7, 1 })[math.max(1, lvl())])) end
+if _G.Golem then _G.Golem.anim_level = lvl end -- the program map (F12) draws flat on LOW and OFF
 
 -------------------------------------------------------------------------------
 -- Colours: its light, dimmer at night

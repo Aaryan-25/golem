@@ -61,6 +61,7 @@ local ITEMS = {
   { 'Flowchart of this code', 'F9', '<F9>' },
   { 'Block builder (snap blocks, code is written)', 'F10', '<F10>' },
   { 'Wires (join boxes, Python is written)', 'F11', '<F11>' },
+  { 'Program map (the project in 3D)', 'F12', '<F12>' },
   { 'Move between my text and the panels', 'Alt+arrows', function()
     S.say('ALT+LEFT / RIGHT / UP / DOWN MOVE BETWEEN YOUR TEXT AND THE PANELS')
   end },

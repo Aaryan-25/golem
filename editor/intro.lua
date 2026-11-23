@@ -40,6 +40,7 @@ local PAGES = {
     'F9            your code as a flowchart',
     'F10           build code from snap-together blocks',
     'F11           build Python by joining boxes with wires',
+    'F12           the whole project as a 3D map',
     'Ctrl+K        ask the AI',
   } },
   { 'THE LOOK', {

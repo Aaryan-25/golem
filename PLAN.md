@@ -198,9 +198,11 @@ The text editor add-on is merged; GADA opens it with its dashboard. **Done when:
    backlight now; a command and file format Echo's extensions can use.
    The FX506LH most likely shows one colour for the whole keyboard (`golem-keylight what` will tell for sure);
    patterns are kept per key anyway, for a keyboard that can.
-13. **Wires and the 3D map**, inside GADA (my graphical editor).
+13. *(built)* **Wires and the 3D map**, inside GADA (my graphical editor).
    *Wires built (F11):* boxes that say what they do, my notes on each, copy / paste / delete; the Python goes after
    my own code, between two marker lines, and a box can use my own functions.
+   *The program map built (F12):* files as districts, functions as towers (taller = longer, brighter = changed
+   this week, ember = a mistake), calls as beams, the gada over where I am; a click opens the function. Flat on LOW.
 14. **The final image**, once everything passes on GitHub (and I say yes).
 No disk encryption, no lock, no Wine, no reader (decided 23 Nov 2026). Later: a software manager through Echo's extensions.
 

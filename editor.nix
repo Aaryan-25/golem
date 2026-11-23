@@ -109,6 +109,11 @@ let
     export GOLEM_WIRES_PAGE=${./editor/wires.html}
     exec ${pkgs.python3}/bin/python3 ${./editor/bin}/golem-wires "$@"
   '';
+  golemMap = pkgs.writeShellScriptBin "golem-map" ''
+    export PATH=${lib.makeBinPath [ golemView ]}:$PATH
+    export GOLEM_MAP_PAGE=${./editor/map.html}
+    exec ${pkgs.python3}/bin/python3 ${./editor/bin}/golem-map "$@"
+  '';
   golemFlow = pkgs.writeShellScriptBin "golem-flow" ''
     exec ${pkgs.python3}/bin/python3 ${./editor/bin}/golem-flow "$@"
   '';
@@ -120,7 +125,7 @@ let
     export GOLEM_EDIT_SOUNDS=${sounds}
     export GOLEM_NEGATIVE_VOID="${ng.void}"
     export PATH=${lib.makeBinPath ([ pkgs.ripgrep pkgs.xclip pkgs.util-linux pkgs.file pkgs.silicon
-      pkgs.bash pkgs.alsa-utils golemOpen golemRun golemPreview golemAi golemBlocks golemWires golemFlow ] ++ tidiers)}:$PATH
+      pkgs.bash pkgs.alsa-utils golemOpen golemRun golemPreview golemAi golemBlocks golemWires golemMap golemFlow ] ++ tidiers)}:$PATH
     exec ${nvim}/bin/nvim "$@"
   '';
 
@@ -191,7 +196,7 @@ let
     '';
   };
 in {
-  environment.systemPackages = [ edit golemOpen golemRun golemPreview golemOffice golemView golemWires ] ++ languages ++ [
+  environment.systemPackages = [ edit golemOpen golemRun golemPreview golemOffice golemView golemWires golemMap ] ++ languages ++ [
     # so Alt+Space finds it as "Text editor" (or "edit")
     (pkgs.makeDesktopItem { name = "golem-edit"; desktopName = "Text editor (edit)"; exec = "golem-edit"; })
     # so text files opened from anywhere (a link, another app) open in it, through its zone

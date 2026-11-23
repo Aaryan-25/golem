@@ -499,6 +499,13 @@ pkgs.testers.runNixOSTest {
         assert '"ok": true' in out and out.strip().endswith("42"), out
         machine.succeed("grep -q 'def double' /home/lilgolemwitch/wired.py && test -s /home/lilgolemwitch/wired.py.wires.json")
 
+    with subtest("The program map reads a project (never runs it) and knows where I am"):
+        as_me("mkdir -p proj && cp wired.py proj/ && echo def broken  > proj/bad.py")
+        m = json.loads(as_me("golem-map proj --json --here /home/lilgolemwitch/proj/wired.py:2"))
+        names = [t["name"] for t in m["towers"]]
+        assert "double" in names and m["here"] == names.index("double"), m
+        assert any(d["mistake"] for d in m["districts"]), m
+
     with subtest("Step E: GADA in the Start panel opens the editor"):
         machine.send_key("meta_l-esc")
         machine.wait_until_succeeds(realm_seen, timeout=30)
