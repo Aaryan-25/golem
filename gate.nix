@@ -3,7 +3,7 @@
 #   * Every app is pointed at the Gate (http_proxy / https_proxy); the Gate asks me the first time an app
 #     wants a site (once / always / never), remembers ALWAYS and NEVER, and writes everything down:
 #     the truth log, and /var/lib/golem-gate/feed.jsonl for my AI to watch.
-#   * golem-gate on | off | status | rules | forget APP ZONE SITE
+#   * golem-gate on | hidden | off | status | rules | forget APP ZONE SITE   (hidden = through Tor)
 # System services (updates, the clock, Wi-Fi) are not my apps and are not asked about.
 { pkgs, ... }:
 let
@@ -14,7 +14,15 @@ let
   '';
   proxy = "http://127.0.0.1:3128";
 in {
-  users.users.golem-gate = { isSystemUser = true; group = "golem-gate"; };
+  users.users.golem-gate = { isSystemUser = true; group = "golem-gate"; extraGroups = [ "tor" ]; };
+
+  # HIDDEN mode: Tor, switched off (no connections at all) until the Gate turns it on.
+  services.tor = {
+    enable = true;
+    client.enable = true;
+    controlSocket.enable = true;
+    settings.DisableNetwork = true;
+  };
   users.groups.golem-gate = { };
 
   systemd.services.golem-gate = {

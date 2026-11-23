@@ -37,7 +37,7 @@ EXPLAIN = {
 # The groups and their pages, named by me (21-22 Nov 2026)
 GROUPS = [
     ("SPELL", ["RUNNING", "STARTUP", "STORAGE", "SAVE SLOTS", "ABOUT"]),
-    ("WEAVE", ["APPS", "KEYS", "DRIVERS", "NETWORK", "SOUND & SCREEN", "POWER", "KEYBOARD"]),
+    ("WEAVE", ["APPS", "KEYS", "DRIVERS", "NETWORK", "THE GATE", "SOUND & SCREEN", "POWER", "KEYBOARD"]),
     ("MIMIC", ["FACE", "COLOURS", "ANIMATIONS", "TEXT", "WINDOWS", "NIGHT LIGHT", "RED ALERT",
                "START SCREEN", "LOCK SCREEN", "WALLPAPER", "TRANSITIONS", "KEYBOARD LIGHT", "WAKING UP"]),
     ("MEMORIES", ["TRUTH LOG", "PRIVACY", "BACKUPS"]),
@@ -486,7 +486,7 @@ class Panel:
             "RUNNING": self.p_running, "STARTUP": self.p_startup, "STORAGE": self.p_storage,
             "SAVE SLOTS": self.p_slots, "ABOUT": self.p_about, "APPS": self.p_apps, "KEYS": self.p_keys,
             "DRIVERS": self.p_drivers, "NETWORK": self.p_network, "SOUND & SCREEN": self.p_sound,
-            "POWER": self.p_power, "KEYBOARD": self.p_keyboard, "FACE": self.p_face, "RED ALERT": self.p_alerts,
+            "POWER": self.p_power, "KEYBOARD": self.p_keyboard, "THE GATE": self.p_gate, "FACE": self.p_face, "RED ALERT": self.p_alerts,
             "ANIMATIONS": lambda: self.setting_rows("ANIMATIONS"), "WINDOWS": lambda: self.setting_rows("WINDOWS"),
             "NIGHT LIGHT": lambda: self.setting_rows("NIGHT LIGHT"),
             **{k: (lambda k=k: [(a, b, None, c) for a, b, c in IN_PROGRESS[k]] + [("IN PROGRESS", None, None, "This page is still being made.")])
@@ -616,6 +616,34 @@ class Panel:
                 ("Clock", now, None, "The clock never sets itself over the internet."),
                 ("Set the clock from the internet, once", None, ("clock-once",), "Enter: your password, then one question to a time server (Wi-Fi must be on). It's logged."),
                 ("Set the clock by hand", None, ("clock-set",), "Enter: type the time like 2026-11-22 02:30, then your password.")]
+
+    def p_gate(self):
+        """The Gate: the only way to the internet. Its switch, and every decision I made, each one undoable."""
+        status = run("golem-gate", "status").strip()
+        mode = "OFF" if status.startswith("mode off") else ("ON" if status.startswith("mode") else "not running")
+        hidden = status.startswith("mode hidden")
+        if hidden:
+            mode = "ON"
+        rows = [("The Gate", mode, ("do", ["golem-gate", "on" if mode == "OFF" else "off"]),
+                 "Enter: OFF stops everything going out at once; ON lets apps ask me, site by site."),
+                ("HIDDEN (through Tor)", "on" if hidden else "off", ("do", ["golem-gate", "on" if hidden else "hidden"]),
+                 "Enter: on/off. Sites can't see where you are; your Wi-Fi can't see which sites; .onion sites open. "
+                 "But your Wi-Fi sees that you use Tor, a site you log in to knows it's you, and downloads can give you away."),
+                ("Asking", "ready" if "asking ready" in status else "not running", None,
+                 "The question (ONCE / ALWAYS / NEVER / any site for this app) appears on the screen."),
+                ("Written down", "truth log + /var/lib/golem-gate/feed.jsonl", None,
+                 "One plain sentence and one line of JSON per connection (for my AI). Nothing inside them is read.")]
+        for line in run("golem-gate", "rules").splitlines():
+            parts = line.split()
+            if len(parts) != 4:
+                continue
+            app, zone, site, answer = parts
+            what = "any site" if site == "*" else site
+            rows.append((f"{app} ({zone})  {what}", answer, ("do", ["golem-gate", "forget", app, zone, site]),
+                         "Enter: take this decision back; the Gate will ask again next time."))
+        if len(rows) == 4:
+            rows.append(("No decisions yet", None, None, "ALWAYS and NEVER answers show up here."))
+        return rows
 
     def p_sound(self):
         vol = run("wpctl", "get-volume", "@DEFAULT_AUDIO_SINK@").strip().replace("Volume: ", "")

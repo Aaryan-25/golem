@@ -11,7 +11,13 @@ Everything is written down: one plain sentence in the truth log, and one line of
   127.0.0.1:3128   the proxy apps use (http_proxy / https_proxy point here)
   /run/golem-gate/ask.sock      golem-gate-ask (in my session) waits here for questions
   /run/golem-gate/control.sock  golem-gate on|off|status|rules|forget APP SITE (my user only)
-Modes: normal (ask), off (nothing goes out).  Rules: /var/lib/golem-gate/rules.json
+Modes: normal (ask), hidden (ask, and everything goes through Tor), off (nothing goes out).
+Rules: /var/lib/golem-gate/rules.json
+
+HIDDEN (Tor), plainly: sites can't see where I am, and my Wi-Fi or internet company can't see which
+sites I visit; .onion sites open. But my Wi-Fi can see that I use Tor, a site I log in to knows it's me,
+and files I download can still give me away. Tor itself stays switched off (it makes no connections at
+all) until I turn HIDDEN on.
 """
 import asyncio
 import json
@@ -29,6 +35,8 @@ RULES = f"{STATE}/rules.json"
 FEED = f"{STATE}/feed.jsonl"
 MODE = f"{STATE}/mode"
 OWNER = int(os.environ.get("GOLEM_GATE_OWNER", "1000"))
+TOR_SOCKS = ("127.0.0.1", 9050)
+TOR_CONTROL = "/run/tor/control"
 PROBE = ("1.1.1.1", 443)            # golem-net-test asks only "could I get out?": no data, no question
 
 syslog.openlog("golem-gate")
@@ -69,6 +77,39 @@ def save_rules(rules):
 
 def mode():
     return load(MODE, "normal") or "normal"
+
+
+async def tor_network(on):
+    """Tor connects to its network only while HIDDEN is on (DisableNetwork otherwise)."""
+    try:
+        r, w = await asyncio.wait_for(asyncio.open_unix_connection(TOR_CONTROL), 5)
+        w.write(b"AUTHENTICATE\r\n" + f"SETCONF DisableNetwork={0 if on else 1}\r\n".encode() + b"QUIT\r\n")
+        await w.drain()
+        reply = (await asyncio.wait_for(r.read(), 5)).decode(errors="replace")
+        w.close()
+        return reply.count("250") >= 2
+    except (OSError, asyncio.TimeoutError):
+        return False
+
+
+async def through_tor(host, port):
+    """A connection to host:port through Tor's SOCKS port; the name is looked up inside Tor too."""
+    r, w = await asyncio.open_connection(*TOR_SOCKS)
+    w.write(b"\x05\x01\x00")
+    await w.drain()
+    if (await r.readexactly(2)) != b"\x05\x00":
+        raise ConnectionError("Tor refused")
+    name = host.encode()
+    w.write(b"\x05\x01\x00\x03" + bytes([len(name)]) + name + struct.pack(">H", port))
+    await w.drain()
+    head = await r.readexactly(4)
+    if head[1] != 0:
+        raise ConnectionError("Tor could not reach it" if head[1] != 1 else "Tor isn't ready yet")
+    skip = {1: 4, 4: 16}.get(head[3])
+    if skip is None:
+        skip = (await r.readexactly(1))[0]
+    await r.readexactly(skip + 2)
+    return r, w
 
 
 def site_of(host):
@@ -209,13 +250,17 @@ async def client(reader, writer):
             say(f"{app} ({zone}) was stopped from reaching {site} ({why})")
             feed(app=app, zone=zone, site=site, host=host, port=tport, allowed=False, why=why)
         return
+    hidden = mode() == "hidden"
     try:
-        up_r, up_w = await asyncio.wait_for(asyncio.open_connection(host, tport), 20)
-    except (OSError, asyncio.TimeoutError) as e:
+        if hidden:
+            up_r, up_w = await asyncio.wait_for(through_tor(host, tport), 60)
+        else:
+            up_r, up_w = await asyncio.wait_for(asyncio.open_connection(host, tport), 20)
+    except (OSError, asyncio.TimeoutError, asyncio.IncompleteReadError) as e:
         writer.write(b"HTTP/1.1 502 Bad Gateway\r\n\r\n")
         writer.close()
         if not probe:
-            say(f"{app} ({zone}) could not reach {site}: {e.__class__.__name__}")
+            say(f"{app} ({zone}) could not reach {site}{' through Tor' if hidden else ''}: {e or e.__class__.__name__}")
         return
     if method == "CONNECT":
         writer.write(b"HTTP/1.1 200 Connection established\r\n\r\n")
@@ -228,8 +273,9 @@ async def client(reader, writer):
     sent, got = [0], [0]
     await asyncio.gather(pipe(reader, up_w, sent), pipe(up_r, writer, got))
     secs = time.time() - start
-    say(f"{app} ({zone}) talked to {site} ({why}): {size(got[0])} in, {size(sent[0])} out, {secs:.0f} s")
-    feed(app=app, zone=zone, site=site, host=host, port=tport, allowed=True, why=why,
+    say(f"{app} ({zone}) talked to {site}{', hidden through Tor' if hidden else ''} ({why}): "
+        f"{size(got[0])} in, {size(sent[0])} out, {secs:.0f} s")
+    feed(app=app, zone=zone, site=site, host=host, port=tport, allowed=True, why=why, hidden=hidden,
          bytes_in=got[0], bytes_out=sent[0], seconds=round(secs, 1))
 
 
@@ -279,11 +325,16 @@ async def control(reader, writer):
         return
     cmd = (await reader.readline()).decode(errors="replace").split()
     out = ""
-    if cmd[:1] in (["on"], ["off"]):
-        m = "normal" if cmd[0] == "on" else "off"
+    if cmd[:1] in (["on"], ["off"], ["hidden"]):
+        m = {"on": "normal", "off": "off", "hidden": "hidden"}[cmd[0]]
         with open(MODE, "w") as f:
             f.write(m + "\n")
-        say(f"The Gate is now {'ON (it asks)' if m == 'normal' else 'OFF: nothing goes out'}")
+        tor = await tor_network(m == "hidden")
+        say({"normal": "The Gate is now ON: it asks, and connections go out directly",
+             "off": "The Gate is now OFF: nothing goes out",
+             "hidden": "The Gate is now HIDDEN: everything goes through Tor. Sites can't see where I am and my "
+                       "Wi-Fi can't see which sites; but my Wi-Fi sees that I use Tor, and a site I log in to knows me"}[m]
+            + ("" if tor or m != "hidden" else " (Tor didn't answer yet)"))
         out = m
     elif cmd[:1] == ["status"]:
         out = f"mode {mode()}; asking {'ready' if asker else 'not running'}; {len(load(RULES, {}))} rules"
@@ -299,7 +350,7 @@ async def control(reader, writer):
         else:
             out = "no such rule"
     else:
-        out = "golem-gate on | off | status | rules | forget APP ZONE SITE"
+        out = "golem-gate on | hidden | off | status | rules | forget APP ZONE SITE"
     writer.write((out + "\n").encode())
     await writer.drain()
     writer.close()
@@ -320,6 +371,7 @@ async def main():
     c = await asyncio.start_unix_server(control, f"{RUN}/control.sock")
     for p in (f"{RUN}/ask.sock", f"{RUN}/control.sock"):
         os.chmod(p, 0o666)            # who may really use them is checked by uid, above
+    await tor_network(mode() == "hidden")
     say(f"The Gate is open for asking (mode {mode()})")
     async with proxy, a, c:
         await asyncio.gather(proxy.serve_forever(), a.serve_forever(), c.serve_forever())

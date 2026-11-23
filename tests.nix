@@ -297,6 +297,17 @@ pkgs.testers.runNixOSTest {
         assert as_me("zone bash -c \"curl -s -o /dev/null -w %{http_code} http://web/\"") == "403"
         assert as_me("golem-gate on") == "normal"
 
+    with subtest("HIDDEN: Tor is off until HIDDEN, then everything goes through it (no Tor network in the test)"):
+        machine.wait_for_unit("tor.service")
+        tor_net = "printf 'AUTHENTICATE\\r\\nGETCONF DisableNetwork\\r\\nQUIT\\r\\n' | socat - UNIX-CONNECT:/run/tor/control"
+        assert "DisableNetwork=1" in machine.succeed(tor_net)
+        assert as_me("golem-gate hidden") == "hidden"
+        assert "DisableNetwork=0" in machine.succeed(tor_net)
+        as_me("zone bash /etc/golem-test-fetch.sh")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'could not reach web through Tor'", timeout=90)
+        assert as_me("golem-gate on") == "normal"
+        assert "DisableNetwork=1" in machine.succeed(tor_net)
+
     with subtest("The browser: in YELLOW, through the Gate, a page from the test web server"):
         as_me("DISPLAY=:0 golem-launch golem-browser http://web/ >/dev/null 2>&1 &")
         if machine.execute("timeout 120 sh -c 'until grep -q golem-browser /var/lib/golem-gate/feed.jsonl; do sleep 2; done'")[0] != 0:

@@ -3,6 +3,7 @@
   golem-gate ask                  (started with my session) waits for the Gate's questions and asks me
                                   on the screen: ONCE / ALWAYS / NEVER. Esc means no, this time.
   golem-gate on | off             the Gate asks (on), or nothing goes out at all (off)
+  golem-gate hidden               the Gate asks, and everything goes through Tor (HIDDEN)
   golem-gate status | rules       how it stands; what I decided, app by app and site by site
   golem-gate forget APP ZONE SITE take back a decision: it will ask again
 """
