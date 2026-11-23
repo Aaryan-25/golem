@@ -294,7 +294,7 @@ pkgs.testers.runNixOSTest {
         assert "web" in machine.succeed("tail -n 3 /var/lib/golem-gate/feed.jsonl")
         assert "bash  YELLOW  web  always" in as_me("golem-gate rules")
         assert as_me("golem-gate off") == "off"
-        assert machine.succeed("su - lilgolemwitch -c 'zone bash -c \"curl -s -o /dev/null -w %{http_code} http://web/\"'").strip() == "403"
+        assert as_me("zone bash -c \"curl -s -o /dev/null -w %{http_code} http://web/\"") == "403"
         assert as_me("golem-gate on") == "normal"
 
     with subtest("The clock can be set by hand from the Control Panel, with the password, and it is logged"):
