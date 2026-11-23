@@ -243,28 +243,76 @@ map(all, '<C-w>', close_file)
 -- Pinned files, and the last session
 -------------------------------------------------------------------------------
 local pin_file = box .. '/pinned'
+-- The file: one path per line; a line "[NAME]" starts a group. Lines before any group are in PINNED.
+local last_group = 'PINNED'
+
+function S.pin_groups()
+  local groups, by = {}, {}
+  local cur = 'PINNED'
+  if fn.filereadable(pin_file) == 1 then
+    for _, l in ipairs(fn.readfile(pin_file)) do
+      local g = l:match('^%[(.+)%]$')
+      if g then
+        cur = g
+        if not by[g] then by[g] = { name = g, items = {} }; groups[#groups + 1] = by[g] end
+      elseif l ~= '' and (fn.filereadable(l) == 1 or fn.isdirectory(l) == 1) then
+        if not by[cur] then by[cur] = { name = cur, items = {} }; table.insert(groups, 1, by[cur]) end
+        table.insert(by[cur].items, l)
+      end
+    end
+  end
+  local out = {}
+  for _, g in ipairs(groups) do if #g.items > 0 then out[#out + 1] = g end end
+  return out
+end
 
 function S.pinned()
   local out = {}
-  if fn.filereadable(pin_file) == 1 then
-    for _, p in ipairs(fn.readfile(pin_file)) do
-      if p ~= '' and (fn.filereadable(p) == 1 or fn.isdirectory(p) == 1) then out[#out + 1] = p end
+  for _, g in ipairs(S.pin_groups()) do vim.list_extend(out, g.items) end
+  return out
+end
+
+local function write_groups(groups)
+  local lines = {}
+  for _, g in ipairs(groups) do
+    lines[#lines + 1] = '[' .. g.name .. ']'
+    vim.list_extend(lines, g.items)
+  end
+  fn.mkdir(box, 'p')
+  fn.writefile(lines, pin_file)
+end
+
+-- Pin a file or folder to the dashboard, in a group you name (or unpin it if it was pinned).
+function S.toggle_pin_path(p)
+  local groups = S.pin_groups()
+  for _, g in ipairs(groups) do
+    for i, q in ipairs(g.items) do
+      if q == p then
+        table.remove(g.items, i)
+        write_groups(groups)
+        return say('UNPINNED ' .. S.tilde(p))
+      end
     end
   end
-  return out
+  local names = {}
+  for _, g in ipairs(groups) do names[#names + 1] = g.name end
+  local g = S.ask('PIN TO WHICH GROUP? (' .. (#names > 0 and table.concat(names, ', ') or 'any name') .. ') ', last_group)
+  if not g then return end
+  g = vim.trim(g):upper()
+  if g == '' then g = 'PINNED' end
+  last_group = g
+  local found
+  for _, x in ipairs(groups) do if x.name == g then found = x end end
+  if not found then found = { name = g, items = {} }; groups[#groups + 1] = found end
+  table.insert(found.items, 1, p)
+  write_groups(groups)
+  say('PINNED TO THE DASHBOARD, IN ' .. g .. ': ' .. S.tilde(p))
 end
 
 local function toggle_pin()
   local n = api.nvim_buf_get_name(0)
   if n == '' or not S.is_text() then return say('SAVE THE FILE FIRST, THEN PIN IT') end
-  local list, found = S.pinned(), false
-  for i, p in ipairs(list) do
-    if p == n then table.remove(list, i); found = true; break end
-  end
-  if not found then table.insert(list, 1, n) end
-  fn.mkdir(box, 'p')
-  fn.writefile(list, pin_file)
-  say(found and ('UNPINNED ' .. S.tilde(n)) or ('PINNED TO THE DASHBOARD: ' .. S.tilde(n)))
+  S.toggle_pin_path(n)
 end
 map(all, '<M-p>', toggle_pin)
 

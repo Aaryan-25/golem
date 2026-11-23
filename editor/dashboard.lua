@@ -89,8 +89,10 @@ end
 -------------------------------------------------------------------------------
 local function entries()
   local list, seen = {}, {}
-  for _, p in ipairs(S.pinned and S.pinned() or {}) do
-    if #list < 9 and not seen[p] then list[#list + 1] = { path = p, pinned = true }; seen[p] = true end
+  for _, g in ipairs(S.pin_groups and S.pin_groups() or {}) do
+    for _, p in ipairs(g.items) do
+      if #list < 9 and not seen[p] then list[#list + 1] = { path = p, pinned = true, group = g.name }; seen[p] = true end
+    end
   end
   local pins = #list
   for _, f in ipairs(vim.v.oldfiles or {}) do
@@ -123,10 +125,12 @@ local function right_lines(list, pins, width)
     seg(info.next and ('  ·  next: ' .. info.next) or '  ·  all found'))
   add()
   if #list > 0 then
-    if pins > 0 then add(seg('PINNED', 'GolemBright')) end
+    local group
     for i, e in ipairs(list) do
+      if e.group and e.group ~= group then group = e.group; add(seg(group, 'GolemBright')) end
       if i == pins + 1 then add(seg('RECENT', 'GolemBright')) end
-      add(seg(tostring(i) .. '   ', 'GolemBright'), seg(cut(tilde(e.path), width - 6), 'Normal'))
+      local shown = tilde(e.path) .. (fn.isdirectory(e.path) == 1 and '/' or '')
+      add(seg(tostring(i) .. '   ', 'GolemBright'), seg(cut(shown, width - 6), 'Normal'))
     end
     add()
   end
@@ -135,7 +139,7 @@ local function right_lines(list, pins, width)
     add(seg('R', 'GolemBright'), seg(string.format('   reopen the files you had open (%d)', #sess)))
   end
   local keys = { { 'N', 'new' }, { 'O', 'open' }, { 'P', 'find' }, { 'B', 'files' }, { 'T', 'terminal' },
-    { 'K', 'AI' }, { 'C', 'codex' }, { 'G', 'settings' }, { 'H', 'guide' }, { 'W', 'tour' }, { 'Q', 'close' } }
+    { 'E', 'explore' }, { 'K', 'AI' }, { 'C', 'codex' }, { 'G', 'settings' }, { 'H', 'guide' }, { 'W', 'tour' }, { 'Q', 'close' } }
   local line, used = {}, 0
   for _, k in ipairs(keys) do
     local w = #k[1] + 1 + #k[2] + 4
@@ -319,13 +323,16 @@ function _G.GolemStart()
   key('g', function() if S.gada then S.gada.settings() end end)
   key('h', S.guide); key('<F1>', function() S.palette() end)
   key('w', function() if S.intro then S.intro() end end)
+  key('e', function() if S.explorer then S.explorer() end end)
   key('r', function() if S.reopen then S.reopen() end end)
   key('q', S.quit); key('<C-q>', S.quit)
   key('<Esc>', function() end)
   for n = 1, 9 do
     key(tostring(n), function()
       local list = entries()
-      if list[n] then S.open_path(list[n].path) end
+      if list[n] then
+        if fn.isdirectory(list[n].path) == 1 and S.explorer then S.explorer(list[n].path) else S.open_path(list[n].path) end
+      end
     end)
   end
   if S.intro_first then S.intro_first() end           -- the short tour, the very first time
