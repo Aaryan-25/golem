@@ -10,7 +10,7 @@ let
     runtimeInputs = with pkgs; [ llama-cpp whisper-cpp ffmpeg-headless procps util-linux coreutils ];
     text = ''
       export GOLEM_THEMES='${builtins.toJSON { shadow = s.theme; }}'
-      exec ${py}/bin/python3 ${./echo/echo.py} "$@"
+      exec ${py}/bin/python3 ${./echo}/echo.py "$@"
     '';
   };
   # Run from a terminal, outside any zone, so it goes through the Gate (which asks about each site once).

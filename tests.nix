@@ -87,7 +87,7 @@ pkgs.testers.runNixOSTest {
         machine.send_key("meta_l-esc")
         machine.wait_until_succeeds(realm_seen, timeout=30)
         machine.sleep(3)
-        for _ in range(4):
+        for _ in range(5):
             machine.send_key("down")
             machine.sleep(1)
         machine.send_key("ret")
@@ -433,6 +433,15 @@ pkgs.testers.runNixOSTest {
         out = machine.execute("su - lilgolemwitch -c 'golem-echo say Mitra hello' 2>&1")[1]
         assert "no brain yet" in out, out
         machine.succeed("grep -q zone=offline /var/lib/golem/apps/golem-echo.conf")
+        f = "/home/lilgolemwitch/zones/golem-echo/feed/chat.txt"
+        machine.succeed(f"mkdir -p $(dirname {f}) && printf '%s\\n' "
+                        "'12/11/26, 9:41 pm - Riya: kal aa rahi hai na?' '12/11/26, 9:42 pm - Aaru: haan yaar pakka' "
+                        "'bas thoda late' '12/11/26, 9:43 pm - Riya: <Media omitted>' > " + f +
+                        " && chown -R lilgolemwitch /home/lilgolemwitch/zones/golem-echo")
+        assert "Riya" in as_me("golem-echo people " + f)
+        assert "1 new messages learned" in as_me(f"golem-echo feed Mitra {f} Aaru")
+        machine.succeed("grep -q 'bas thoda late' /home/lilgolemwitch/zones/golem-echo/echo/echos/mitra/samples.jsonl")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Mitra was fed 1 messages of Aaru'", timeout=30)
         machine.send_key("meta_l-esc")
         machine.wait_until_succeeds(realm_seen, timeout=30)
         machine.sleep(3)
@@ -444,7 +453,7 @@ pkgs.testers.runNixOSTest {
         machine.screenshot("echo")
         machine.send_key("meta_l-shift-e")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'STOP pressed'", timeout=30)
-        machine.execute("pkill -f -- -echo.py")
+        machine.execute("pkill -f echo/echo.py")
         machine.sleep(2)
 
     with subtest("Step E: GADA in the Start panel opens the editor"):

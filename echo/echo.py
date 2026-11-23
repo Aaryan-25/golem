@@ -7,6 +7,7 @@
 #   golem-echo list            my Echos
 #   golem-echo new NAME [ABOUT]
 #   golem-echo say NAME TEXT   talk to one, from a terminal
+#   golem-echo chats | people CHAT | feed NAME CHAT PERSON | describe NAME
 #   golem-echo stop            the STOP key: stop every Echo at once (also Super+Shift+E)
 import json
 import os
@@ -17,11 +18,14 @@ import threading
 import time
 import urllib.request
 
+import feed
+
 HOME = os.path.expanduser("~")
 # Inside its zone, Echo's own folder is its home; outside (a terminal, the tests) it is ~/zones/golem-echo.
 BASE = os.path.join(HOME, "zones", "golem-echo") if os.path.isdir(os.path.join(HOME, "zones")) else HOME
 D = os.path.join(BASE, "echo")
 ECHOS, BRAIN = os.path.join(D, "echos"), os.path.join(D, "brain")
+FEED, RULES = os.path.join(BASE, "feed"), os.path.join(D, "rules.txt")
 PORT = 8091
 URL = f"http://127.0.0.1:{PORT}"
 LOCAL = urllib.request.build_opener(urllib.request.ProxyHandler({}))    # the brain is here; never via the Gate
@@ -86,8 +90,7 @@ def new(name, about=""):
         raise SystemExit(f"There is already an Echo called {name}.")
     os.makedirs(d)
     e = {"name": name, "slug": s, "about": about, "made": time.strftime("%Y-%m-%d")}
-    with open(os.path.join(d, "profile.json"), "w", encoding="utf-8") as f:
-        json.dump(e, f, ensure_ascii=False, indent=1)
+    save_profile(e)
     log(f"a new Echo, {name}")
     return e
 
@@ -115,7 +118,7 @@ def wake_brain():
         raise RuntimeError("Echo has no brain yet. Open a terminal (Super+Enter) and type: golem-echo-brain")
     os.makedirs(BRAIN, exist_ok=True)
     with open(os.path.join(BRAIN, "brain.log"), "ab") as lf:
-        subprocess.Popen(["llama-server", "-m", model, "--host", "127.0.0.1", "--port", str(PORT), "-c", "2048",
+        subprocess.Popen(["llama-server", "-m", model, "--host", "127.0.0.1", "--port", str(PORT), "-c", "4096",
                           "-t", str(os.cpu_count() or 2), "--no-webui"], stdout=lf, stderr=lf, start_new_session=True)
     for _ in range(240):
         if brain_up():
@@ -139,21 +142,35 @@ def history(e, n=8):
     return turns
 
 
+def path(e, f):
+    return os.path.join(ECHOS, e["slug"], f)
+
+
+def save_profile(e):
+    with open(path(e, "profile.json"), "w", encoding="utf-8") as f:
+        json.dump(e, f, ensure_ascii=False, indent=1)
+
+
 def messages(e, text):
     system = CORE.format(name=e["name"])
-    if e.get("about"):
-        system += "\n\nWho you are:\n" + e["about"]
+    for title, body in [("My rules for every Echo", read(RULES)), ("Who you are", e.get("about", "")),
+                        ("What you remember about me", read(path(e, "memory.txt")))]:
+        if body.strip():
+            system += f"\n\n{title}:\n{body.strip()}"
+    lines = feed.pick(feed.load(path(e, "samples.jsonl")))
+    if lines:
+        system += "\n\nHow you talk. These are real messages of yours; copy their words, language mix, length and " \
+                  "style, never their facts:\n" + "\n".join("- " + x.replace("\n", " / ") for x in lines)
     msgs = [{"role": "system", "content": system}]
     for t in history(e):
         msgs += [{"role": "user", "content": t["me"]}, {"role": "assistant", "content": t["echo"]}]
     return msgs + [{"role": "user", "content": text}]
 
 
-def reply(e, text, piece=lambda s: None, stop=None):
-    """Ask Echo e; each new piece of the answer goes to piece() as it is written. stop: a threading.Event."""
+def ask(msgs, piece=lambda s: None, stop=None, max_tokens=400):
+    """Send messages to the brain; each new piece of the answer goes to piece() as it is written."""
     wake_brain()
-    body = json.dumps({"messages": messages(e, text), "stream": True, "temperature": 0.7,
-                       "max_tokens": 400}).encode()
+    body = json.dumps({"messages": msgs, "stream": True, "temperature": 0.7, "max_tokens": max_tokens}).encode()
     req = urllib.request.Request(URL + "/v1/chat/completions", body, {"Content-Type": "application/json"})
     out = []
     with LOCAL.open(req, timeout=600) as r:
@@ -169,11 +186,42 @@ def reply(e, text, piece=lambda s: None, stop=None):
                 continue
             out.append(s)
             piece(s)
-    answer = "".join(out).strip()
+    return "".join(out).strip()
+
+
+def reply(e, text, piece=lambda s: None, stop=None):
+    """Talk to Echo e, and keep the talk. stop: a threading.Event (the Esc key)."""
+    answer = ask(messages(e, text), piece, stop)
     with open(os.path.join(ECHOS, e["slug"], "talk.jsonl"), "a", encoding="utf-8") as f:
         f.write(json.dumps({"t": time.strftime("%Y-%m-%d %H:%M"), "me": text, "echo": answer,
                             "stopped": bool(stop is not None and stop.is_set())}, ensure_ascii=False) + "\n")
     return answer
+
+
+def analyse(e, piece=lambda s: None, stop=None):
+    """Echo's description: what kind of person speaks in its fed messages, their personality and quirks."""
+    lines = feed.pick(feed.load(path(e, "samples.jsonl")), budget=6000, seed=1)
+    if not lines:
+        raise RuntimeError(f"{e['name']} has not been fed any chats yet (FEEDING).")
+    msgs = [{"role": "system", "content": "You describe people from their messages. Be honest and specific. "
+             "Write in English, in at most 8 short lines: personality, mood, humour, how they show care, "
+             "favourite words and phrases, language mix (Hindi / Hinglish / English), message length, emoji, quirks."},
+            {"role": "user", "content": "Messages written by one person:\n" + "\n".join("- " + x for x in lines)}]
+    text = ask(msgs, piece, stop, max_tokens=350)
+    if text and not (stop and stop.is_set()):
+        e["about"] = text
+        save_profile(e)
+        log(f"{e['name']}'s description was written from its chats")
+    return text
+
+
+def feed_echo(e, chat, person, say=lambda s: None):
+    ears = next((os.path.join(BRAIN, f) for f in sorted(os.listdir(BRAIN)) if f.startswith("ggml-")), None) \
+        if os.path.isdir(BRAIN) else None
+    got = feed.take(chat, person, ears, say)
+    n = feed.add(path(e, "samples.jsonl"), got)
+    log(f"{e['name']} was fed {n} messages of {person} from {os.path.basename(chat)}")
+    return n
 
 
 # ---------------------------------------------------------------- the app
@@ -187,7 +235,8 @@ def app():
     root.attributes("-fullscreen", True)
     size = max(11, min(18, root.winfo_screenheight() // 60))
     F, FS = ("Golem Runes", size), ("Golem Runes", max(9, size - 3))
-    st = {"sec": 0, "echo": 0, "stop": threading.Event(), "busy": False}
+    st = {"sec": 0, "echo": 0, "stop": threading.Event(), "busy": False, "chat": None, "people": []}
+    EDIT = {"ECHOS", "MEMORY", "RULES"}            # sections whose page I can write in (Ctrl+S keeps it)
 
     left = tk.Frame(root, bg=T["void"])
     left.pack(side="left", fill="y", padx=(size * 3, size * 2), pady=size * 3)
@@ -197,15 +246,15 @@ def app():
         lb = tk.Label(left, text=s, font=F, fg=T["mist"], bg=T["void"])
         lb.pack(anchor="w", pady=2)
         labels.append(lb)
-    tk.Label(left, text="\nCtrl+↑↓ section\nCtrl+←→ Echo\nEsc stop the reply\nSuper+Shift+E STOP all\nCtrl+Q leave",
-             font=FS, fg=T["mist"], bg=T["void"], justify="left").pack(anchor="w", side="bottom")
+    keys = tk.Label(left, font=FS, fg=T["mist"], bg=T["void"], justify="left")
+    keys.pack(anchor="w", side="bottom")
 
     right = tk.Frame(root, bg=T["void"])
     right.pack(side="left", fill="both", expand=True, padx=size * 2, pady=size * 3)
     head = tk.Label(right, font=("Golem Runes", size + 3), fg=T["pale"], bg=T["void"], anchor="w")
     head.pack(fill="x")
     box = tk.Text(right, font=F, fg=T["pale"], bg=T["void"], insertbackground=T["pale"], wrap="word",
-                  relief="flat", highlightthickness=0, padx=4, pady=8)
+                  relief="flat", highlightthickness=0, padx=4, pady=8, undo=True)
     box.pack(fill="both", expand=True)
     box.tag_configure("me", foreground=T["mist"])
     entry = tk.Entry(right, font=F, fg=T["pale"], bg=T["void"], insertbackground=T["pale"], relief="flat",
@@ -216,77 +265,172 @@ def app():
         box.configure(state="normal")
         box.insert("end", s, tag)
         box.see("end")
-        box.configure(state="disabled")
+        if SECTIONS[st["sec"]] not in EDIT:
+            box.configure(state="disabled")
 
-    def current():
+    def current(k=0):
         es = all_echos()
-        return es[st["echo"] % len(es)] if es else None
+        return es[(st["echo"] + k) % len(es)] if es else None
+
+    def busy(job, done=None):
+        """Run a slow job (the brain) without freezing the window."""
+        st["busy"] = True
+        st["stop"].clear()
+
+        def work():
+            try:
+                job()
+            except Exception as err:   # the brain is missing or stopped: say so plainly
+                root.after(0, say, f"\n({err})\n")
+            st["busy"] = False
+            if done:
+                root.after(0, done)
+        threading.Thread(target=work, daemon=True).start()
 
     def show():
-        sec = SECTIONS[st["sec"]]
+        sec, e = SECTIONS[st["sec"]], current()
         for i, lb in enumerate(labels):
             lb.configure(fg=T["pale"] if i == st["sec"] else T["mist"], text=("◆ " if i == st["sec"] else "  ") + SECTIONS[i])
         box.configure(state="normal")
         box.delete("1.0", "end")
-        e = current()
+        name = e["name"] if e else "no Echo yet"
+        more = {"TALK": "Enter talk   Esc stop the reply",
+                "ECHOS": "Enter (with a name) a new Echo\nCtrl+S keep the description\nCtrl+A describe it from its chats",
+                "FEEDING": "type a number, Enter", "MEMORY": "Ctrl+S keep   Ctrl+W forget our talks",
+                "RULES": "Ctrl+S keep", "COMPARE": "Enter ask both"}.get(sec, "")
+        keys.configure(text=f"\n{more}\n\nCtrl+↑↓ section   Ctrl+←→ Echo\nSuper+Shift+E STOP all\nCtrl+Q leave")
         if sec == "TALK":
-            head.configure(text="TALK  ·  " + (e["name"] if e else "no Echo yet"))
+            head.configure(text="TALK  ·  " + name)
             if not e:
                 say("Make your first Echo in ECHOS (Ctrl+↓).\n")
             for t in history(e, 20) if e else []:
                 say("\n" + t["me"] + "\n", "me")
                 say(t["echo"] + "\n")
         elif sec == "ECHOS":
-            head.configure(text="ECHOS  ·  type a new name and press Enter")
-            for x in all_echos():
-                say(x["name"] + "\n", "me")
-                say((x.get("about") or "(nothing known yet: feed it chats in FEEDING)") + "\n\n")
+            head.configure(text="ECHOS  ·  " + name + f"  ·  {len(all_echos())} in all")
+            if e:
+                box.insert("1.0", e.get("about") or "")
+        elif sec == "FEEDING":
+            head.configure(text="FEEDING  ·  " + name + (f"  ·  {len(feed.load(path(e, 'samples.jsonl')))} messages known" if e else ""))
+            if st["chat"]:
+                say(f"Who in {os.path.basename(st['chat'])} is {name}?\n\n")
+                for i, (who, n) in enumerate(st["people"], 1):
+                    say(f"{i}  {who}  ({n} messages)\n")
+                say("\n0  back\n", "me")
+            else:
+                cs = feed.chats(FEED)
+                say(f"Chats waiting in {FEED}:\n\n", "me")
+                for i, c in enumerate(cs, 1):
+                    say(f"{i}  {os.path.relpath(c, FEED)}\n")
+                if not cs:
+                    say("(none yet: put a WhatsApp export, .txt or .zip, in that folder)\n")
+        elif sec in ("MEMORY", "RULES"):
+            head.configure(text=sec + ("  ·  " + name if sec == "MEMORY" else "  ·  for every Echo"))
+            box.insert("1.0", read(path(e, "memory.txt")) if sec == "MEMORY" and e else read(RULES))
+        elif sec == "COMPARE":
+            o = current(1)
+            head.configure(text=f"COMPARE  ·  {name}  and  {o['name'] if o else '?'}")
         else:
             head.configure(text=sec)
             say(SOON[sec] + "\n\nThis part is being built.", "me")
-        box.configure(state="disabled")
+        if sec not in EDIT:
+            box.configure(state="disabled")
+
+    def keep(_ev=None):
+        sec, e, text = SECTIONS[st["sec"]], current(), box.get("1.0", "end").strip()
+        if sec == "ECHOS" and e:
+            e["about"] = text
+            save_profile(e)
+        elif sec == "MEMORY" and e:
+            with open(path(e, "memory.txt"), "w", encoding="utf-8") as f:
+                f.write(text + "\n")
+        elif sec == "RULES":
+            with open(RULES, "w", encoding="utf-8") as f:
+                f.write(text + "\n")
+        else:
+            return
+        log(f"{sec.lower()} changed" + (f" for {e['name']}" if sec != "RULES" and e else ""))
+        head.configure(text=head.cget("text") + "  ·  kept")
 
     def send(_ev=None):
         text = entry.get().strip()
         if not text or st["busy"]:
             return
         entry.delete(0, "end")
-        sec = SECTIONS[st["sec"]]
+        sec, e = SECTIONS[st["sec"]], current()
         if sec == "ECHOS":
             try:
                 new(text)
+                st["echo"] = [x["slug"] for x in all_echos()].index(slug(text))
             except SystemExit as err:
                 say(str(err) + "\n")
-            show()
+            return show()
+        if not e:
             return
-        e = current()
-        if sec != "TALK" or not e:
-            return
-        say("\n" + text + "\n", "me")
-        st["busy"] = True
-        st["stop"].clear()
+        if sec == "TALK":
+            say("\n" + text + "\n", "me")
+            busy(lambda: reply(e, text, lambda s: root.after(0, say, s), st["stop"]), lambda: say("\n"))
+        elif sec == "COMPARE":
+            o = current(1)
+            say("\n" + text + "\n", "me")
 
-        def work():
-            try:
-                reply(e, text, lambda s: root.after(0, say, s), st["stop"])
-            except Exception as err:   # the brain is missing or stopped: say so plainly
-                root.after(0, say, f"\n({err})")
-            root.after(0, say, "\n")
-            st["busy"] = False
-        threading.Thread(target=work, daemon=True).start()
+            def both():
+                for x in (e, o):
+                    root.after(0, say, f"\n{x['name']}:\n", "me")
+                    ask(messages(x, text), lambda s: root.after(0, say, s), st["stop"])
+                    root.after(0, say, "\n")
+            busy(both)
+        elif sec == "FEEDING" and text.isdigit():
+            n = int(text)
+            if st["chat"]:
+                if n == 0 or n > len(st["people"]):
+                    st["chat"] = None
+                    return show()
+                who, chat = st["people"][n - 1][0], st["chat"]
+                say(f"\nFeeding {e['name']} the messages of {who}...\n", "me")
+
+                def eat():
+                    k = feed_echo(e, chat, who, lambda s: root.after(0, say, s + "\n", "me"))
+                    root.after(0, say, f"{k} new messages learned. Describe {e['name']} again in ECHOS (Ctrl+A).\n")
+                st["chat"] = None
+                busy(eat)
+            else:
+                cs = feed.chats(FEED)
+                if 1 <= n <= len(cs):
+                    st["chat"], st["people"] = cs[n - 1], feed.people(feed.parse(cs[n - 1]))[:30]
+                    show()
+
+    def describe(_ev=None):
+        e = current()
+        if SECTIONS[st["sec"]] != "ECHOS" or not e or st["busy"]:
+            return
+        box.delete("1.0", "end")
+        busy(lambda: analyse(e, lambda s: root.after(0, say, s), st["stop"]))
+
+    def forget(_ev=None):
+        e = current()
+        if SECTIONS[st["sec"]] == "MEMORY" and e:
+            open(path(e, "talk.jsonl"), "w").close()
+            log(f"{e['name']} forgot our talks")
+            head.configure(text=head.cget("text") + "  ·  our talks forgotten")
 
     def move(k, d):
         if not st["busy"]:
             st[k] += d
+            st["chat"] = None
             if k == "sec":
                 st["sec"] %= len(SECTIONS)
             show()
+        return "break"
 
     entry.bind("<Return>", send)
     root.bind("<Control-Up>", lambda e: move("sec", -1))
     root.bind("<Control-Down>", lambda e: move("sec", 1))
     root.bind("<Control-Left>", lambda e: move("echo", -1))
     root.bind("<Control-Right>", lambda e: move("echo", 1))
+    root.bind("<Control-s>", keep)
+    root.bind("<Control-a>", describe)
+    root.bind("<Control-w>", forget)
     root.bind("<Escape>", lambda e: st["stop"].set())
     root.bind("<Control-q>", lambda e: root.destroy())
     show()
@@ -313,12 +457,29 @@ def main(a):
             print()
         except RuntimeError as err:
             sys.exit(str(err))
+    elif a[0] == "chats":
+        for c in feed.chats(FEED):
+            print(c)
+    elif a[0] == "people" and len(a) == 2:
+        for who, n in feed.people(feed.parse(a[1])):
+            print(f"{n:6}  {who}")
+    elif a[0] == "feed" and len(a) == 4:
+        e = find(a[1]) or sys.exit(f"No Echo called {a[1]}.")
+        print(feed_echo(e, a[2], a[3], print), "new messages learned")
+    elif a[0] == "describe" and len(a) == 2:
+        e = find(a[1]) or sys.exit(f"No Echo called {a[1]}.")
+        try:
+            analyse(e, lambda s: print(s, end="", flush=True))
+            print()
+        except RuntimeError as err:
+            sys.exit(str(err))
     elif a[0] == "stop":
         stop_all()
     elif a[0] == "where":
         print(D)
     else:
-        sys.exit(__doc__ or "golem-echo [list | new NAME [ABOUT] | say NAME TEXT | stop | where]")
+        sys.exit("golem-echo [list | new NAME [ABOUT] | say NAME TEXT | chats | people CHAT | feed NAME CHAT PERSON"
+                 " | describe NAME | stop | where]")
 
 
 if __name__ == "__main__":
