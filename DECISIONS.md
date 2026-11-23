@@ -34,7 +34,7 @@ The goal: **private, clean, usable.**
 | Windows | Tiling with an existing engine. No gaps, titles or borders, only a 1 px line on the focused window. Focus moves by keys only. |
 | Close | Closing a window asks for confirmation. This is the one allowed popup. |
 | Notifications | None. Only a full-screen red alert, dismissed by pressing a key several times. |
-| Lock | **None for now** (22 Nov 2026): Golem starts straight in, and idle shows the idle screen. A mechanism comes later. The password is asked only by settings (it may become `arise`). |
+| Lock | **None** (decided 22–23 Nov 2026): Golem starts straight in, and idle shows the idle screen. The password, **arise**, is asked only by settings. |
 | Lid | Closing it sleeps. (No lock on wake for now.) |
 | Panels | The Control Panel and every system panel run in the GREEN zone. Apply asks the password once. |
 | Look | The shadow realm: black background, everything else white; the yin-yang flip turns it over. Everything is sand (drift, picture to picture, the light). |
@@ -42,6 +42,19 @@ The goal: **private, clean, usable.**
 | BIOS password | No. A PC password, maybe later. |
 | Windows OS | Gets wiped, but only at the very end, after Golem works fully from the pendrive. |
 | Save slots | Two things: SAVE SLOTS are older versions of the whole system (go back if an update breaks; the last 5 kept, the newest 3 never deletable from the panel), BACKUPS are my settings (keys, zones, look, quests) saved and loaded by name. |
+
+## Decided on 23 Nov 2026
+| Topic | Decision |
+|---|---|
+| Password | **arise** (the first password on a new install; `passwd` changes it). |
+| Start panel | CONTINUE, GADA, ECHO, FATE, SUMMON, SLUMBER. |
+| Echo | My AI: several Echos, each its own person (an avatar name, a description analysing its personality and quirks), shaped only by the chats I choose for it. It only talks; every other power comes from extensions I add, each with permissions I give. Offline (llama.cpp); voice notes become text offline (whisper.cpp); Hinglish, Hindi and English. |
+| The Gate | The only way to the internet; asks once / always / never / any site for this app; HIDDEN through Tor. |
+| Links | Open in golem-browser (no reader). |
+| Rooms | RED, OFFLINE and YELLOW apps get their own sealed screen and clipboard; Super+C / Super+Shift+C carry the clipboard. |
+| Reports | `golem-report` pushes the self-test, errors, version, hardware and the truth log to my private repo `golem-reports`; Claude reads only GitHub, never my PC. |
+| Not now | Disk encryption, a lock, Wine, the reader, the round menu. A software manager comes later through Echo's extensions and the editor. |
+| Keyboard light | Per key, as an experiment on the Asus (FX506LH). |
 
 ## Decided on 22 Nov 2026 (the shadow realm)
 | Topic | Decision |

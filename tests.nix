@@ -241,7 +241,7 @@ pkgs.testers.runNixOSTest {
         for k in keys:
             if k[2].endswith("golem-truth"):
                 k[0] = "Super+y"
-        answer = ask_guard({"do": "apply", "password": "golem", "apps": apps, "keys": keys})
+        answer = ask_guard({"do": "apply", "password": "arise", "apps": apps, "keys": keys})
         if answer != "OK":
             print(machine.execute("journalctl -b --no-pager | grep -iE 'golem-helper|golem-panel|pam' | tail -20")[1])
         assert answer == "OK", answer
@@ -266,7 +266,7 @@ pkgs.testers.runNixOSTest {
         machine.succeed("test -s /run/user/1000/golem-page-b.png")      # the page changes went through the sand
         machine.send_key("a")
         machine.sleep(1)
-        machine.send_chars("golem\n")
+        machine.send_chars("arise\n")
         if machine.execute("timeout 30 sh -c 'until grep -q zone=yellow /var/lib/golem/apps/bash.conf; do sleep 1; done'")[0] != 0:
             print("SCREEN:", machine.get_screen_text())
             print(machine.execute("cat /var/lib/golem/apps/bash.conf; golem-truth --text | tail -5")[1])
@@ -282,7 +282,7 @@ pkgs.testers.runNixOSTest {
         apps, keys = current()
         apps["bash"]["zone"] = "yellow"
         apps["bash"]["internet"] = "allowed"
-        assert ask_guard({"do": "apply", "password": "golem", "apps": apps, "keys": []}) == "OK"
+        assert ask_guard({"do": "apply", "password": "arise", "apps": apps, "keys": []}) == "OK"
         machine.succeed("su - lilgolemwitch -c 'export XDG_RUNTIME_DIR=/run/user/1000 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus; zone bash /etc/golem-test-long.sh' >/dev/null 2>&1 &")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'has been talking to .* (still open)'", timeout=120)
 
@@ -325,7 +325,7 @@ pkgs.testers.runNixOSTest {
 
     with subtest("The clock can be set by hand from the Control Panel, with the password, and it is logged"):
         assert "wrong password" in ask_guard({"do": "clock-set", "time": "2026-12-25 10:00", "password": "nope"})
-        assert ask_guard({"do": "clock-set", "time": "2026-12-25 10:00", "password": "golem"}) == "OK"
+        assert ask_guard({"do": "clock-set", "time": "2026-12-25 10:00", "password": "arise"}) == "OK"
         assert machine.succeed("date +%Y-%m-%d").strip() == "2026-12-25"
         machine.wait_until_succeeds("golem-truth --text | grep -q 'Clock set by hand'")
 
@@ -336,11 +336,11 @@ pkgs.testers.runNixOSTest {
 
     with subtest("DRIVERS: switching the camera off means its driver can't load at all"):
         machine.succeed("modprobe uvcvideo && modprobe -r uvcvideo")
-        assert ask_guard({"do": "apply", "password": "golem", "apps": current()[0], "keys": [],
+        assert ask_guard({"do": "apply", "password": "arise", "apps": current()[0], "keys": [],
                           "settings": {"camera": "off"}}) == "OK"
         machine.fail("modprobe uvcvideo")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'Settings: Camera: off'")
-        assert ask_guard({"do": "apply", "password": "golem", "apps": current()[0], "keys": [],
+        assert ask_guard({"do": "apply", "password": "arise", "apps": current()[0], "keys": [],
                           "settings": {"camera": "on"}}) == "OK"
         machine.succeed("modprobe uvcvideo")
 
@@ -371,10 +371,10 @@ pkgs.testers.runNixOSTest {
         machine.wait_until_succeeds("golem-truth --text | grep -q 'RED ALERT dismissed'")
 
     with subtest("Backups and save slots work through the guard"):
-        assert ask_guard({"do": "backup-save", "name": "test1", "password": "golem"}) == "OK"
+        assert ask_guard({"do": "backup-save", "name": "test1", "password": "arise"}) == "OK"
         machine.succeed("test -s /var/lib/golem/backups/test1.tar")
-        assert ask_guard({"do": "backup-load", "name": "test1", "password": "golem"}) == "OK"
-        assert "newest 3" in ask_guard({"do": "delete-version", "version": "1", "password": "golem"})
+        assert ask_guard({"do": "backup-load", "name": "test1", "password": "arise"}) == "OK"
+        assert "newest 3" in ask_guard({"do": "delete-version", "version": "1", "password": "arise"})
 
     with subtest("Firefox out: none in Golem; the preview window shows this computer only; Word/Excel helper"):
         machine.fail("su - lilgolemwitch -c 'command -v firefox'")

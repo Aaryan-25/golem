@@ -177,17 +177,22 @@ The text editor add-on is merged; GADA opens it with its dashboard. **Done when:
 5. **Screen and clipboard separation** (the step below).
 6. **Wires** in the editor: boxes that say what they do and how, my own notes on them, copy / paste / delete.
 7. **The 3D map** of a program.
-8. **Helpers that come and go:** a file Golem can't open asks "get this for now?" (LibreOffice, Wine in RED for .exe,
-   archives, e-books, languages for F5), and helpers unused for 7 days or when the disk is low are removed. Plus the
-   **reader** (a link as clean text in the editor, no page code runs) and an ad-hiding list in golem-browser.
+8. **Small changes:** the password becomes **arise**; the Start panel gets ECHO (CONTINUE, GADA, ECHO, FATE, SUMMON, SLUMBER).
 9. **The optimiser:** compressed memory, a guard against freezes, the window I work in first, power by charger;
-   sleeps almost all the time, never touches the window I'm in.
-10. **golem-keylight:** a command and file format for the keyboard lights (my AI can drive it); on the Asus,
-   suggestive lights (after a modifier, only the keys that do something light up).
-11. **My AI** (llama.cpp, offline, its own zone): loyal and truthful, talks like me (examples from my chats first,
-   training on the Asus later), codes through wires and the Gate's reader, works with the truth log, FILES, keylight
-   and the editor (asks before acting), fast, the same on both laptops, the phone and the pendrive.
-No disk encryption, no lock (decided 23 Nov 2026).
+   nearly all of it kernel features, plus one tiny program that only wakes when I switch windows. And **reports**:
+   `golem-report` pushes the self-test, errors, version, hardware and the truth log to my private repo
+   `golem-reports` (after each update, and when I ask; `--screen` adds a picture). Claude reads only GitHub.
+10. **Clipboard history:** the last 10 things copied on my screen, in memory only; Super+V picks one.
+11. **Echo:** my AIs, each its own person, in their own app (TALK, ECHOS, FEEDING, PERMISSIONS, ACTIONS, EXTENSIONS,
+   AVATAR, MEMORY, COMPARE, RULES, CARRY, and a STOP key). Offline (llama.cpp, Llama 3.2: 1B on the Dell, 3B on the
+   Asus), voice notes to text offline (whisper.cpp), Hinglish / Hindi / English. Each Echo has an avatar name and a
+   description that analyses its personality and quirks from the chats I feed it. It only talks; extensions I add
+   give it every other power, each with my permission.
+12. **golem-keylight:** colours per key where the keyboard allows (the Asus FX506LH, as an experiment), the Dell's
+   backlight now; a command and file format Echo's extensions can use.
+13. **Wires and the 3D map**, inside GADA (my graphical editor).
+14. **The final image**, once everything passes on GitHub (and I say yes).
+No disk encryption, no lock, no Wine, no reader (decided 23 Nov 2026). Later: a software manager through Echo's extensions.
 
 ## Test tools (22 Nov 2026, asked for by me)
 - `golem-selftest`: every check a machine can do on the laptop, as ✓ or ✗.

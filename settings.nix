@@ -1,6 +1,6 @@
 # My settings. Change these, and the next build uses them.
 {
-  user = "lilgolemwitch";       # account name (first password: golem, change it with `passwd`)
+  user = "lilgolemwitch";       # account name (first password: arise, change it with `passwd`)
   timeZone = "Asia/Kolkata";
   keyboardLayout = "us";
   # Hard limits per zone (RAM, CPU). 100% CPU = one full core; the Dell has 2.

@@ -69,7 +69,7 @@ in
   users.users.${s.user} = {
     isNormalUser = true;
     extraGroups = [ "wheel" "networkmanager" "video" "audio" "systemd-journal" ];   # journal: to read the truth log
-    initialPassword = "golem";
+    initialPassword = "arise";
   };
 
   # ---- Wi-Fi and sound ----

@@ -5,23 +5,15 @@ Nothing here gets built until I move it into PLAN.md. New ideas from any chat ge
 ## System
 - Install to the SSD and wipe Windows
 - Hibernate after 3 h asleep on battery (needs 4 GB of swap: comes with the SSD install)
-- BLUE zone for my own offline AI
-- Clipboard manager with real separation between zones
-- The Fetcher (`golem-fetch <link>`): download inside YELLOW, find out what the file really is, and open it in a safe zone
-- Network privacy switch (VPN or Tor) and a connection watcher
+- The download checker: an Echo extension (and golem-browser says what each download really is); was: the Fetcher, download inside YELLOW, find out what the file really is, and open it in a safe zone
 - Red alert triggers, press count and sound
 
 ## Apps
-- Text editor
-- File manager
-- Browser with internet control and no ads or popups
-- Cool Retro Term
 
 ## Look and feel (the shadow realm)
 - The veil: motes of light that gather into a sigil (the lock screen, and later the wallpaper)
 - Living, clickable wallpaper that pauses when covered
 - Shadow and Negative looks
-- A round menu that blooms from the bottom-left corner while Super is held
 - The mace that travels across the UI
 - The shade (my AI's body) with animations for each state
 - Windows that gather and melt, and focus shown by light and shadow
@@ -29,10 +21,12 @@ Nothing here gets built until I move it into PLAN.md. New ideas from any chat ge
 - Idle screen extras: live space footage, welcome message, boot animation (no lock: decided 23 Nov 2026)
 
 ## Later
+- A software manager (Windows programs too), run by Echo's extensions and the editor
+- For the animations chat (see ANIMATIONS.md): the gada travelling across the screen, a living wallpaper, an avatar of my PC that shows when the camera or mic is in use
+- The phone viewer, after the laptop boots Golem
 - Phone as a viewer, reachable from anywhere through an encrypted tunnel I control: see the truth log, status and alerts. See only at first. Not before the laptop side is done.
 - An animated avatar of my PC: shows when the camera or mic is in use, and in the idle scene (like games' idle screens).
 - Keyboard light scripts: designs, flashes, colours tied to modes and keybinds (limited by the keyboard being one zone).
-- Clipboard: a short history (last 10, memory only, cleared on lock).
 
 ## Control Panel contents
 - Truth log captures all internet traffic: which app, where to, when, and how much data

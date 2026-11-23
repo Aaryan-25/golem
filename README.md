@@ -27,7 +27,7 @@ This is a fresh start. The old attempt lives in `Aaryan-25/shilp`, and it's kept
    press SELECT, choose `golem.img.xz`, then Start. If Rufus asks, choose "DD image".
 3. Restart the laptop, press **F12** at the Dell logo, and pick the pendrive.
 4. Golem starts straight in (no lock screen). Open a terminal
-   (Alt+Enter) and type `passwd` to set your own password.
+   (Alt+Enter) and type `passwd` to set your own password (the first one is **arise**).
 
 The laptop's SSD and Windows are never touched.
 
