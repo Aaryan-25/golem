@@ -133,3 +133,22 @@ Get it: on the text screen or a terminal, `golem-update`, answer `y`, then `sudo
       changing page turns the page to sand. MIMIC > WINDOWS turns the window sand off
 - [ ] Choose **Golem - text only** once: a text screen that shows what went wrong last time
 - [ ] Put a picture at `~/zones/settings/scenery.png` and open the Start panel: it's on the right, made of sand
+
+## The final version (23 Nov 2026)
+Password is now **arise**. First, once: `golem-report setup` (see README), then every report goes to GitHub by itself.
+- [ ] The Start panel: CONTINUE, GADA, **ECHO**, FATE, SUMMON, SLUMBER
+- [ ] **Super+V**: the last things I copied; pick one and paste it. **Super+Shift+V** forgets them
+- [ ] It feels fast enough; nothing froze when memory was full (the truth log says if something was closed)
+- [ ] `golem-report --screen`: the report and a picture of the screen appear in my golem-reports repo
+- [ ] **Echo:** in a terminal `golem-echo-brain` (say yes to the Gate twice). Then ECHO in the Start panel:
+      in ECHOS type a name and Enter; in TALK talk to it (Esc stops a reply). Replies come within a few seconds
+- [ ] FEEDING: put a WhatsApp export (.zip) in `~/zones/golem-echo/feed`, pick the chat, pick the person;
+      then ECHOS, Ctrl+A writes its description. Talk again: does it sound more like them?
+- [ ] Voice notes in the export became text (FEEDING says "listening to voice note...")
+- [ ] MEMORY, RULES and AVATAR: write something, Ctrl+S, and the Echo follows it
+- [ ] COMPARE: two Echos answer the same question
+- [ ] `golem-keylight extension`, then ask an Echo to light the keyboard red: I am asked first (only this time /
+      always / never), the light changes, and ACTIONS shows it. **Super+Shift+E** stops everything
+- [ ] `golem-keylight what` on the Dell (white light) and on the Asus (colour?); `golem-keylight all orange`
+- [ ] GADA: open a .py file, **F11** wires: two numbers into ADD into SHOW; F5 runs it
+- [ ] GADA: **F12** the program map turns smoothly; a click on a tower opens that function
