@@ -70,7 +70,7 @@ The goal: **private, clean, usable.**
 | Topic | Decision |
 |---|---|
 | Drivers | A driver finder that asks: it detects the hardware, says in plain words what's missing and why, downloads only after I say yes, and logs it. |
-| NVIDIA (Asus) | Hybrid: the built-in GPU runs the desktop, NVIDIA wakes only for apps I mark (games, AI training). No switch for it; keep it safe and untouched. **For now (23 Nov):** no NVIDIA driver at all, the card sleeps; the HDMI port needs the driver, so it comes with the "apps I mark" step. |
+| NVIDIA (Asus) | Hybrid: the built-in GPU runs the desktop, NVIDIA wakes only for apps I mark (games, AI training). No switch for it; keep it safe and untouched. **24 Nov:** NVIDIA's own driver (closed: the only closed part, my choice), for computing only; an app may use the card only if marked (Control Panel > APPS > nvidia: allowed). The card sleeps when unused. HDMI needs more (later). |
 | Keyboard light (Asus) | Follows the LOOK palette's light colour, pulses red with the red alert, off at start. Probably one colour zone (to be checked on the laptop): whole-keyboard colour, 4 brightness levels, a few effects, no per-key designs. Any key can be bound to a light change. |
 | Battery | Stop charging at 80% where the laptop allows it (Asus: yes; Dell: Linux if supported, else the BIOS setting, which Golem explains). |
 | Idle | Dim at 4 min, lock at 5, sleep at 30. All timings changeable in the Control Panel. Caps Lock ON still stops locking. (Hibernate after 3 h asleep on battery is removed for now, to come back with the SSD install: see IDEAS.md.) |

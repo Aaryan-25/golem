@@ -4,6 +4,7 @@
 pkgs.testers.runNixOSTest {
   name = "golem";
   node.specialArgs = { inherit golemRev; };
+  node.pkgsReadOnly = false;    # Golem allows one closed part (NVIDIA's driver, nvidia.nix)
   # A small web server on the test network, for the internet part of the truth log.
   nodes.web = { ... }: {
     services.nginx = {
@@ -485,6 +486,15 @@ pkgs.testers.runNixOSTest {
         machine.wait_until_succeeds("golem-truth --text | grep -q 'STOP pressed'", timeout=30)
         machine.execute("pkill -f echo/echo.py")
         machine.sleep(2)
+
+    with subtest("The NVIDIA card is only for apps I mark (this virtual laptop has none: nothing breaks)"):
+        assert "nvidia=never" in machine.succeed("zone defaults offline")
+        machine.succeed("printf '%s\\n' zone=offline nvidia=allowed > /var/lib/golem/apps/true.conf")
+        assert "nvidia:allowed" in as_me("zone show true")
+        as_me("zone true")
+        machine.succeed("journalctl -t zone | grep 'START OFFLINE true' | grep -q nvidia:allowed")
+        machine.succeed("rm /var/lib/golem/apps/true.conf")
+        machine.fail("lsmod | grep -q '^nvidia '")
 
     with subtest("golem-keylight: says plainly there is no keyboard light here; keeps the pattern; makes Echo's extension"):
         assert "No keyboard light found" in as_me("golem-keylight what")

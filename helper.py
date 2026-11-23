@@ -29,11 +29,12 @@ syslog.openlog("golem")
 FIELDS = {
     "zone": lambda v: v in ZONES,
     "ram": lambda v: re.fullmatch(r"[0-9]{1,5}[MG]", v),
-    "cpu": lambda v: re.fullmatch(r"[0-9]{1,3}%", v) and 10 <= int(v[:-1]) <= 200,
+    "cpu": lambda v: re.fullmatch(r"[0-9]{1,3}%", v) and 10 <= int(v[:-1]) <= 800,
     "internet": lambda v: v in ("allowed", "never"),
     "camera": lambda v: v in ("allowed", "never"),
     "usb": lambda v: v in ("allowed", "never"),
     "sound": lambda v: v in ("on", "off"),
+    "nvidia": lambda v: v in ("allowed", "never", ""),
     "folder": lambda v: v == "" or re.fullmatch(r"~/[A-Za-z0-9._/ -]+", v) and ".." not in v,
 }
 NAME = re.compile(r"[A-Za-z0-9._+-]{1,64}")

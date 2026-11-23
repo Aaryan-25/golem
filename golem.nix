@@ -64,12 +64,8 @@ in
   ];
   hardware.cpu.intel.updateMicrocode = true;
 
-  # ---- The Asus's NVIDIA card (GTX 1650) ----
-  # The Intel graphics run the screen. The NVIDIA card is left alone: no driver (the open one, nouveau, can freeze
-  # these laptops), and the kernel may put it to sleep to save battery. Its HDMI port won't work this way.
-  boot.blacklistedKernelModules = [ "nouveau" ];
+  # (The Asus's NVIDIA card: nvidia.nix.)
   services.udev.extraRules = ''
-    ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x10de", ATTR{power/control}="auto"
     # Stop charging at 80% where the laptop allows it (the Asus does), so the battery lasts more years.
     ACTION=="add", SUBSYSTEM=="power_supply", KERNEL=="BAT[0-9]", TEST=="charge_control_end_threshold", ATTR{charge_control_end_threshold}="80"
   '';

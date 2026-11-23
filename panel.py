@@ -19,18 +19,19 @@ KEYS = "/var/lib/golem/keys.conf"
 SETTINGS = "/var/lib/golem/settings.conf"
 LOOK = ("face", "effects", "motes", "night_light", "window_sand")
 RUNES = os.environ.get("GOLEM_RUNES", "")                 # Golem's own carved letters (realm.nix)
-FIELDS = ["zone", "internet", "camera", "sound", "usb", "ram", "cpu", "folder"]
+FIELDS = ["zone", "internet", "camera", "sound", "usb", "nvidia", "ram", "cpu", "folder"]
 CYCLE = {
     "zone": ["red", "offline", "yellow", "green"],
     "internet": ["never", "allowed"], "camera": ["never", "allowed"], "usb": ["never", "allowed"],
-    "sound": ["off", "on"],
+    "nvidia": ["never", "allowed"], "sound": ["off", "on"],
     "ram": ["512M", "1G", "1500M", "2G", "2500M", "3G", "4G", "6G"],
     "cpu": ["25%", "50%", "100%", "150%", "180%", "200%", "400%", "800%"],
 }
 EXPLAIN = {
     "zone": "RED: nothing, wiped on close.  OFFLINE: no internet, own folder.  YELLOW: internet, own folder.  GREEN: trusted, my files.",
     "internet": "May it use the internet? (RED and OFFLINE never can.)",
-    "camera": "May it use the camera?", "usb": "May it see USB drives?", "sound": "Sound and microphone.",
+    "camera": "May it use the camera?", "usb": "May it see USB drives?",
+    "nvidia": "May it use the NVIDIA card (the Asus)? For heavy work like training Echo. Never in RED.", "sound": "Sound and microphone.",
     "ram": "The most memory it may use.", "cpu": "The most processor it may use (100% = one core).",
     "folder": "Its folder, inside your home. Empty = ~/zones/<app>. Enter to type.",
 }
@@ -117,6 +118,15 @@ def mix(a, b, t):
 
 def copy(x):
     return json.loads(json.dumps(x))
+
+
+def laptop():
+    """This computer, as it says it is: maker and model, processor, memory."""
+    name = " ".join(open(f"/sys/class/dmi/id/{f}").read().strip() for f in ("sys_vendor", "product_name")
+                    if os.path.exists(f"/sys/class/dmi/id/{f}"))
+    cpu = next((line.split(":", 1)[1].strip() for line in open("/proc/cpuinfo") if line.startswith("model name")), "?")
+    gb = round(int(open("/proc/meminfo").readline().split()[1]) / 1048576)
+    return f"{name or '?'} · {cpu.replace('(R)', '').replace('(TM)', '').replace(' CPU', '')} · {gb} GB"
 
 
 class Panel:
@@ -568,7 +578,7 @@ class Panel:
                 ("Battery", f"{bat}%" if bat else "no battery", None),
                 ("Hottest part", f"{int(temp) // 1000} °C" if temp.isdigit() else "?", None),
                 ("On for", up or "?", None),
-                ("Laptop", "Dell Latitude 3180 · Celeron N3350 · 4 GB", None)]
+                ("Laptop", laptop(), None)]
 
     def p_apps(self):
         if self.app:

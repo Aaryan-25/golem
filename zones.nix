@@ -36,7 +36,7 @@ let
       }
 
       defaults() {   # the starting settings of a zone
-        Z=$1; FOLDER=""
+        Z=$1; FOLDER=""; GPU=never
         case "$1" in
           red)     RAM=${L.red.memory};     CPU=${L.red.cpu};     NET=never;   CAM=never; USB=never; SND=off ;;
           offline) RAM=${L.offline.memory}; CPU=${L.offline.cpu}; NET=never;   CAM=never; USB=never; SND=on ;;
@@ -60,6 +60,7 @@ let
             camera)   CAM=never; if [ "$v" = allowed ]; then CAM=allowed; fi ;;
             usb)      USB=never; if [ "$v" = allowed ]; then USB=allowed; fi ;;
             sound)    SND=off;   if [ "$v" = on ]; then SND=on; fi ;;
+            nvidia)   GPU=never; if [ "$v" = allowed ]; then GPU=allowed; fi ;;
             folder)   FOLDER=$v ;;
           esac
         done < "$f"
@@ -68,7 +69,7 @@ let
       [ $# -ge 1 ] || usage
       case "$1" in
         defaults) is_zone "''${2:-}" || usage; defaults "$2"
-              printf '%s\n' "zone=$Z" "ram=$RAM" "cpu=$CPU" "internet=$NET" "camera=$CAM" "usb=$USB" "sound=$SND" "folder="
+              printf '%s\n' "zone=$Z" "ram=$RAM" "cpu=$CPU" "internet=$NET" "camera=$CAM" "usb=$USB" "sound=$SND" "nvidia=$GPU" "folder="
               exit 0 ;;
         set)  if [ $# -ne 3 ] || ! is_zone "$3"; then usage; fi
               r=$(printf '{"do":"first-zone","app":"%s","zone":"%s"}\n' "$(basename "$2")" "$3" \
@@ -76,7 +77,7 @@ let
               if [ "$r" = OK ]; then echo "$2 is now in ''${3^^}"; exit 0; fi
               echo "zone: ''${r#ERROR }" >&2; exit 1 ;;
         show) [ $# -eq 2 ] || usage; load "$(basename "$2")"
-              echo "$2: ''${Z^^}  internet:$NET camera:$CAM sound:$SND usb:$USB  RAM<=$RAM CPU<=$CPU  folder:''${FOLDER:-default}"
+              echo "$2: ''${Z^^}  internet:$NET camera:$CAM sound:$SND usb:$USB nvidia:$GPU  RAM<=$RAM CPU<=$CPU  folder:''${FOLDER:-default}"
               exit 0 ;;
       esac
 
@@ -87,7 +88,7 @@ let
       load "$name"
       if [ -n "$z" ] && [ "$z" != "$Z" ]; then defaults "$z"; fi
       # What the zone forbids, no setting can allow.
-      if [ "$Z" = red ]; then NET=never; CAM=never; USB=never; SND=off; fi
+      if [ "$Z" = red ]; then NET=never; CAM=never; USB=never; SND=off; GPU=never; fi
       if [ "$Z" = offline ]; then NET=never; fi
 
       dir="$HOME/zones/$name"
@@ -108,6 +109,7 @@ let
       [ "$CAM" = allowed ] || opts+=(--novideo)
       [ "$SND" = on ]      || opts+=(--nosound)
       [ "$USB" = allowed ] || opts+=(--blacklist=/run/media --blacklist=/media --blacklist=/mnt)
+      [ "$GPU" = allowed ] || opts+=("--blacklist=/dev/nvidia*")   # the NVIDIA card: only for apps I mark
 
       # A room: its own screen (Xephyr), with a tiny window manager inside, shown as one window on mine.
       room=""
@@ -128,7 +130,8 @@ let
         opts+=(--env=DISPLAY=":$n" --blacklist="$HOME/.Xauthority")
       fi
 
-      desc="''${Z^^} $name | internet:$NET camera:$CAM sound:$SND usb:$USB | RAM<=$RAM CPU<=$CPU''${room:+ | room $room}"
+      gpu_note=""; if [ "$GPU" = allowed ]; then gpu_note=" nvidia:allowed"; fi
+      desc="''${Z^^} $name | internet:$NET camera:$CAM sound:$SND usb:$USB$gpu_note | RAM<=$RAM CPU<=$CPU''${room:+ | room $room}"
       logger -t zone "START $desc"
       systemd-run --user --scope --quiet --collect --unit="zone-$Z-$name-$$" --description="$desc" \
         -p MemoryMax="$RAM" -p MemorySwapMax=256M -p CPUQuota="$CPU" -p TasksMax=256 \
