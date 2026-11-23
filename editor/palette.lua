@@ -60,6 +60,7 @@ local ITEMS = {
   { 'Picture of this code (PNG)', 'F7', '<F7>' },
   { 'Flowchart of this code', 'F9', '<F9>' },
   { 'Block builder (snap blocks, code is written)', 'F10', '<F10>' },
+  { 'Wires (join boxes, Python is written)', 'F11', '<F11>' },
   { 'Move between my text and the panels', 'Alt+arrows', function()
     S.say('ALT+LEFT / RIGHT / UP / DOWN MOVE BETWEEN YOUR TEXT AND THE PANELS')
   end },

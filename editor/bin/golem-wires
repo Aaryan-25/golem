@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+"""golem-wires FILE.py: build a program by joining boxes with wires (F11 in the editor).
+
+Like the block builder: a tiny web server on this computer only serves the wires page, and golem-view shows it.
+As you wire, the code is written into FILE between two marker lines, so the rest of the file (my own functions)
+is never touched, and a "use my function" box can call them. The boxes are kept in FILE.wires.json.
+"""
+import http.server
+import json
+import os
+import re
+import socketserver
+import subprocess
+import sys
+import threading
+
+START, END = "# ---- wires: made by golem-wires, changes here are replaced ----", "# ---- wires end ----"
+if len(sys.argv) != 2 or not sys.argv[1].endswith(".py"):
+    sys.exit("usage: golem-wires FILE.py   (wires make Python)")
+FILE = os.path.realpath(sys.argv[1])
+SIDE = FILE + ".wires.json"
+PAGE = os.environ.get("GOLEM_WIRES_PAGE", os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "wires.html"))
+
+
+def text():
+    try:
+        with open(FILE, encoding="utf-8") as fh:
+            return fh.read()
+    except FileNotFoundError:
+        return ""
+
+
+def my_functions(src):
+    """Names and inputs of the functions already in the file, for the "use my function" box."""
+    out = []
+    for m in re.finditer(r"^def ([A-Za-z_]\w*)\(([^)]*)\)", src.split(START)[0], re.M):
+        args = [a.split("=")[0].split(":")[0].strip() for a in m.group(2).split(",") if a.strip()]
+        out.append({"name": m.group(1), "args": [a for a in args if a and not a.startswith("*")][:4]})
+    return out
+
+
+def put(code):
+    """Write the wires' code between the markers; everything outside them stays as it was."""
+    src = text()
+    block = START + "\n" + code.rstrip() + "\n" + END + "\n"
+    if START in src and END in src:
+        new = src[:src.index(START)] + block + src[src.index(END) + len(END):].lstrip("\n")
+    else:
+        new = src + ("\n" if src and not src.endswith("\n") else "") + ("\n" if src.strip() else "") + block
+    tmp = FILE + ".golem-tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:      # write whole, then swap: never half a file
+        fh.write(new)
+    os.replace(tmp, FILE)
+
+
+class Handler(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a):
+        pass
+
+    def send(self, code, body, kind):
+        self.send_response(code)
+        self.send_header("Content-Type", kind)
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def do_GET(self):
+        if self.path.split("?")[0] != "/":
+            return self.send(404, b"not here", "text/plain")
+        try:
+            with open(SIDE, encoding="utf-8") as fh:
+                saved = json.load(fh)
+        except (OSError, ValueError):
+            saved = None
+        cfg = {"name": os.path.basename(FILE), "saved": saved, "functions": my_functions(text())}
+        with open(PAGE, encoding="utf-8") as fh:
+            page = fh.read().replace("__CONFIG__", json.dumps(cfg))
+        self.send(200, page.encode("utf-8"), "text/html; charset=utf-8")
+
+    def do_POST(self):
+        if self.path != "/save":
+            return self.send(404, b"{}", "application/json")
+        try:
+            data = json.loads(self.rfile.read(min(int(self.headers.get("Content-Length", "0")), 5_000_000)))
+            if not isinstance(data.get("code"), str):
+                raise ValueError("no code")
+            put(data["code"])
+            with open(SIDE, "w", encoding="utf-8") as fh:
+                json.dump(data.get("boxes"), fh)
+            answer = {"ok": True}
+        except Exception as e:  # tell the page, plainly
+            answer = {"ok": False, "error": "not written: " + str(e)[:120]}
+        self.send(200, json.dumps(answer).encode(), "application/json")
+
+
+class Server(socketserver.ThreadingMixIn, http.server.HTTPServer):
+    daemon_threads = True
+
+
+if __name__ == "__main__":
+    server = Server(("127.0.0.1", 0), Handler)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    url = f"http://127.0.0.1:{server.server_address[1]}/"
+    if os.environ.get("GOLEM_WIRES_URL_ONLY"):        # for the tests: print the address and wait
+        print(url, flush=True)
+        threading.Event().wait()
+    try:
+        subprocess.run(["golem-view", "--class", "golem-wires", url])
+    except FileNotFoundError:
+        sys.exit("golem-wires: golem-view is missing")
+    finally:
+        server.shutdown()

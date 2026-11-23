@@ -39,6 +39,7 @@ local PAGES = {
     'F6            a live preview of HTML or Markdown',
     'F9            your code as a flowchart',
     'F10           build code from snap-together blocks',
+    'F11           build Python by joining boxes with wires',
     'Ctrl+K        ask the AI',
   } },
   { 'THE LOOK', {

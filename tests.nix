@@ -29,6 +29,19 @@ pkgs.testers.runNixOSTest {
       echo '{"echo": "Mitra", "use": "say-hi", "give": "abc"}' | socat -t 60 - UNIX-CONNECT:"$HOME/zones/golem-echo/echo/hands.sock"
       echo '{"echo": "Mitra", "use": "nothing-here", "give": ""}' | socat -t 10 - UNIX-CONNECT:"$HOME/zones/golem-echo/echo/hands.sock"
     '';
+    # Wires: a file with my own function; the wires' code goes after it and uses it; the file then runs
+    environment.etc."golem-test-wires.sh".text = ''
+      set -e
+      f=$HOME/wired.py
+      printf 'def double(x):\n    return x * 2\n' > "$f"
+      GOLEM_WIRES_URL_ONLY=1 golem-wires "$f" > /tmp/wires-url & p=$!
+      for _ in $(seq 50); do [ -s /tmp/wires-url ] && break; sleep 0.2; done
+      u=$(cat /tmp/wires-url)
+      curl -s --noproxy '*' "$u" | grep -q '"name": "double"'
+      curl -s --noproxy '*' -d '{"code": "box1 = 21\nbox2 = double(box1)\nprint(box2)", "boxes": {"boxes": []}}' "''${u}save"
+      kill $p
+      python3 "$f"
+    '';
     environment.etc."golem-test-room.sh".text = ''
       if DISPLAY=:0 xdpyinfo >/dev/null 2>&1; then echo SEES-MY-SCREEN; else echo BLIND; fi
       echo "room=$DISPLAY"
@@ -480,6 +493,11 @@ pkgs.testers.runNixOSTest {
         machine.succeed("grep -q 'W red' /home/lilgolemwitch/.config/golem-keylight/now.lights")
         as_me("golem-keylight extension")
         machine.succeed("test -x /home/lilgolemwitch/.local/share/golem-echo/extensions/keylight/keylight")
+
+    with subtest("Wires: the code goes after my own function, uses it, and runs"):
+        out = as_me("bash /etc/golem-test-wires.sh")
+        assert '"ok": true' in out and out.strip().endswith("42"), out
+        machine.succeed("grep -q 'def double' /home/lilgolemwitch/wired.py && test -s /home/lilgolemwitch/wired.py.wires.json")
 
     with subtest("Step E: GADA in the Start panel opens the editor"):
         machine.send_key("meta_l-esc")

@@ -1,0 +1,211 @@
+<!doctype html>
+<!-- Golem editor: wires (F11). Boxes joined by wires; the Python is written into the file as you wire.
+     Served by golem-wires from this computer only. Keyboard: Delete removes the chosen box, Ctrl+C / Ctrl+V copy it. -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>WIRES</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #000; color: #e6e6e6; overflow: hidden;
+    font-family: "DejaVu Sans Mono", monospace; font-size: 13px; }
+  #tools { position: absolute; left: 0; top: 0; bottom: 0; width: 150px; padding: 10px 8px; border-right: 1px solid #222;
+    overflow-y: auto; z-index: 5; background: #000; }
+  #tools button { display: block; width: 100%; margin: 0 0 5px; padding: 5px 6px; text-align: left; font: inherit;
+    background: #0b0b0b; color: #e6e6e6; border: 1px solid #333; cursor: pointer; }
+  #tools button:hover { background: #fff; color: #000; }
+  #tools h4 { margin: 10px 0 6px; font-weight: normal; color: #777; letter-spacing: .1em; font-size: 11px; }
+  #area { position: absolute; left: 167px; right: 0; top: 0; bottom: 0; }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .box { position: absolute; min-width: 150px; background: #050505; border: 1px solid #555; }
+  .box.chosen { border-color: #fff; box-shadow: 0 0 12px #fff4; }
+  .box .t { padding: 4px 8px; background: #151515; cursor: move; letter-spacing: .08em; user-select: none; }
+  .box .d { padding: 3px 8px; color: #888; font-size: 11px; max-width: 210px; }
+  .box .n { margin: 2px 8px 6px; width: calc(100% - 16px); box-sizing: border-box; min-height: 2.4em; resize: vertical;
+    background: #000; color: #bbb; border: 1px dashed #333; font: inherit; font-size: 11px; }
+  .box input, .box select { margin: 2px 8px; width: calc(100% - 16px); box-sizing: border-box; background: #000;
+    color: #fff; border: 1px solid #444; font: inherit; }
+  .row { position: relative; height: 20px; line-height: 20px; padding: 0 14px; font-size: 12px; }
+  .row.out { text-align: right; }
+  .sock { position: absolute; top: 5px; width: 10px; height: 10px; border-radius: 50%; border: 1px solid #fff;
+    background: #000; cursor: crosshair; }
+  .row.in .sock { left: -6px; } .row.out .sock { right: -6px; }
+  .row.in.missing { color: #c96; }
+  path { fill: none; stroke: #ddd; stroke-width: 2; cursor: pointer; }
+  path:hover { stroke: #f66; }
+  #note { position: absolute; right: 12px; bottom: 8px; color: #777; letter-spacing: .06em; z-index: 6; }
+</style>
+</head>
+<body>
+<div id="tools"></div>
+<div id="area"><svg id="wires"></svg></div>
+<div id="note">WIRES → <b id="nm"></b> · drag from a right dot to a left dot · click a wire to cut it ·
+  Delete · Ctrl+C / Ctrl+V · <span id="state">ready</span></div>
+<script>
+const CFG = __CONFIG__;   // { name, saved: {boxes, wires, next}, functions: [{name, args}] }
+document.getElementById("nm").textContent = CFG.name;
+// Each kind: what it does (in plain words), its inputs, whether it gives a result, its fields, and its line of Python.
+const KINDS = {
+  number:  { g: "GIVE", does: "A number you type.", ins: [], out: true, f: { value: "0" }, py: (b) => num(b.f.value) },
+  text:    { g: "GIVE", does: "Some text you type.", ins: [], out: true, f: { value: "hello" }, py: (b) => JSON.stringify(b.f.value) },
+  asktext: { g: "GIVE", does: "Asks me to type something when the program runs.", ins: [], out: true, f: { question: "Your name? " },
+             py: (b) => `input(${JSON.stringify(b.f.question)})` },
+  asknum:  { g: "GIVE", does: "Asks me for a number when the program runs.", ins: [], out: true, f: { question: "A number? " },
+             py: (b) => `float(input(${JSON.stringify(b.f.question)}))` },
+  add:     { g: "MATHS", does: "Adds the two numbers coming in, and gives the total.", ins: ["a", "b"], out: true, py: (b, i) => `${i[0]} + ${i[1]}` },
+  subtract:{ g: "MATHS", does: "Takes b away from a.", ins: ["a", "b"], out: true, py: (b, i) => `${i[0]} - ${i[1]}` },
+  multiply:{ g: "MATHS", does: "Multiplies a by b.", ins: ["a", "b"], out: true, py: (b, i) => `${i[0]} * ${i[1]}` },
+  divide:  { g: "MATHS", does: "Divides a by b.", ins: ["a", "b"], out: true, py: (b, i) => `${i[0]} / ${i[1]}` },
+  join:    { g: "TEXT", does: "Puts two things together as text.", ins: ["a", "b"], out: true, py: (b, i) => `str(${i[0]}) + str(${i[1]})` },
+  compare: { g: "CHOOSE", does: "Is a bigger, smaller or equal to b? Gives yes (True) or no (False).", ins: ["a", "b"], out: true,
+             f: { how: ">" }, sel: { how: [">", "<", "==", ">=", "<=", "!="] }, py: (b, i) => `${i[0]} ${b.f.how} ${i[1]}` },
+  choose:  { g: "CHOOSE", does: "If the first is yes, gives 'then', otherwise gives 'else'.", ins: ["if", "then", "else"], out: true,
+             py: (b, i) => `${i[1]} if ${i[0]} else ${i[2]}` },
+  show:    { g: "DO", does: "Shows what comes in on the screen.", ins: ["what"], out: false, py: (b, i) => `print(${i[0]})` },
+  repeat:  { g: "DO", does: "Shows what comes in, that many times.", ins: ["times", "what"], out: false,
+             py: (b, i) => `for _ in range(int(${i[0]})):\n    print(${i[1]})` },
+  mine:    { g: "MY CODE", does: "Uses a function already written in this file (empty inputs at the end are left out).", ins: [], out: true,
+             f: { name: "" }, py: (b, i) => { while (i.length && i[i.length - 1] === "None") i.pop(); return `${b.f.name || "None"}(${i.join(", ")})`; } },
+};
+const LABEL = { asktext: "ASK FOR TEXT", asknum: "ASK FOR A NUMBER", mine: "USE MY FUNCTION", compare: "COMPARE", choose: "IF / ELSE" };
+const label = (k) => LABEL[k] || k.toUpperCase();
+const num = (v) => (isNaN(parseFloat(v)) ? "0" : String(parseFloat(v)));
+const S = CFG.saved && CFG.saved.boxes ? CFG.saved : { boxes: [], wires: [], next: 1 };
+let chosen = null, copied = null, drag = null, pull = null;
+const area = document.getElementById("area"), svg = document.getElementById("wires");
+
+function insOf(b) {
+  if (b.k !== "mine") return KINDS[b.k].ins;
+  const fn = CFG.functions.find((f) => f.name === b.f.name);
+  return fn ? fn.args : [];
+}
+
+// ---- the toolbox
+const tools = document.getElementById("tools");
+let group = "";
+for (const [k, K] of Object.entries(KINDS)) {
+  if (k === "mine" && !CFG.functions.length) continue;
+  if (K.g !== group) { group = K.g; tools.insertAdjacentHTML("beforeend", `<h4>${group}</h4>`); }
+  const btn = document.createElement("button");
+  btn.textContent = label(k); btn.title = K.does;
+  btn.onclick = () => addBox(k, 60 + Math.random() * 200, 40 + Math.random() * 200);
+  tools.appendChild(btn);
+}
+
+function addBox(k, x, y, f, notes) {
+  const K = KINDS[k];
+  const b = { id: S.next++, k, x, y, f: Object.assign({}, K.f || {}, f || {}), notes: notes || "" };
+  if (k === "mine" && !b.f.name && CFG.functions[0]) b.f.name = CFG.functions[0].name;
+  S.boxes.push(b); draw(); save(); return b;
+}
+
+// ---- drawing
+function draw() {
+  area.querySelectorAll(".box").forEach((e) => e.remove());
+  for (const b of S.boxes) {
+    const K = KINDS[b.k], el = document.createElement("div");
+    el.className = "box" + (chosen === b.id ? " chosen" : "");
+    el.style.left = b.x + "px"; el.style.top = b.y + "px"; el.dataset.id = b.id;
+    el.innerHTML = `<div class="t">${label(b.k)}</div><div class="d"></div>`;
+    el.querySelector(".d").textContent = K.does;
+    for (const name of Object.keys(b.f)) {
+      let inp;
+      if (b.k === "mine") {
+        inp = document.createElement("select");
+        for (const fn of CFG.functions) inp.add(new Option(fn.name, fn.name));
+      } else if (K.sel && K.sel[name]) {
+        inp = document.createElement("select");
+        for (const o of K.sel[name]) inp.add(new Option(o, o));
+      } else { inp = document.createElement("input"); }
+      inp.value = b.f[name]; inp.title = name;
+      inp.oninput = () => { b.f[name] = inp.value; if (b.k === "mine") { S.wires = S.wires.filter((w) => w.to !== b.id); draw(); } save(); };
+      el.appendChild(inp);
+    }
+    insOf(b).forEach((name, i) => {
+      const fed = S.wires.some((w) => w.to === b.id && w.slot === i);
+      el.insertAdjacentHTML("beforeend", `<div class="row in${fed ? "" : " missing"}"><span class="sock" data-slot="${i}"></span>${name}</div>`);
+    });
+    if (K.out) el.insertAdjacentHTML("beforeend", `<div class="row out">result<span class="sock out"></span></div>`);
+    const n = document.createElement("textarea");
+    n.className = "n"; n.placeholder = "my notes on this box"; n.value = b.notes;
+    n.oninput = () => { b.notes = n.value; save(); };
+    el.appendChild(n);
+    el.onmousedown = (ev) => { chosen = b.id; area.querySelectorAll(".box").forEach((x) => x.classList.toggle("chosen", x === el)); };
+    el.querySelector(".t").onmousedown = (ev) => { drag = { b, dx: ev.clientX - b.x, dy: ev.clientY - b.y }; };
+    const out = el.querySelector(".sock.out");
+    if (out) out.onmousedown = (ev) => { ev.stopPropagation(); pull = { from: b.id, x: ev.clientX, y: ev.clientY }; };
+    el.querySelectorAll(".row.in .sock").forEach((s) => (s.onmouseup = () => {
+      if (!pull || pull.from === b.id) return;
+      const slot = +s.dataset.slot;
+      S.wires = S.wires.filter((w) => !(w.to === b.id && w.slot === slot));
+      S.wires.push({ from: pull.from, to: b.id, slot }); pull = null; draw(); save();
+    }));
+    area.appendChild(el);
+  }
+  lines();
+}
+
+function at(sel) {
+  const r = sel.getBoundingClientRect(), a = area.getBoundingClientRect();
+  return [r.left - a.left + r.width / 2, r.top - a.top + r.height / 2];
+}
+function curve(p, q) { const m = Math.max(40, Math.abs(q[0] - p[0]) / 2); return `M${p[0]},${p[1]} C${p[0] + m},${p[1]} ${q[0] - m},${q[1]} ${q[0]},${q[1]}`; }
+function lines(extra) {
+  svg.innerHTML = "";
+  for (const w of S.wires) {
+    const a = area.querySelector(`.box[data-id="${w.from}"] .sock.out`);
+    const b = area.querySelector(`.box[data-id="${w.to}"] .sock[data-slot="${w.slot}"]`);
+    if (!a || !b) continue;
+    const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    p.setAttribute("d", curve(at(a), at(b)));
+    p.onclick = () => { S.wires = S.wires.filter((x) => x !== w); draw(); save(); };
+    svg.appendChild(p);
+  }
+  if (extra) { const p = document.createElementNS("http://www.w3.org/2000/svg", "path"); p.setAttribute("d", extra); svg.appendChild(p); }
+}
+
+document.onmousemove = (ev) => {
+  if (drag) { drag.b.x = Math.max(0, ev.clientX - drag.dx); drag.b.y = Math.max(0, ev.clientY - drag.dy);
+    const el = area.querySelector(`.box[data-id="${drag.b.id}"]`); el.style.left = drag.b.x + "px"; el.style.top = drag.b.y + "px"; lines(); }
+  if (pull) { const a = area.getBoundingClientRect(), s = area.querySelector(`.box[data-id="${pull.from}"] .sock.out`);
+    lines(curve(at(s), [ev.clientX - a.left, ev.clientY - a.top])); }
+};
+document.onmouseup = () => { if (drag) save(); drag = null; if (pull) { pull = null; lines(); } };
+document.onkeydown = (ev) => {
+  if (/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  const b = S.boxes.find((x) => x.id === chosen);
+  if (ev.key === "Delete" && b) { S.boxes = S.boxes.filter((x) => x !== b); S.wires = S.wires.filter((w) => w.from !== b.id && w.to !== b.id); chosen = null; draw(); save(); }
+  if (ev.ctrlKey && ev.key === "c" && b) copied = JSON.parse(JSON.stringify(b));
+  if (ev.ctrlKey && ev.key === "v" && copied) { const n = addBox(copied.k, copied.x + 30, copied.y + 30, copied.f, copied.notes); chosen = n.id; copied.x += 30; copied.y += 30; draw(); }
+};
+
+// ---- the code: each box after the ones it needs (top to bottom when free to choose); one line each
+function code() {
+  const need = new Map(S.boxes.map((b) => [b.id, S.wires.filter((w) => w.to === b.id).map((w) => w.from)]));
+  const done = new Set(), out = [], left = S.boxes.slice().sort((a, b) => a.y - b.y || a.x - b.x);
+  while (left.length) {
+    const i = left.findIndex((b) => need.get(b.id).every((d) => done.has(d)));
+    if (i < 0) { out.push("# some wires go round in a circle, so these boxes can't run: " + left.map((b) => b.k).join(", ")); break; }
+    const b = left.splice(i, 1)[0], K = KINDS[b.k];
+    const ins = insOf(b).map((_, s) => { const w = S.wires.find((x) => x.to === b.id && x.slot === s); return w ? "box" + w.from : "None"; });
+    if (b.notes.trim()) out.push(...b.notes.trim().split("\n").map((l) => "# " + l));
+    out.push(K.out ? `box${b.id} = ${K.py(b, ins)}` : K.py(b, ins));
+    done.add(b.id);
+  }
+  return out.join("\n");
+}
+
+let timer = null;
+function save() {
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    const st = document.getElementById("state");
+    try {
+      const r = await fetch("/save", { method: "POST", body: JSON.stringify({ code: code(), boxes: S }) });
+      const a = await r.json(); st.textContent = a.ok ? "written" : a.error;
+    } catch (e) { st.textContent = "not written: the editor's helper has stopped"; }
+  }, 400);
+}
+draw();
+</script>
+</body>
+</html>

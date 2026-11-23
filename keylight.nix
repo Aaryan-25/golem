@@ -11,6 +11,7 @@ let
         x="$HOME/.local/share/golem-echo/extensions/keylight"
         mkdir -p "$x"
         echo '{"does": "lights the keyboard: give it a colour (red, #ff8800, off) or KEY COLOUR", "needs": ["keyboard light"], "zone": "green"}' > "$x/extension.json"
+        # shellcheck disable=SC2016  # these lines are the extension's own script, written as they are
         printf '%s\n' '#!/bin/sh' 'read -r a b' 'if [ -n "$b" ]; then exec golem-keylight key "$a" "$b"; else exec golem-keylight all "$a"; fi' > "$x/keylight"
         chmod +x "$x/keylight"
         echo "Echo can now ask to use the keyboard light (you will be asked the first time)."

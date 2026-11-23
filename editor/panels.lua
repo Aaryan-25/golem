@@ -7,6 +7,7 @@
 --                text, with Devanagari joined properly), updates as you type
 --   F7           a picture of this code (PNG), saved in ~/media/code
 --   F10          the block builder: snap blocks together, the code is written as you build
+--   F11          wires: join boxes; the Python is written between two marker lines, the rest stays mine
 --   Alt+Shift+F  tidy the code now (Ctrl+S also tidies before saving)
 
 local api, fn = vim.api, vim.fn
@@ -304,6 +305,40 @@ local function blocks()
 end
 
 -------------------------------------------------------------------------------
+-- Wires (F11): boxes joined by wires in a window on the right. Python only. The code goes between two
+-- marker lines in this file; my own functions above stay untouched, and a box can use them.
+-------------------------------------------------------------------------------
+local wires_job, wires_watch = nil, nil
+
+local function wires()
+  local b = api.nvim_get_current_buf()
+  if not S.is_text(b) then return end
+  local name = api.nvim_buf_get_name(b)
+  if name == '' then
+    say('FIRST GIVE IT A NAME ENDING IN .py')
+    if not S.save() then return end
+    name = api.nvim_buf_get_name(b)
+  end
+  if fn.fnamemodify(name, ':e'):lower() ~= 'py' then return say('WIRES MAKE PYTHON (.py) FILES') end
+  S.autosave_now()
+  if wires_job then return say('WIRES ARE ALREADY OPEN') end
+  wires_job = fn.jobstart({ 'golem-wires', name }, {
+    on_exit = function()
+      wires_job = nil
+      if wires_watch then wires_watch:stop(); wires_watch:close(); wires_watch = nil end
+    end,
+  })
+  if wires_job <= 0 then wires_job = nil; return say('WIRES (golem-wires) ARE MISSING') end
+  wires_watch = (vim.uv or vim.loop).new_timer()
+  wires_watch:start(700, 700, vim.schedule_wrap(function()
+    if fn.mode() ~= 'c' then pcall(vim.cmd, 'silent! checktime') end
+  end))
+  local stop = S.busy and S.busy() or function() end
+  vim.defer_fn(stop, 6000)
+  say('WIRES OPEN ON THE RIGHT. THE CODE APPEARS AT THE END OF THIS FILE AS YOU WIRE; F5 RUNS IT.')
+end
+
+-------------------------------------------------------------------------------
 -- A picture of the code (F7): PNG in ~/Pictures/code, then shown in the picture viewer.
 -------------------------------------------------------------------------------
 local function picture()
@@ -403,6 +438,7 @@ map(all, '<F5>', run)
 map(all, '<F6>', preview)
 map(all, '<F7>', picture)
 map(all, '<F10>', blocks)
+map(all, '<F11>', wires)
 map(all, '<M-F>', function() S.tidy(nil, true) end)
 
 -- Alt+arrows move between the panels and your text.
