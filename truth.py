@@ -8,7 +8,7 @@ import subprocess
 import sys
 import time
 
-SOURCES = ["zone", "golem", "golem-net", "golem-usb", "sudo", "i3lock", "login", "su", "NetworkManager", "systemd-coredump"]
+SOURCES = ["zone", "golem", "golem-net", "golem-gate", "golem-usb", "sudo", "i3lock", "login", "su", "NetworkManager", "systemd-coredump"]
 
 
 def sentence(ident, msg):
@@ -33,6 +33,8 @@ def sentence(ident, msg):
             return f"Keys: {m.group(1)} now does: {m.group(2)}"
         return {"LOCK": "Screen locked", "UNLOCK": "Screen unlocked", "IDLE": "Untouched for a while (idle)", "AWAKE": "Touched again",
                 "LOCK failed": "The lock screen failed to start"}.get(msg, msg)
+    if ident == "golem-gate":
+        return "Gate: " + msg
     if ident == "golem-net":
         if msg.startswith(("Camera", "Microphone")):
             return msg
@@ -64,7 +66,7 @@ def sentence(ident, msg):
 
 
 def kind(ident, text):
-    if ident == "golem-net" and not text.startswith(("Camera", "Microphone")):
+    if ident in ("golem-net", "golem-gate") and not text.startswith(("Camera", "Microphone")):
         return "internet"
     if ident == "zone" and text.startswith(("Opened", "Closed")):
         return "apps"

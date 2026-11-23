@@ -17,17 +17,22 @@ pkgs.testers.runNixOSTest {
     virtualisation.memorySize = 2048;
     virtualisation.qemu.options = [ "-device qemu-xhci,id=xhci" ];   # a USB port to plug things into
     networking.networkmanager.unmanaged = [ "eth1" ];               # the test network stays as the test set it
-    environment.systemPackages = [ pkgs.socat ];
+    environment.systemPackages = [ pkgs.socat pkgs.curl ];
     # the test laptop's small disk is always nearly full: no drive alert here
-    systemd.tmpfiles.rules = [ "f /var/lib/golem/settings.conf 0644 root root - alert_disk=off" ];
+    systemd.tmpfiles.rules = [ "f /var/lib/golem/settings.conf 0644 root root - alert_disk=off"
+      # the test's own answer to the Gate, given once in advance: bash in YELLOW may always reach the test web server
+      "d /var/lib/golem-gate 0755 golem-gate golem-gate -"
+      "f /var/lib/golem-gate/rules.json 0644 golem-gate golem-gate - {\"bash|YELLOW|web\": \"always\"}" ];
+    # through the Gate, the only way out (gate.nix)
     environment.etc."golem-test-long.sh".text = ''
-      exec 3<>/dev/tcp/web/80
+      exec 3<>/dev/tcp/127.0.0.1/3128
+      printf 'CONNECT web:80 HTTP/1.1\r\n\r\n' >&3
       sleep 90
     '';
     environment.etc."golem-test-fetch.sh".text = ''
-      exec 3<>/dev/tcp/web/80
+      exec 3<>/dev/tcp/127.0.0.1/3128
       sleep 2
-      printf 'GET / HTTP/1.0\r\nHost: web\r\n\r\n' >&3
+      printf 'GET http://web/ HTTP/1.0\r\nHost: web\r\n\r\n' >&3
       cat <&3 >/dev/null
     '';
     boot.loader.grub.enable = lib.mkForce false;     # the test machine starts the kernel directly
@@ -275,6 +280,22 @@ pkgs.testers.runNixOSTest {
         assert ask_guard({"do": "apply", "password": "golem", "apps": apps, "keys": []}) == "OK"
         machine.succeed("su - lilgolemwitch -c 'export XDG_RUNTIME_DIR=/run/user/1000 DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus; zone bash /etc/golem-test-long.sh' >/dev/null 2>&1 &")
         machine.wait_until_succeeds("golem-truth --text | grep -q 'has been talking to .* (still open)'", timeout=120)
+
+    with subtest("The Gate: no way out but through it; it asks me; my answer is kept and logged"):
+        machine.wait_for_unit("golem-gate.service")
+        machine.fail("su - lilgolemwitch -c 'timeout 5 bash -c \"echo > /dev/tcp/web/80\"'")      # straight out: refused
+        machine.succeed("su - lilgolemwitch -c 'DISPLAY=:0 curl -s -o /tmp/gate-answer -w %{http_code} http://web/ > /tmp/gate-code' >/dev/null 2>&1 &")
+        machine.wait_until_succeeds("pgrep -f 'THE GATE'", timeout=30)              # the question is on the screen
+        machine.sleep(1)
+        machine.screenshot("gate_asks")
+        machine.send_key("esc")                                                     # no, this time
+        machine.wait_until_succeeds("grep -q 403 /tmp/gate-code", timeout=30)
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Gate: curl (not in a zone) was stopped from reaching web'", timeout=30)
+        assert "web" in machine.succeed("tail -n 3 /var/lib/golem-gate/feed.jsonl")
+        assert "bash  YELLOW  web  always" in as_me("golem-gate rules")
+        assert as_me("golem-gate off") == "off"
+        assert machine.succeed("su - lilgolemwitch -c 'zone bash -c \"curl -s -o /dev/null -w %{http_code} http://web/\"'").strip() == "403"
+        assert as_me("golem-gate on") == "normal"
 
     with subtest("The clock can be set by hand from the Control Panel, with the password, and it is logged"):
         assert "wrong password" in ask_guard({"do": "clock-set", "time": "2026-12-25 10:00", "password": "nope"})

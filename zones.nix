@@ -96,7 +96,7 @@ let
       case "$Z" in
         red)     opts+=(--private --private-tmp --private-dev --nogroups --no3d --dbus-user=none --machine-id) ;;
         offline) mkdir -p "$dir"; opts+=(--private="$dir" --private-tmp --private-dev --nogroups --dbus-user=none) ;;
-        yellow)  mkdir -p "$dir"; opts+=(--private="$dir" --private-tmp --private-dev --nogroups) ;;
+        yellow)  mkdir -p "$dir"; opts+=(--private="$dir" --private-tmp --private-dev --nogroups --blacklist=/run/golem-gate) ;;
         green)   ;;
       esac
       [ "$NET" = allowed ] || opts+=(--net=none)
@@ -116,7 +116,9 @@ let
 
   # For testing zones: says ONLINE or OFFLINE.
   nettest = pkgs.writeShellScriptBin "golem-net-test" ''
-    if timeout 5 bash -c 'echo > /dev/tcp/1.1.1.1/443' 2>/dev/null; then echo ONLINE; else echo OFFLINE; fi
+    # Could this zone get out through the Gate? (a test the Gate allows without asking: it sends nothing)
+    if timeout 8 bash -c 'exec 3<>/dev/tcp/127.0.0.1/3128 && printf "CONNECT 1.1.1.1:443 HTTP/1.1\r\nX-Golem-Probe: 1\r\n\r\n" >&3 && read -r l <&3 && [[ $l == *" 200 "* ]]' 2>/dev/null; then
+      echo ONLINE; else echo OFFLINE; fi
   '';
 in {
   programs.firejail.enable = true;

@@ -34,6 +34,8 @@ def app_of(pid):
     m = re.search(r"zone-(red|offline|yellow|green)-([^/]+?)-\d+\.scope", cg)
     if m:
         return f"{m.group(2)} ({m.group(1).upper()})"
+    if "golem-gate.service" in cg:
+        return "the Gate"
     m = re.search(r"system\.slice/([^/]+?)\.service", cg)
     if m:
         return f"{comm} (system service {m.group(1)})"
