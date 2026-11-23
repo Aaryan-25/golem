@@ -154,9 +154,9 @@ let
       case "$t" in "ROOM | "*) ;; *) exit 0 ;; esac
       d=''${t##* | }; who=$(echo "$t" | sed 's/^ROOM | //; s/ | :[0-9]*$//; s/ | / /')
       case "''${1:-}" in
-        in)  xclip -selection clipboard -o 2>/dev/null | xclip -display "$d" -selection clipboard -i
+        in)  xclip -selection clipboard -o 2>/dev/null | xclip -display "$d" -selection clipboard -i >/dev/null 2>&1
              logger -t zone "Clipboard carried into the room of $who" ;;
-        out) DISPLAY=$d xclip -selection clipboard -o 2>/dev/null | xclip -selection clipboard -i
+        out) DISPLAY=$d xclip -selection clipboard -o 2>/dev/null | xclip -selection clipboard -i >/dev/null 2>&1
              logger -t zone "Clipboard carried out of the room of $who" ;;
       esac
     '';
