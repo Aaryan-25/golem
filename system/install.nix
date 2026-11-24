@@ -25,7 +25,9 @@ let
         echo "golem-install works only when Golem was started from the pendrive."; exit 1
       fi
       # The disk Golem is running from (the pendrive): never offered.
-      here=$(lsblk -no PKNAME "$(findmnt -no SOURCE /)" | head -n 1)
+      root=$(findmnt -no SOURCE /)
+      here=$(lsblk -no PKNAME "$root" | head -n 1)
+      [ -n "$here" ] || here=$(basename "$root")           # Golem's root is a whole disk, not a part of one
       mapfile -t disks < <(lsblk -dn -o NAME,TYPE | awk -v h="$here" '$2 == "disk" && $1 != h && $1 !~ /^(zram|loop|sr)/ {print $1}')
       if [ "''${#disks[@]}" -eq 0 ]; then echo "No disk found to install on (only the pendrive)."; exit 1; fi
       say "Disks Golem can be installed on (the pendrive, $here, is not listed):"
