@@ -50,3 +50,15 @@ Nothing here gets built until I move it into PLAN.md. New ideas from any chat ge
 - Picture to picture = almost every transition. Each grain flies from its place in the old picture to its place in the new one (kick out, drift back in).
 - Used for: waking up, start screen, lock screen, wallpaper, and panel page changes. Details to decide together.
 - The 3D "depth brain" is not needed for any of this.
+
+## Echo, growing up (24 Nov 2026; after Golem is tested on the Asus)
+- **Many brains:** each Echo picks its own brain in ECHOS from free offline models (Llama, Qwen, Gemma, Mistral…).
+  Sizes the laptops can carry: the Dell up to about 3B; the Asus up to about 7-8B (smarter, slower). The trainer
+  fetches the matching training copy for whichever brain an Echo uses.
+- **More kinds of food:** besides chats, notes, documents and PDFs, essays, and question-and-answer lists.
+- **More ways to train,** chosen in FEEDING:
+  - voice layer, stronger or lighter (learns more, or trains faster)
+  - taste: I mark the better of two answers, and it learns what I like
+  - facts: learns from my documents
+  (Retraining a whole brain from scratch is beyond a 4 GB graphics card; small add-on layers are the realistic kind.)
+- Echo on the Dell thinking with the Asus's bigger brain and graphics card, when the Asus is online (also in PLAN.md).
