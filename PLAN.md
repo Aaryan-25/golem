@@ -1,11 +1,21 @@
 # Plan
 
-## The pendrive as a key (asked for on 24 Nov 2026)
+## Golem on the laptops, reached from the phone (asked for on 24 Nov 2026, evening)
+Golem replaces Windows on both laptops; the Asus first (always online). I mainly work on the Dell; the
+Asus has the power. The phone (and later other devices) reaches a laptop from anywhere.
+1. *(built, 24 Nov)* **golem-install:** from the pendrive onto the laptop's own disk (erases it).
+2. *(built, 24 Nov)* **golem-remote:** the phone sees and uses the screen, through Tailscale (free now; my own
+   server later). Off until turned on; every connection in the truth log.
+3. **NOW: testing on the Asus** (TESTS.md, "Installed on the Asus").
+4. Files kept the same on both laptops (laptop to laptop, no cloud).
+5. The Dell uses the Asus's power (Echo's bigger brain, the NVIDIA card) when the Asus is online.
+
+## The pendrive as a key (asked for on 24 Nov 2026; on hold: the laptops come first)
 Golem starts only from the pendrive, on any PC, and uses that PC's hardware; it keeps running after the
 pendrive is pulled out. One step at a time:
 1. *(built, 24 Nov)* **Tidy the code** for any future reader: files in folders by part, MAP.md (the detailed
    map), a line at the top of every file pointing to it. The folder move was proven to change nothing.
-2. **NOW (waiting for a yes):** **Drivers for any PC:** carry the drivers and firmware for almost all hardware;
+2. **Drivers for any PC:** carry the drivers and firmware for almost all hardware;
    the truth log lists every part of the PC as working or "no driver".
 3. **The PC's disks:** look only, never change (see DECISIONS.md, 24 Nov).
 4. **Keep running after unplugging:** a copy on my own laptops only; what's saved after unplugging is not kept.

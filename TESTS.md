@@ -159,3 +159,18 @@ Password is now **arise**. First, once: `golem-report setup` (see README), then 
 - [ ] COMPARE, Ctrl+T: with its trained voice, does it sound more like the person than without?
 - [ ] GADA: open a .py file, **F11** wires: two numbers into ADD into SHOW; F5 runs it
 - [ ] GADA: **F12** the program map turns smoothly; a click on a tower opens that function
+
+## Installed on the Asus (24 Nov 2026)
+1. Start the Asus from the new pendrive (Esc at the ASUS logo). Open a terminal (Alt+Enter).
+2. `sudo golem-install` (password: arise). Pick the Asus's own disk (the big one, usually nvme0n1), type ERASE.
+   Say y to copy your files from the pendrive. Wait until it says Done.
+3. Shut down, unplug the pendrive, start the Asus.
+- [ ] Golem starts from the Asus's own disk (faster than the pendrive), password still arise
+- [ ] `cat /etc/golem/config-name` says golem-disk; `golem-update` works
+4. On your phone: install **Tailscale** and log in. Install a VNC app (or just use the browser).
+5. On the Asus: `golem-remote setup` (open the link it shows on the phone, approve; choose a screen password),
+   then `golem-remote on`. It prints the address.
+- [ ] From the phone: the browser at http://ADDRESS:6080/vnc.html shows the Asus's screen, and you can use it
+- [ ] Super+T on the Asus shows "Remote: the screen was opened from ..."
+- [ ] With the lid closed, the phone can still reach it
+- [ ] `golem-remote off`: the phone can't reach it any more

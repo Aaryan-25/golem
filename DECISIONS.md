@@ -43,6 +43,15 @@ The goal: **private, clean, usable.**
 | Windows OS | Gets wiped, but only at the very end, after Golem works fully from the pendrive. |
 | Save slots | Two things: SAVE SLOTS are older versions of the whole system (go back if an update breaks; the last 5 kept, the newest 3 never deletable from the panel), BACKUPS are my settings (keys, zones, look, quests) saved and loaded by name. |
 
+## Decided on 24 Nov 2026, evening (the laptops and the phone)
+| Topic | Decision |
+|---|---|
+| Install | Golem replaces Windows on both laptops (files saved elsewhere first). The Asus first. |
+| Roles | The Dell is where I work; the Asus has the power and is always online; the phone reaches them. |
+| Reaching them | Tailscale (free) for now; my own server later. Off until I turn it on; password; truth log. |
+| Pendrive | Put aside for now (the "pendrive as a key" plan below is on hold). |
+| Transparency | Everything written so I, or my own AI later, can understand it without Claude (MAP.md, notes in every file). |
+
 ## Decided on 24 Nov 2026 (the pendrive as a key)
 | Topic | Decision |
 |---|---|

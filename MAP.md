@@ -43,7 +43,7 @@ white, things drawn as drifting sand, letters cut like old stone (**Golem Runes*
 ```
 flake.nix            The whole recipe: which parts make up Golem, the test, and the pendrive image.
 flake.lock           Exactly which version of NixOS the recipe uses (changed only on purpose).
-system/              Starting up, hardware, power, updates, reports, the self-test.
+system/              Starting up, hardware, power, updates, reports, the self-test, installing, the phone.
 settings/            The owner's settings and the pieces that make them real; the look (faces), the red alert.
 truth/               The truth log, and the watcher that writes every internet connection into it.
 zones/               Zones and rooms (what each app may touch), the Gate (internet), the browser.
@@ -210,6 +210,21 @@ How one setting travels:
   for computing only; only apps marked `nvidia=allowed` may use it.
 - Keyboard lights: `keylight/keylight.py` (`golem-keylight`): the Dell's white light, the Asus's colour.
 
+### 5.10 Installed on a laptop, and reached from the phone (`system/install.nix`, `disk.nix`, `remote.nix`)
+- **Two Golems from one recipe** (`flake.nix`): `golem` (the pendrive) and `golem-disk` (installed on a
+  laptop's own disk). They differ only in `system/disk.nix`: the disk's parts are labelled `golem` and
+  `GOLEM-BOOT` (the pendrive's: `nixos` and `ESP`). `/etc/golem/config-name` says which one is running, and
+  `golem-update` rebuilds that one.
+- **`golem-install`** (`system/install.nix`, only on the pendrive): the pendrive carries the installed
+  Golem ready-made, so installing needs no internet. It never offers the pendrive itself, shows what's on the
+  chosen disk, and does nothing unless the owner types ERASE. Then: two parts, `nixos-install`, optionally
+  the owner's files.
+- **`golem-remote`** (`system/remote.nix`): off until turned on (`/var/lib/golem/remote-on`).
+  Tailscale links the owner's own devices (encrypted); `golem-remote-screen` (started by i3) shares the real
+  screen with x11vnc (port 5900) and noVNC in a browser (port 6080), only on the Tailscale link, with a
+  password. While on, `golem-remote-awake` keeps the laptop from sleeping (also with the lid closed). Every
+  connection goes to the truth log (`Remote: ...`).
+
 ---
 
 ## 6. Every command, and where it comes from
@@ -241,6 +256,8 @@ How one setting travels:
 | `golem-selftest` | the self-test | `system/selftest.nix`, `system/selftest.sh` |
 | `golem-echo`, `golem-echo-brain`, `golem-echo-hands`, `golem-echo-train`, `golem-echo-trainer` | Echo | `echo/echo.nix` |
 | `golem-keylight` | keyboard lights | `keylight/keylight.nix`, `keylight/keylight.py` |
+| `golem-install` | put Golem on a laptop's own disk (from the pendrive) | `system/install.nix` |
+| `golem-remote`, `golem-remote-screen` | reach this laptop from the phone | `system/remote.nix` |
 | `golem-edit`, `golem-edit-open`, `golem-view`, `golem-office`, `golem-preview`, `golem-blocks`, `golem-wires`, `golem-map`, `golem-flow` | the editor and its tools | `editor/editor.nix`, `editor/bin/` |
 
 ---
@@ -265,6 +282,9 @@ How one setting travels:
 | `~/.local/share/golem-edit/` | the editor's data | the editor |
 | `~/.config/golem-report/token` | the GitHub token for reports | `golem-report setup` |
 | `~/golem/`, `~/golem-updates.txt` | the recipe for updates, the update log | `golem-update` |
+| `/etc/golem/config-name` | `golem` (pendrive) or `golem-disk` (installed) | the build |
+| `/var/lib/golem/remote-on` | exists = the phone may reach this laptop | `golem-remote on/off` |
+| `~/.config/golem-remote/passwd` | the screen password for the phone | `golem-remote setup` |
 
 ---
 

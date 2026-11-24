@@ -71,6 +71,9 @@ in
     ACTION=="add", SUBSYSTEM=="power_supply", KERNEL=="BAT[0-9]", TEST=="charge_control_end_threshold", ATTR{charge_control_end_threshold}="80"
   '';
 
+  # Which recipe golem-update rebuilds: "golem" (this pendrive) or "golem-disk" (installed on a laptop: disk.nix).
+  environment.etc."golem/config-name".text = "golem";
+
   # On the first start Golem grows to fill the whole pendrive.
   boot.growPartition = true;
   fileSystems."/" = {

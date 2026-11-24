@@ -4,7 +4,7 @@
 { pkgs, modules, golemRev }:
 pkgs.testers.runNixOSTest {
   name = "golem";
-  node.specialArgs = { inherit golemRev; };
+  node.specialArgs = { inherit golemRev; diskSystem = "/run/current-system"; };   # the installer, without a real install
   node.pkgsReadOnly = false;    # Golem allows one closed part (NVIDIA's driver, nvidia.nix)
   # A small web server on the test network, for the internet part of the truth log.
   nodes.web = { ... }: {
@@ -17,6 +17,7 @@ pkgs.testers.runNixOSTest {
   nodes.machine = { lib, pkgs, ... }: {
     imports = modules;
     virtualisation.memorySize = 2048;
+    virtualisation.emptyDiskImages = [ 1024 ];   # a second, empty disk: what golem-install may offer
     virtualisation.qemu.options = [ "-device qemu-xhci,id=xhci" ];   # a USB port to plug things into
     networking.networkmanager.unmanaged = [ "eth1" ];               # the test network stays as the test set it
     environment.systemPackages = [ pkgs.socat pkgs.curl pkgs.xorg.xdpyinfo ];
@@ -495,6 +496,22 @@ pkgs.testers.runNixOSTest {
         machine.wait_until_succeeds("golem-truth --text | grep -q 'STOP pressed'", timeout=30)
         machine.execute("pkill -f echo/echo.py")
         machine.sleep(2)
+
+    with subtest("golem-install offers only other disks, and changes nothing unless I type ERASE"):
+        out = as_me("golem-install --list")
+        print(out)
+        assert "/dev/vdb" in out and "/dev/vda " not in out, out
+        out = machine.succeed("printf '1\\nno\\n' | golem-install 2>&1")
+        assert "Stopped. Nothing was changed." in out, out
+        machine.fail("lsblk -no LABEL /dev/vdb | grep -q golem")
+        assert machine.succeed("cat /etc/golem/config-name").strip() == "golem"
+
+    with subtest("Remote is off until I turn it on: Tailscale stopped, the screen shared with no one"):
+        assert "Remote: OFF" in as_me("golem-remote status")
+        machine.fail("systemctl is-active tailscaled")
+        machine.succeed("iptables -S | grep -q 'tailscale0.*5900'")
+        machine.wait_until_succeeds("pgrep -f golem-remote-screen", timeout=30)
+        machine.fail("pgrep -x x11vnc")
 
     with subtest("The NVIDIA card is only for apps I mark (this virtual laptop has none: nothing breaks)"):
         assert "nvidia=never" in machine.succeed("zone defaults offline")
