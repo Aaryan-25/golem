@@ -373,7 +373,7 @@ pkgs.testers.runNixOSTest {
     with subtest("LOOK: Super+I turns the face to Negative everywhere, at once"):
         machine.send_key("meta_l-i")
         machine.wait_until_succeeds("grep -q face=negative /var/lib/golem/settings.conf", timeout=30)
-        machine.wait_until_succeeds("grep -q '${(import ./settings.nix).themeNegative.void}' /home/lilgolemwitch/zones/settings/face.i3", timeout=30)
+        machine.wait_until_succeeds("grep -q '${(import ../settings/settings.nix).themeNegative.void}' /home/lilgolemwitch/zones/settings/face.i3", timeout=30)
         machine.screenshot("negative")
         machine.send_key("meta_l-i")
         machine.wait_until_succeeds("grep -q face=shadow /var/lib/golem/settings.conf", timeout=30)

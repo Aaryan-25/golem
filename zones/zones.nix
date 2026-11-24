@@ -16,7 +16,7 @@
 # GREEN apps stay on my own screen. MEMORIES > PRIVACY > "Separate screens" turns rooms off.
 { pkgs, ... }:
 let
-  s = import ./settings.nix;
+  s = import ../settings/settings.nix;
   L = s.limits;
 
   zone = pkgs.writeShellApplication {

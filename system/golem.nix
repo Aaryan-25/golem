@@ -2,7 +2,7 @@
 # Login, tiling windows (no bars), a terminal, Wi-Fi. Nothing else yet.
 { config, lib, pkgs, modulesPath, ... }:
 let
-  s = import ./settings.nix;
+  s = import ../settings/settings.nix;
 
   # golem-why: what went wrong, in short (golem-why = this start, golem-why last = the start before).
   why = pkgs.writeShellApplication {

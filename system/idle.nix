@@ -3,7 +3,7 @@
 #   lid     closing it sleeps
 { pkgs, ... }:
 let
-  s = import ./settings.nix;
+  s = import ../settings/settings.nix;
 
   # Runs when nothing has been touched for the idle time (xss-lock starts it), and ends on the first touch.
   idle = pkgs.writeShellApplication {

@@ -2,7 +2,7 @@
 # It always shows what changed and asks first. Every update is written to ~/golem-updates.txt.
 { pkgs, golemRev, ... }:
 let
-  s = import ./settings.nix;
+  s = import ../settings/settings.nix;
 
   update = pkgs.writeShellApplication {
     name = "golem-update";

@@ -3,6 +3,8 @@
 # Echo can use it only through an extension I add: `golem-keylight extension` puts one in place.
 { pkgs, ... }:
 let
+  # This folder's code, as one piece (everything here except this file, which only describes how to build it).
+  here = builtins.path { name = "keylight"; path = ./.; filter = path: _: baseNameOf path != "keylight.nix"; };
   keylight = pkgs.writeShellApplication {
     name = "golem-keylight";
     runtimeInputs = with pkgs; [ util-linux coreutils ];
@@ -17,7 +19,7 @@ let
         echo "Echo can now ask to use the keyboard light (you will be asked the first time)."
         exit 0
       fi
-      exec ${pkgs.python3}/bin/python3 ${./keylight}/keylight.py "$@"
+      exec ${pkgs.python3}/bin/python3 ${here}/keylight.py "$@"
     '';
   };
 in {

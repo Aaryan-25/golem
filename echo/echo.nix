@@ -3,21 +3,23 @@
 # The brain is not part of the image (it is large): golem-echo-brain fetches it once, through the Gate.
 { pkgs, ... }:
 let
-  s = import ./settings.nix;
+  # This folder's code, as one piece (everything here except this file, which only describes how to build it).
+  here = builtins.path { name = "echo"; path = ./.; filter = path: _: baseNameOf path != "echo.nix"; };
+  s = import ../settings/settings.nix;
   py = pkgs.python3.withPackages (p: [ p.tkinter ]);
   echo = pkgs.writeShellApplication {
     name = "golem-echo";
     runtimeInputs = with pkgs; [ llama-cpp whisper-cpp ffmpeg-headless procps util-linux coreutils ];
     text = ''
       export GOLEM_THEMES='${builtins.toJSON { shadow = s.theme; }}'
-      exec ${py}/bin/python3 ${./echo}/echo.py "$@"
+      exec ${py}/bin/python3 ${here}/echo.py "$@"
     '';
   };
   # Echo's hands: outside the zone, asks me before any extension runs (echo/hands.py). Started with i3.
   hands = pkgs.writeShellApplication {
     name = "golem-echo-hands";
     runtimeInputs = with pkgs; [ util-linux coreutils ];
-    text = "exec ${pkgs.python3}/bin/python3 ${./echo}/hands.py";
+    text = "exec ${pkgs.python3}/bin/python3 ${here}/hands.py";
   };
   # The trainer (echo/train.py), on the NVIDIA card. Its tools (PyTorch and friends, about 4 GB) and the brains in
   # training form (about 3 GB) are not in the image: golem-echo-trainer fetches them once, through the Gate.
@@ -34,7 +36,7 @@ let
       h="$HOME"; [ -d "$HOME/zones/golem-echo/echo" ] && h="$HOME/zones/golem-echo"
       py="$h/echo/trainer/venv/bin/python3"
       [ -x "$py" ] || py=${pkgs.python3}/bin/python3
-      exec "$py" ${./echo}/train.py "$h/echo" "$1"
+      exec "$py" ${here}/train.py "$h/echo" "$1"
     '';
   };
   trainer = pkgs.writeShellApplication {

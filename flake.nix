@@ -7,7 +7,7 @@
   outputs = { self, nixpkgs, ... }:
     let
       golemRev = self.rev or "unknown";                 # which GitHub version this is
-      modules = [ ./golem.nix ./update.nix ./truthful.nix ./zones.nix ./desktop.nix ./idle.nix ./truth.nix ./panel.nix ./look.nix ./selftest.nix ./sand.nix ./editor.nix ./realm.nix ./gate.nix ./browser.nix ./optimiser.nix ./echo.nix ./keylight.nix ./nvidia.nix ];
+      modules = [ ./system/golem.nix ./system/update.nix ./system/truthful.nix ./zones/zones.nix ./realm/desktop.nix ./system/idle.nix ./truth/truth.nix ./panel/panel.nix ./settings/look.nix ./system/selftest.nix ./realm/sand.nix ./editor/editor.nix ./realm/realm.nix ./zones/gate.nix ./zones/browser.nix ./system/optimiser.nix ./echo/echo.nix ./keylight/keylight.nix ./system/nvidia.nix ];
       golem = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { inherit golemRev; };
@@ -21,6 +21,6 @@
         image  = golem.config.system.build.golemImage;        # the pendrive image
         default = self.packages.x86_64-linux.system;
       };
-      checks.x86_64-linux.vm = import ./tests.nix { inherit pkgs modules golemRev; };   # the virtual laptop test
+      checks.x86_64-linux.vm = import ./tests/tests.nix { inherit pkgs modules golemRev; };   # the virtual laptop test
     };
 }

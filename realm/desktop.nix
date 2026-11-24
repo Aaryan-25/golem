@@ -4,7 +4,7 @@
 # Apps opened from the launcher always go through `zone`.
 { pkgs, lib, ... }:
 let
-  s = import ./settings.nix;
+  s = import ../settings/settings.nix;
   c = s.theme;
   term = "golem-term";
 

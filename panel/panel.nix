@@ -3,7 +3,7 @@
 # but only the guard (golem-helper) can change, and only after my password. Every change is logged.
 { config, pkgs, lib, ... }:
 let
-  s = import ./settings.nix;
+  s = import ../settings/settings.nix;
   uid = toString config.users.users.${s.user}.uid;
   pyw = name: deps: file: pkgs.writers.writePython3Bin name { libraries = deps; flakeIgnore = [ "E501" "W503" "W504" ]; }
     (builtins.readFile file);

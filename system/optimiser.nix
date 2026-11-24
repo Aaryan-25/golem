@@ -10,7 +10,7 @@
 # And golem-report (the reports to my private repo golem-reports), so nobody has to photograph the screen.
 { pkgs, ... }:
 let
-  s = import ./settings.nix;
+  s = import ../settings/settings.nix;
   tune = pkgs.writeShellApplication {
     name = "golem-tune";
     runtimeInputs = with pkgs; [ i3 jq xorg.xprop systemd coreutils gnused ];

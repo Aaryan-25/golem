@@ -7,7 +7,7 @@
 # System services (updates, the clock, Wi-Fi) are not my apps and are not asked about.
 { pkgs, ... }:
 let
-  s = import ./settings.nix;
+  s = import ../settings/settings.nix;
   gatePy = pkgs.python3;
   cli = pkgs.writeShellScriptBin "golem-gate" ''
     exec ${pkgs.python3}/bin/python3 ${./gate_ask.py} "$@"

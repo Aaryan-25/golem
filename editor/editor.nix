@@ -22,7 +22,9 @@
 # setting; after that the Control Panel decides, like for every app.
 { pkgs, lib, ... }:
 let
-  s = import ./settings.nix;
+  # This folder's code, as one piece (everything here except this file, which only describes how to build it).
+  here = builtins.path { name = "editor"; path = ./.; filter = path: _: baseNameOf path != "editor.nix"; };
+  s = import ../settings/settings.nix;
   sh = s.theme;
   ng = s.themeNegative;
 
@@ -34,9 +36,9 @@ let
     "text/html" "text/css" "text/javascript" "application/json" "text/x-csrc" "text/x-c++src"
     "application/x-shellscript" "text/x-java" ];
 
-  plugins = map (n: pkgs.vimPlugins.${n}) (import ./editor/extensions.nix);
-  languages = map (n: pkgs.${n}) (import ./editor/languages.nix);
-  langNames = import ./editor/languages.nix;
+  plugins = map (n: pkgs.vimPlugins.${n}) (import ./extensions.nix);
+  languages = map (n: pkgs.${n}) (import ./languages.nix);
+  langNames = import ./languages.nix;
   has = n: builtins.elem n langNames;
 
   # Each language brings its tidier (Ctrl+S / Alt+Shift+F).
@@ -51,7 +53,7 @@ let
 
   nvim = pkgs.neovim.override {
     configure = {
-      customLuaRC = "dofile('${./editor}/init.lua')";
+      customLuaRC = "dofile('${here}/init.lua')";
       packages.golem.start = plugins;
     };
   };
@@ -59,30 +61,30 @@ let
   # The helpers, each with exactly what it needs.
   helper = name: interp: deps: pkgs.writeShellScriptBin name ''
     export PATH=${lib.makeBinPath deps}:$PATH
-    exec ${interp} ${./editor/bin}/${name} "$@"
+    exec ${interp} ${./bin}/${name} "$@"
   '';
   golemOpen = helper "golem-open" "${pkgs.bash}/bin/bash"
     [ pkgs.coreutils pkgs.file pkgs.util-linux pkgs.imv pkgs.mpv pkgs.zathura golemOffice ];
   # Word and Excel inside the editor (python-docx, openpyxl): no Firefox, no Google, no internet.
   golemOffice = pkgs.writeShellScriptBin "golem-office" ''
-    exec ${pkgs.python3.withPackages (p: [ p.python-docx p.openpyxl ])}/bin/python3 ${./editor/bin}/golem-office "$@"
+    exec ${pkgs.python3.withPackages (p: [ p.python-docx p.openpyxl ])}/bin/python3 ${./bin}/golem-office "$@"
   '';
   # golem-view: the small window for the live preview and the block builder; pages from this computer only.
   golemView = pkgs.writeShellScriptBin "golem-view" ''
     export GI_TYPELIB_PATH=${lib.makeSearchPath "lib/girepository-1.0" [ pkgs.gtk4 pkgs.webkitgtk_6_0 pkgs.glib.out pkgs.pango.out pkgs.gdk-pixbuf pkgs.graphene pkgs.harfbuzz pkgs.libsoup_3 pkgs.gobject-introspection ]}
     export PATH=${lib.makeBinPath [ pkgs.util-linux ]}:$PATH
-    exec ${pkgs.python3.withPackages (p: [ p.pygobject3 ])}/bin/python3 ${./editor/bin}/golem-view "$@"
+    exec ${pkgs.python3.withPackages (p: [ p.pygobject3 ])}/bin/python3 ${./bin}/golem-view "$@"
   '';
   golemRun = helper "golem-run" "${pkgs.bash}/bin/bash" [ pkgs.coreutils pkgs.gnugrep pkgs.bc ];
   golemAi = helper "golem-ai" "${pkgs.bash}/bin/bash" [ pkgs.coreutils pkgs.curl pkgs.jq ];
   golemPreview = pkgs.writeShellScriptBin "golem-preview" ''
     export PATH=${lib.makeBinPath [ golemView ]}:$PATH
     export GOLEM_VOID="${sh.void}" GOLEM_MIST="${sh.mist}" GOLEM_TEXT="${sh.text}" GOLEM_PALE="${sh.pale}"
-    exec ${pkgs.python3.withPackages (p: [ p.markdown ])}/bin/python3 ${./editor/bin}/golem-preview "$@"
+    exec ${pkgs.python3.withPackages (p: [ p.markdown ])}/bin/python3 ${./bin}/golem-preview "$@"
   '';
 
   # The gada's soft sounds, made from numbers at build time (no recordings).
-  sounds = pkgs.runCommand "golem-edit-sounds" { } "${pkgs.python3}/bin/python3 ${./editor/sounds.py} $out";
+  sounds = pkgs.runCommand "golem-edit-sounds" { } "${pkgs.python3}/bin/python3 ${./sounds.py} $out";
 
   # Blockly (Google's snap-together blocks, Apache-2.0), fetched once when Golem is built;
   # only the parts the block builder uses are kept. Nothing is fetched while you work.
@@ -101,27 +103,27 @@ let
   '';
   golemBlocks = pkgs.writeShellScriptBin "golem-blocks" ''
     export PATH=${lib.makeBinPath [ golemView ]}:$PATH
-    export GOLEM_BLOCKLY=${blockly} GOLEM_BLOCKS_PAGE=${./editor/blocks.html}
-    exec ${pkgs.python3}/bin/python3 ${./editor/bin}/golem-blocks "$@"
+    export GOLEM_BLOCKLY=${blockly} GOLEM_BLOCKS_PAGE=${./blocks.html}
+    exec ${pkgs.python3}/bin/python3 ${./bin}/golem-blocks "$@"
   '';
   golemWires = pkgs.writeShellScriptBin "golem-wires" ''
     export PATH=${lib.makeBinPath [ golemView ]}:$PATH
-    export GOLEM_WIRES_PAGE=${./editor/wires.html}
-    exec ${pkgs.python3}/bin/python3 ${./editor/bin}/golem-wires "$@"
+    export GOLEM_WIRES_PAGE=${./wires.html}
+    exec ${pkgs.python3}/bin/python3 ${./bin}/golem-wires "$@"
   '';
   golemMap = pkgs.writeShellScriptBin "golem-map" ''
     export PATH=${lib.makeBinPath [ golemView ]}:$PATH
-    export GOLEM_MAP_PAGE=${./editor/map.html}
-    exec ${pkgs.python3}/bin/python3 ${./editor/bin}/golem-map "$@"
+    export GOLEM_MAP_PAGE=${./map.html}
+    exec ${pkgs.python3}/bin/python3 ${./bin}/golem-map "$@"
   '';
   golemFlow = pkgs.writeShellScriptBin "golem-flow" ''
-    exec ${pkgs.python3}/bin/python3 ${./editor/bin}/golem-flow "$@"
+    exec ${pkgs.python3}/bin/python3 ${./bin}/golem-flow "$@"
   '';
 
   # Neovim with everything the editor uses.
   inner = pkgs.writeShellScriptBin "golem-edit-nvim" ''
     export GOLEM_PALETTE="${sh.void} ${sh.shade} ${sh.mist} ${sh.text} ${sh.pale} ${hues.shadow}"
-    export GOLEM_EDIT_EXTENSIONS=${./editor/extensions.lua}
+    export GOLEM_EDIT_EXTENSIONS=${./extensions.lua}
     export GOLEM_EDIT_SOUNDS=${sounds}
     export GOLEM_NEGATIVE_VOID="${ng.void}"
     export PATH=${lib.makeBinPath ([ pkgs.ripgrep pkgs.xclip pkgs.util-linux pkgs.file pkgs.silicon
