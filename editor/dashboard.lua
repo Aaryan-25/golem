@@ -10,6 +10,7 @@
 --   bottom  a pulse: battery, memory, Wi-Fi, the time (looked at every 5 s, only while
 --           the dashboard is showing), and a line for the day: from
 --           ~/.local/share/golem-edit/daily.txt if you write your own (one per line)
+-- Part of Golem: GADA, the editor; MAP.md section 5.7.
 
 local api, fn = vim.api, vim.fn
 local uv = vim.uv or vim.loop

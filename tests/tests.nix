@@ -1,5 +1,6 @@
 # Automated tests: GitHub starts Golem in a virtual laptop and checks it, on every change.
 # (The real laptop still has the last word: see TESTS.md.)
+# Part of Golem: the automated test; MAP.md section 8.
 { pkgs, modules, golemRev }:
 pkgs.testers.runNixOSTest {
   name = "golem";

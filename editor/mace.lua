@@ -24,6 +24,7 @@
 --
 -- Everything is text in small see-through windows: no pictures, little work for the processor.
 -- LOW draws fewer frames and fewer motes; OFF draws nothing and plays nothing.
+-- Part of Golem: GADA, the editor; MAP.md section 5.7.
 
 local api, fn = vim.api, vim.fn
 local uv = vim.uv or vim.loop

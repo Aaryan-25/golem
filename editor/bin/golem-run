@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # golem-run FILE: runs a file with its language, in the file's own folder.
 # Which languages exist: editor/languages.nix (add a name there, then golem-update).
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 set -u
 f=$(realpath -- "${1:?usage: golem-run FILE}")
 dir=$(dirname -- "$f"); name=$(basename -- "$f"); ext=${name##*.}; [ "$ext" = "$name" ] && ext=""

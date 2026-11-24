@@ -6,6 +6,7 @@
 --
 -- AIs: Gemini (online, your key) now; your own offline AI later (Ctrl+K, "Choose the AI",
 -- and give its address: any OpenAI-style one, e.g. llama.cpp's server).
+-- Part of Golem: GADA, the editor; MAP.md section 5.7.
 
 local api, fn = vim.api, vim.fn
 local S = _G.Golem

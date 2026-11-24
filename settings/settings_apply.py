@@ -1,5 +1,6 @@
 # golem-settings-apply: makes the system side of my settings real (runs as root, at start and after Apply).
 # Drivers on/off, microphone, processor mode, battery charge limit, tracker and ad blocking.
+# Part of Golem: settings and the look; MAP.md section 5.4.
 import glob
 import json
 import os

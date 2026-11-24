@@ -2,6 +2,7 @@
 # NVIDIA's own driver (closed, chosen 24 Nov 2026), its open kernel part, for computing only (Echo's training).
 # The Intel graphics keep running the screen, and the card sleeps whenever nothing uses it.
 # On the Dell (no NVIDIA card) none of this loads. The HDMI port still needs more (a later step).
+# Part of Golem: the system (start, hardware, power, updates); MAP.md sections 4, 5.8, 5.9.
 { config, lib, pkgs, ... }:
 let
   nv = config.boot.kernelPackages.nvidiaPackages.stable;

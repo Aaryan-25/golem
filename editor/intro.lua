@@ -1,5 +1,6 @@
 -- Golem editor: a short tour. It shows the first time the editor opens, and again with W on the
 -- dashboard or "A short tour" in the F1 list. Arrows or Enter turn the pages, Esc closes it.
+-- Part of Golem: GADA, the editor; MAP.md section 5.7.
 
 local api, fn = vim.api, vim.fn
 local S = _G.Golem

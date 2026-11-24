@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 """golem-wires FILE.py: build a program by joining boxes with wires (F11 in the editor).
 
 Like the block builder: a tiny web server on this computer only serves the wires page, and golem-view shows it.

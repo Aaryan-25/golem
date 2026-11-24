@@ -10,6 +10,7 @@
 --   F11          wires: join boxes; the Python is written between two marker lines, the rest stays mine
 --   F12          the program map: this project's Python as a 3D landscape; a click opens a function
 --   Alt+Shift+F  tidy the code now (Ctrl+S also tidies before saving)
+-- Part of Golem: GADA, the editor; MAP.md section 5.7.
 
 local api, fn = vim.api, vim.fn
 local S = _G.Golem

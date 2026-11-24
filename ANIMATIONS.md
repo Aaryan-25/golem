@@ -12,22 +12,22 @@ the wallpaper, transitions, the avatar's emotes. Read it, then [CLAUDE.md](CLAUD
   - **picture to picture:** every grain flies from its place in the old picture to its place in the new one, thrown
     out a little, then drawn in;
   - **the light:** the cursor is a lamp in the sand; Enter sends a ring.
-- **Letters:** Golem Runes, Cambria's shapes (via its free twin Caladea) carved as ancient broken stone (`runes.py`).
+- **Letters:** Golem Runes, Cambria's shapes (via its free twin Caladea) carved as ancient broken stone (`realm/runes.py`).
 - **Waking up:** an animation of something waking, inspired by Nine Sols and Shadow Slave. To be designed with the owner.
 - **No lock screen.** The idle screen = the Start panel with its tabs blown away.
 
 ## Where things live
 | File | What it is |
 |---|---|
-| `realm.py` | **The sand engine.** One program for the whole session (OpenGL 3.3 through moderngl + glfw). Draws the Start panel, the idle screen, windows turning to sand, the Control Panel's page turns. |
-| `realm.nix` | Builds the font and the `golem-realm` command; starts it with the desktop. |
-| `runes.py` | Makes the Golem Runes font at build time. |
-| `sand.py` / `sand.nix` | `golem-sand`, the stand-alone sand test (drift, flip, picture to picture, a smoothness number). A good playground. |
-| `panel.py` | The Control Panel (Tk). Its page turns ask the realm for sand (`sand_turn`). |
-| `settings.nix` | The colours of the two faces (`theme`, `themeNegative`). |
+| `realm/realm.py` | **The sand engine.** One program for the whole session (OpenGL 3.3 through moderngl + glfw). Draws the Start panel, the idle screen, windows turning to sand, the Control Panel's page turns. |
+| `realm/realm.nix` | Builds the font and the `golem-realm` command; starts it with the desktop. |
+| `realm/runes.py` | Makes the Golem Runes font at build time. |
+| `realm/sand.py` / `realm/sand.nix` | `golem-sand`, the stand-alone sand test (drift, flip, picture to picture, a smoothness number). A good playground. |
+| `panel/panel.py` | The Control Panel (Tk). Its page turns ask the realm for sand (`sand_turn`). |
+| `settings/settings.nix` | The colours of the two faces (`theme`, `themeNegative`). |
 | `~/zones/settings/scenery.png` | The owner's picture on the right of the Start panel (a moon until he puts one). |
 
-## How the realm works (realm.py)
+## How the realm works (realm/realm.py)
 - **Grains** live in one buffer. Each grain has `a_from` (x, y, brightness), `a_to` (x, y, brightness) and `a_more`
   (seed, layer). x and y go from 0 to 1 across the screen, y downwards.
 - **Layers** (`a_more.y`): 0 = the Start panel's words, 1 = the scenery, 2 = a window or page, 3 = dust in the air.
@@ -44,14 +44,14 @@ the wallpaper, transitions, the avatar's emotes. Read it, then [CLAUDE.md](CLAUD
 - **Its window** floats above everything (not arranged by i3) and takes the keyboard only while the Start panel is up.
 
 ## Adding an animation, the Golem way
-1. A new scene is a picture (or a few) turned into grains, plus how they move: start in `sand.py` or a copy of it
-   to try ideas fast, then move the result into `realm.py` as a new mode next to `show` / `idle`.
+1. A new scene is a picture (or a few) turned into grains, plus how they move: start in `realm/sand.py` or a copy of it
+   to try ideas fast, then move the result into `realm/realm.py` as a new mode next to `show` / `idle`.
 2. New behaviour goes in the shader as a new layer number or a new uniform, so the old scenes stay as they are.
 3. Keep it light: the Dell (Celeron N3350, Intel HD 500, 4 GB) draws about 30,000 grains smoothly. Aim for ~40,000
    at most on screen at once; the Asus (FX506LH) can do far more.
 4. Black and white only; whatever you draw must also look right on white paper (`ink = 1`).
-5. Every change gets a test in `tests.nix` (the virtual laptop on GitHub runs it) and a plain-words commit.
-6. Settings that switch animations on or off belong to MIMIC (`settings-schema.json`, pages ANIMATIONS / WINDOWS /
+5. Every change gets a test in `tests/tests.nix` (the virtual laptop on GitHub runs it) and a plain-words commit.
+6. Settings that switch animations on or off belong to MIMIC (`settings/settings-schema.json`, pages ANIMATIONS / WINDOWS /
    TRANSITIONS / WAKING UP / WALLPAPER / START SCREEN), and the owner chooses their names.
 
 ## Waiting to be designed with the owner
@@ -63,5 +63,5 @@ the wallpaper, transitions, the avatar's emotes. Read it, then [CLAUDE.md](CLAUD
 
 ## Trying it without the laptop
 On any Linux with a virtual screen: `Xvfb :7 -screen 0 1366x768x24 +extension GLX &`, then
-`DISPLAY=:7 XDG_RUNTIME_DIR=/tmp GOLEM_RUNES=/path/GolemRunes.ttf python3 realm.py --daemon` and take pictures
-with `import -window root shot.png`. Make the font with `python3 runes.py Caladea-Bold.ttf GolemRunes.ttf`.
+`DISPLAY=:7 XDG_RUNTIME_DIR=/tmp GOLEM_RUNES=/path/GolemRunes.ttf python3 realm/realm.py --daemon` and take pictures
+with `import -window root shot.png`. Make the font with `python3 realm/runes.py Caladea-Bold.ttf GolemRunes.ttf`.

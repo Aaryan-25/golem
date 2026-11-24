@@ -1,5 +1,6 @@
 # golem-session-apply: makes my side of the settings real in the running desktop (at login and after changes).
 # Idle dim/lock, key repeat, touchpad, night light, and the face (Shadow / Negative) everywhere.
+# Part of Golem: settings and the look; MAP.md section 5.4.
 import json
 import os
 import subprocess

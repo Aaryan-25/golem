@@ -5,6 +5,7 @@
 #   links -> golem-browser, in its zone, through the Gate (there is no Firefox in Golem)
 # Prints one line saying what it did. Exit 3 = it is text (the editor opens it itself).
 # Exit 6 = a Word or Excel file: the line printed is the path of the copy the editor opens.
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 set -u
 t=${1:?usage: golem-open FILE|LINK}
 

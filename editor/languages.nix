@@ -1,5 +1,6 @@
 # Languages the editor can run (F5), from nixpkgs. One name per line, in quotes.
 # Add or remove as you go, then run golem-update. Each also brings its tidier (Ctrl+S).
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 [
   "python3"   # Python          (tidied by ruff)
   "bash"      # Bash scripts    (tidied by shfmt)

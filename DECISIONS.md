@@ -43,6 +43,18 @@ The goal: **private, clean, usable.**
 | Windows OS | Gets wiped, but only at the very end, after Golem works fully from the pendrive. |
 | Save slots | Two things: SAVE SLOTS are older versions of the whole system (go back if an update breaks; the last 5 kept, the newest 3 never deletable from the panel), BACKUPS are my settings (keys, zones, look, quests) saved and loaded by name. |
 
+## Decided on 24 Nov 2026 (the pendrive as a key)
+| Topic | Decision |
+|---|---|
+| The idea | The pendrive is a key: Golem starts only from it, on any PC, and uses that PC's hardware (GPUs, Wi-Fi, everything). |
+| Features | Keep everything (nothing cut for the pendrive). Golem carries drivers for any PC itself. |
+| Pendrive | The 64 GB USB 2.0 one (the 256 GB USB 3.2 would be 5 to 10 times faster; offered, not chosen). |
+| The PC's disks | Look only, never change. BitLocker disks can't be read; Windows "fast startup" disks only read. |
+| After unplugging | Golem keeps running from a copy on the PC; that copy may be made **only on my own laptops** (Dell, Asus). Other PCs: run from the pendrive only, leave nothing behind. |
+| Saved after unplugging | Not kept: lost at shutdown, and Golem warns. |
+| Code | Folders by part, MAP.md (detailed), a pointer line in every file; risk kept low (moves proven identical). |
+| NVIDIA | NVIDIA's own driver is allowed (closed: the only closed part). Echo trains the 3B brain, else 1B. |
+
 ## Decided on 23 Nov 2026
 | Topic | Decision |
 |---|---|

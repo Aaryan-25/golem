@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 """golem-map FOLDER [--here FILE:LINE] [--low]: the program map (F12 in the editor).
 
 The Python files in FOLDER as a dark 3D landscape: each file a district, each function a tower (taller = longer,

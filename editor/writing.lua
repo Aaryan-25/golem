@@ -13,6 +13,7 @@
 --                   opens them again where you left off.
 --
 -- Alt+G (settings) can turn spell check and suggestions on or off too.
+-- Part of Golem: GADA, the editor; MAP.md section 5.7.
 
 local api, fn = vim.api, vim.fn
 local S = _G.Golem

@@ -9,6 +9,7 @@
 #   golem-echo say NAME TEXT   talk to one, from a terminal
 #   golem-echo chats | people CHAT | feed NAME CHAT PERSON | describe NAME
 #   golem-echo stop            the STOP key: stop every Echo at once (also Super+Shift+E)
+# Part of Golem: Echo, the owner's AIs; MAP.md section 5.6.
 import json
 import os
 import re

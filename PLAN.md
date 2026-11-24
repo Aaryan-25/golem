@@ -1,5 +1,15 @@
 # Plan
 
+## The pendrive as a key (asked for on 24 Nov 2026)
+Golem starts only from the pendrive, on any PC, and uses that PC's hardware; it keeps running after the
+pendrive is pulled out. One step at a time:
+1. *(built, 24 Nov)* **Tidy the code** for any future reader: files in folders by part, MAP.md (the detailed
+   map), a line at the top of every file pointing to it. The folder move was proven to change nothing.
+2. **NOW (waiting for a yes):** **Drivers for any PC:** carry the drivers and firmware for almost all hardware;
+   the truth log lists every part of the PC as working or "no driver".
+3. **The PC's disks:** look only, never change (see DECISIONS.md, 24 Nov).
+4. **Keep running after unplugging:** a copy on my own laptops only; what's saved after unplugging is not kept.
+
 **NOW: testing Steps A to E on the laptop** (the shadow realm look, asked for on 22 Nov 2026), with the last
 part of [TESTS.md](TESTS.md). All five are built and pass GitHub's virtual-laptop test. (On the laptop, Step 9's build gave only a black screen, so Step A makes the screen visible first.)
 
@@ -112,7 +122,7 @@ Wayland step).
 ## Add-on: Text editor (built early, on the `text-editor` branch, at my request, 22 Nov 2026)
 **Goal:** my editor: Notepad-style typing in Cool Retro Term's glass, files panel, running code, live preview,
 the AI (Gemini now, my own later) and the gada animations.
-**Made:** `editor.nix` and the `editor/` folder; Super+E. Its starting zone is GREEN with internet (for the AI),
+**Made:** `editor/editor.nix` and the `editor/` folder; Super+E. Its starting zone is GREEN with internet (for the AI),
 sound and USB; after that the Control Panel decides. It joins main when I say so, after the laptop test of Steps 2 to 8.
 
 **Done when:** on the laptop, Super+E opens it; I type, save (SAVED shows), find and replace, open the files panel

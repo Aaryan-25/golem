@@ -1,4 +1,5 @@
 # golem-selftest: one command that checks, on the real laptop, everything a machine can check by itself.
+# Part of Golem: the system (start, hardware, power, updates); MAP.md sections 4, 5.8, 5.9.
 { pkgs, ... }:
 let
   selftest = pkgs.writeShellApplication {

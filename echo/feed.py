@@ -1,6 +1,7 @@
 # Feeding an Echo: reading chats (WhatsApp exports, or chats edited by hand) and keeping only the messages
 # of the one person this Echo is. Voice notes from that person become text offline (whisper.cpp).
 # The chats go into Echo's own folder first: ~/zones/golem-echo/feed (a .txt, or the .zip WhatsApp makes).
+# Part of Golem: Echo, the owner's AIs; MAP.md section 5.6.
 import json
 import os
 import random

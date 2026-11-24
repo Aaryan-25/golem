@@ -4,6 +4,7 @@
 #   FOLDER/ask/ID.img    a picture to send along (optional)
 #   FOLDER/gemini.key    your Gemini key
 # Writes FOLDER/ask/ID.out (the answer) or FOLDER/ask/ID.err (what went wrong, in plain words).
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 set -u
 box=${1:?usage: golem-ai FOLDER ID}; id=${2:?usage: golem-ai FOLDER ID}
 [[ "$id" =~ ^[A-Za-z0-9_-]+$ ]] || exit 2

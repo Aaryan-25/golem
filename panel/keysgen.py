@@ -1,5 +1,6 @@
 # golem-keys-gen: turns my key list (/var/lib/golem/keys.conf) into the window manager's key lines
 # and the list Super+H shows. Keys that a new Golem version adds are appended; keys I moved stay moved.
+# Part of Golem: the Control Panel and its guard; MAP.md section 5.4.
 import os
 
 DEFAULT = "/etc/golem/keys.default"

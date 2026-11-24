@@ -3,6 +3,7 @@
 # be thrown away any time. It runs in the OFFLINE zone (no internet), and only reads what the Echo was fed.
 #   python3 train.py ECHO_FOLDER SLUG          (started by Echo's hands when I press TRAIN)
 # Progress goes to echos/SLUG/train.json, so the app can show a bar. A file echos/SLUG/train.stop stops it.
+# Part of Golem: Echo, the owner's AIs; MAP.md section 5.6.
 import json
 import math
 import os

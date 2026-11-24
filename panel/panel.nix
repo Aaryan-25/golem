@@ -1,6 +1,7 @@
 # Golem, step 8: the Control Panel (Super+Z) and the guard in front of the settings.
 # The Control Panel reigns supreme: app settings and keys live in /var/lib/golem, which I can read
 # but only the guard (golem-helper) can change, and only after my password. Every change is logged.
+# Part of Golem: the Control Panel and its guard; MAP.md section 5.4.
 { config, pkgs, lib, ... }:
 let
   s = import ../settings/settings.nix;

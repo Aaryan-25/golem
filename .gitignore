@@ -1,0 +1,4 @@
+# Leftovers from running Python here; never part of Golem.
+__pycache__/
+result
+result-*

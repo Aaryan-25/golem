@@ -1,6 +1,7 @@
 # golem-alert: the red alert, the only thing that ever covers the screen by itself.
 #   golem-alert "message"   show it; it goes away after pressing the dismiss key several times
 #   golem-alert --watch     check every minute: battery low (not charging), drive almost full
+# Part of Golem: settings and the look; MAP.md section 5.4.
 import glob
 import os
 import shutil

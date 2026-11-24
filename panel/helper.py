@@ -1,6 +1,7 @@
 # golem-helper: the guard in front of Golem's settings. Runs as root, one request at a time,
 # only for lilgolemwitch. It does only the things in its fixed list, and every change goes to
 # the truth log. Changing settings needs the password; a first zone for a new app does not.
+# Part of Golem: the Control Panel and its guard; MAP.md section 5.4.
 import json
 import os
 import re

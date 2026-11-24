@@ -4,6 +4,7 @@
 # Written into it: apps opened and closed (with zone and permissions), every internet connection
 # (which app, which site, how long, data in and out), USB plugged in and out, admin rights used,
 # wrong passwords, lock and unlock, Wi-Fi on and off, networks joined, zone and window changes, updates.
+# Part of Golem: the truth log; MAP.md section 5.1.
 { pkgs, ... }:
 let
   py = name: file: pkgs.writers.writePython3Bin name { flakeIgnore = [ "E501" ]; } (builtins.readFile file);

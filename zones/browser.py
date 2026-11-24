@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Part of Golem: zones, rooms, the Gate and the browser; MAP.md sections 5.2, 5.3.
 """golem-browser: Golem's only browser. It reaches the internet through the Gate, and nothing stays.
 
   golem-browser [address or words]

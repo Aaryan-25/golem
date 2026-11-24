@@ -7,6 +7,7 @@
 --                 to that line in your code; arrows move
 --
 -- The drawing comes from the helper golem-flow, which reads the code but never runs it.
+-- Part of Golem: GADA, the editor; MAP.md section 5.7.
 
 local api, fn = vim.api, vim.fn
 local uv = vim.uv or vim.loop

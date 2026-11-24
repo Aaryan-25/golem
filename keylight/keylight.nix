@@ -1,6 +1,7 @@
 # golem-keylight: the keyboard's lights (keylight/keylight.py). The Dell has white light (brightness only); the
 # Asus TUF FX506LH has one colour for the whole keyboard (an experiment: patterns are kept per key anyway).
 # Echo can use it only through an extension I add: `golem-keylight extension` puts one in place.
+# Part of Golem: the keyboard's lights; MAP.md section 5.9.
 { pkgs, ... }:
 let
   # This folder's code, as one piece (everything here except this file, which only describes how to build it).

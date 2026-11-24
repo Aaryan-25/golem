@@ -1,6 +1,7 @@
 # golem-netwatch: writes every internet connection into the truth log, in plain words:
 # which app (and its zone), which site, when, how long, and how much data in and out.
 # It runs as a small system service and only reads; it never blocks or changes anything.
+# Part of Golem: the truth log; MAP.md section 5.1.
 import os
 import re
 import subprocess

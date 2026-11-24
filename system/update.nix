@@ -1,5 +1,6 @@
 # golem-update: bring changes from GitHub onto the laptop without reinstalling.
 # It always shows what changed and asks first. Every update is written to ~/golem-updates.txt.
+# Part of Golem: the system (start, hardware, power, updates); MAP.md sections 4, 5.8, 5.9.
 { pkgs, golemRev, ... }:
 let
   s = import ../settings/settings.nix;

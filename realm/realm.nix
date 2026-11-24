@@ -1,5 +1,6 @@
 # The shadow realm: Golem's own rune letters, and the sand that draws everything outside apps
 # (the Start panel, the idle screen). See realm.py and runes.py.
+# Part of Golem: the shadow realm and the desktop; MAP.md section 5.5.
 { pkgs, ... }:
 let
   # Golem Runes: Cambria's letter shapes (through Caladea, its free twin, Apache 2.0), carved as ancient stone

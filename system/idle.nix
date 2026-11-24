@@ -1,6 +1,7 @@
 # Idle and the lid. There is no lock screen for now (decided 22 Nov 2026): Golem starts straight in.
 #   idle    dim after a few minutes (POWER page), then the idle screen, then sleep
 #   lid     closing it sleeps
+# Part of Golem: the system (start, hardware, power, updates); MAP.md sections 4, 5.8, 5.9.
 { pkgs, ... }:
 let
   s = import ../settings/settings.nix;

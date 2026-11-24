@@ -1,6 +1,7 @@
 # golem-selftest: checks everything a machine can check by itself on the real laptop.
 # Prints ✓ (works), ✗ (broken) or – (just so you know). Saved to ~/golem-selftest.txt.
 # What needs eyes and hands (the lid, how it feels) stays in TESTS.md.
+# Part of Golem: the system (start, hardware, power, updates); MAP.md sections 4, 5.8, 5.9.
 pass=0; fail=0; report=""
 say() { report+="$1"$'\n'; echo "$1"; }
 ok()   { pass=$((pass + 1)); say "  ✓ $1"; }

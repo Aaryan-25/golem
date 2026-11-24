@@ -14,6 +14,7 @@
 # only while its room is in front), not my clipboard. Super+C carries my clipboard into the room in
 # front; Super+Shift+C carries the room's clipboard out to me. Both are logged.
 # GREEN apps stay on my own screen. MEMORIES > PRIVACY > "Separate screens" turns rooms off.
+# Part of Golem: zones, rooms, the Gate and the browser; MAP.md sections 5.2, 5.3.
 { pkgs, ... }:
 let
   s = import ../settings/settings.nix;

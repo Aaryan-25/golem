@@ -4,6 +4,7 @@
 #   A apply the waiting changes (your password, once)        X throw them away
 #   F find anything        I switch the face (Shadow / Negative)
 # Closing an app, volume, brightness, Wi-Fi, Bluetooth and the look change at once.
+# Part of Golem: the Control Panel and its guard; MAP.md section 5.4.
 import json
 import math
 import os

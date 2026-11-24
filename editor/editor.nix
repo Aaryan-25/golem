@@ -20,6 +20,7 @@
 #
 # Its zone: GREEN with internet (for the AI), sound and USB allowed. This is only its starting
 # setting; after that the Control Panel decides, like for every app.
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 { pkgs, lib, ... }:
 let
   # This folder's code, as one piece (everything here except this file, which only describes how to build it).

@@ -1,6 +1,7 @@
 # Echo: my AIs (echo/echo.py). They run offline in the OFFLINE zone; the brain is llama.cpp with Llama 3.2
 # (1B on the Dell, 3B on a computer with more memory), and voice notes become text with whisper.cpp.
 # The brain is not part of the image (it is large): golem-echo-brain fetches it once, through the Gate.
+# Part of Golem: Echo, the owner's AIs; MAP.md section 5.6.
 { pkgs, ... }:
 let
   # This folder's code, as one piece (everything here except this file, which only describes how to build it).

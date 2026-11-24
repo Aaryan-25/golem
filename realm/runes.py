@@ -1,3 +1,4 @@
+# Part of Golem: the shadow realm and the desktop; MAP.md section 5.5.
 """Golem Runes: Golem's letters. Cambria's shapes (through Caladea, its free twin), cut as ancient stone.
 
 Each letter of Caladea Bold (a free font made to match Microsoft's Cambria letter for letter; Apache 2.0,

@@ -2,6 +2,7 @@
 # Tiling (i3 underneath), no bars, no titles, no gaps, a 1 px line on the focused window.
 # Focus moves by keys only; new windows don't take focus. Each app remembers its workspace.
 # Apps opened from the launcher always go through `zone`.
+# Part of Golem: the shadow realm and the desktop; MAP.md section 5.5.
 { pkgs, lib, ... }:
 let
   s = import ../settings/settings.nix;
@@ -194,7 +195,7 @@ let
     [ "Super+Shift+3"     "Send window to 3 (remembered)"              "exec golem-win send 3" ]
     [ "Super+Shift+4"     "Send window to 4 (remembered)"              "exec golem-win send 4" ]
     [ "Super+i"           "Face: Shadow / Negative"                    "exec golem-face" ]
-    [ "Super+Escape"      "Start panel (CONTINUE, GADA, FATE, SUMMON, SLUMBER)" "exec golem-realm show" ]
+    [ "Super+Escape"      "Start panel (CONTINUE, GADA, ECHO, FATE, SUMMON, SLUMBER)" "exec golem-realm show" ]
     [ "Super+Shift+q"     "Log out (asks first)"                       "exec golem-win logout" ]
     [ "Super+t"           "Truth log: what the system did"             "exec ${term} -e golem-truth" ]
     [ "Super+n"           "Wi-Fi on/off"                               "exec golem-wifi" ]

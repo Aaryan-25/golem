@@ -1,5 +1,6 @@
 # Golem, step 1: the smallest system that boots from the pendrive.
 # Login, tiling windows (no bars), a terminal, Wi-Fi. Nothing else yet.
+# Part of Golem: the system (start, hardware, power, updates); MAP.md sections 4, 5.8, 5.9.
 { config, lib, pkgs, modulesPath, ... }:
 let
   s = import ../settings/settings.nix;

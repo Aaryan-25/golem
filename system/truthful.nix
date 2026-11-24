@@ -1,5 +1,6 @@
 # Golem, step 3: the system does nothing I didn't ask for.
 # Wi-Fi off at every start, no internet clock, silent start, the boot menu says Golem.
+# Part of Golem: the system (start, hardware, power, updates); MAP.md sections 4, 5.8, 5.9.
 { pkgs, lib, ... }:
 let
   # Super+N: Wi-Fi on or off.

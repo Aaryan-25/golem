@@ -16,6 +16,7 @@
 --   Alt+P          pin to the dashboard (in a group)
 --   Esc / Alt+E    back to your writing
 -- Every change to your files is written in the truth log, in plain words.
+-- Part of Golem: GADA, the editor; MAP.md section 5.7.
 
 local api, fn, uv = vim.api, vim.fn, vim.uv or vim.loop
 local S = _G.Golem

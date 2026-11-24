@@ -1,3 +1,4 @@
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 """Makes the editor's soft sounds as small WAV files (no recordings, all made from numbers).
 
     python3 sounds.py OUTPUT_FOLDER

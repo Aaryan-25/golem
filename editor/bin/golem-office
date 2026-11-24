@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 """golem-office: Word and Excel files, opened inside the editor (no Firefox, no Google, no internet).
 
   golem-office open FILE    makes a text copy the editor can show, and prints its path:

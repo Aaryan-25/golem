@@ -1,4 +1,5 @@
 # My settings. Change these, and the next build uses them.
+# Part of Golem: settings and the look; MAP.md section 5.4.
 {
   user = "lilgolemwitch";       # account name (first password: arise, change it with `passwd`)
   timeZone = "Asia/Kolkata";

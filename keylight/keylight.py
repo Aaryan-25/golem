@@ -7,6 +7,7 @@
 #   golem-keylight off
 # The pattern is always kept per key (~/.config/golem-keylight/now.lights), even on a keyboard with one colour,
 # so the same patterns work on a keyboard with a light per key. It says plainly what it could not show.
+# Part of Golem: the keyboard's lights; MAP.md section 5.9.
 import glob
 import os
 import subprocess

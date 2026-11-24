@@ -1,6 +1,7 @@
 # golem-browser: Golem's only browser (browser.py). It starts in YELLOW, reaches the internet only
 # through the Gate (which asks about each new site), keeps nothing after closing, runs no JavaScript
 # unless I turn it on for a site (Ctrl+J), and opens no pop-ups. Super+B, or a link from the editor.
+# Part of Golem: zones, rooms, the Gate and the browser; MAP.md sections 5.2, 5.3.
 { pkgs, lib, ... }:
 let
   s = import ../settings/settings.nix;

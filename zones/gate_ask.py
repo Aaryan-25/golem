@@ -1,3 +1,4 @@
+# Part of Golem: zones, rooms, the Gate and the browser; MAP.md sections 5.2, 5.3.
 """golem-gate: talk to the Gate.
 
   golem-gate ask                  (started with my session) waits for the Gate's questions and asks me

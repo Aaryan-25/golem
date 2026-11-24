@@ -1,5 +1,6 @@
 # The look and the settings that take effect: Shadow / Negative faces, the red alert, and the pieces that
 # turn the Control Panel's settings into reality (system side at start and after Apply, my side at login).
+# Part of Golem: settings and the look; MAP.md section 5.4.
 { pkgs, lib, ... }:
 let
   s = import ./settings.nix;

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 """golem-blocks FILE: the block builder for FILE (.py, .js or .lua).
 
 A tiny web server on this computer only (127.0.0.1) serves the block page and Blockly; a

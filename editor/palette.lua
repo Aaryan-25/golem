@@ -4,6 +4,7 @@
 -- what you want ("flow", "spell", "pin"); Enter does it. The whole guide is in the list too.
 -- Nothing here is new: each line runs the same thing as its key, so the list can never drift
 -- from what the keys do.
+-- Part of Golem: GADA, the editor; MAP.md section 5.7.
 
 local api = vim.api
 local S = _G.Golem

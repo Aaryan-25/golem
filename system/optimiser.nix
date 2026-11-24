@@ -8,6 +8,7 @@
 #   * power by charger (POWER > Processor > by charger): saver on battery, balanced when plugged in
 #   * small, steady disk use: the journal is capped, old Golem versions are cleaned weekly
 # And golem-report (the reports to my private repo golem-reports), so nobody has to photograph the screen.
+# Part of Golem: the system (start, hardware, power, updates); MAP.md sections 4, 5.8, 5.9.
 { pkgs, ... }:
 let
   s = import ../settings/settings.nix;

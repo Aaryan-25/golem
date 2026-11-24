@@ -1,3 +1,4 @@
+# Part of Golem: zones, rooms, the Gate and the browser; MAP.md sections 5.2, 5.3.
 """golem-gate: the Gate. The only way from my apps to the internet.
 
 Every app reaches the internet through here (the firewall stops any other way for my user).

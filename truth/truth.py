@@ -2,6 +2,7 @@
 #   golem-truth          the whole log, in a scrollable view
 #   golem-truth --text   print it (for the Control Panel)
 #   --kind apps|internet|devices|passwords|settings|system   only that kind
+# Part of Golem: the truth log; MAP.md section 5.1.
 import json
 import re
 import subprocess

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Part of Golem: GADA, the editor; MAP.md section 5.7.
 """golem-preview FILE: a live preview of an HTML, Markdown or SVG file, or any text file
 (shown as text, with Hindi / Sanskrit letters joined properly).
 

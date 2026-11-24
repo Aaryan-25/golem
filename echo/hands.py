@@ -5,6 +5,7 @@
 #   extension.json  {"does": "what it does, in plain words", "needs": ["clipboard", ...], "zone": "red"}
 #   <name>          a script (sh, bash or python3): it gets Echo's words on its input and answers on its output
 # Permissions live where Echo can't write either: ~/.config/golem-echo/permissions.json
+# Part of Golem: Echo, the owner's AIs; MAP.md section 5.6.
 import json
 import os
 import signal

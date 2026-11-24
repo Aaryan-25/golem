@@ -13,6 +13,7 @@
 --
 -- Colours: brightness levels from Golem's theme (settings.nix). Cool Retro Term turns them
 -- into the screen's colours, so the editor never needs its own.
+-- Part of Golem: GADA, the editor; MAP.md section 5.7.
 
 local api, fn = vim.api, vim.fn
 local uv = vim.uv or vim.loop

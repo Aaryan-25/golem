@@ -1,3 +1,4 @@
+# Part of Golem: the shadow realm and the desktop; MAP.md section 5.5.
 """golem-realm: the shadow realm. Everything outside apps is drawn here as sand, by the graphics chip.
 
 One program stays running for the whole session, so it answers at once:

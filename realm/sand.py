@@ -1,3 +1,4 @@
+# Part of Golem: the shadow realm and the desktop; MAP.md section 5.5.
 """golem-sand: the sand test. Can this laptop draw Golem's look, and does it feel like the shadow realm?
 
 Every picture is made of grains of sand, drawn by the graphics chip.

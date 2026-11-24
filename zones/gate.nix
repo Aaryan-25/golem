@@ -5,6 +5,7 @@
 #     the truth log, and /var/lib/golem-gate/feed.jsonl for my AI to watch.
 #   * golem-gate on | hidden | off | status | rules | forget APP ZONE SITE   (hidden = through Tor)
 # System services (updates, the clock, Wi-Fi) are not my apps and are not asked about.
+# Part of Golem: zones, rooms, the Gate and the browser; MAP.md sections 5.2, 5.3.
 { pkgs, ... }:
 let
   s = import ../settings/settings.nix;
