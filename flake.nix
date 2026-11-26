@@ -8,7 +8,7 @@
     let
       golemRev = self.rev or "unknown";                 # which GitHub version this is
       # Every part of Golem. The same list makes the pendrive and the installed Golem.
-      modules = [ ./system/install.nix ./system/remote.nix ./system/golem.nix ./system/update.nix ./system/truthful.nix ./zones/zones.nix ./realm/desktop.nix ./system/idle.nix ./truth/truth.nix ./panel/panel.nix ./settings/look.nix ./system/selftest.nix ./realm/sand.nix ./editor/editor.nix ./realm/realm.nix ./zones/gate.nix ./zones/browser.nix ./system/optimiser.nix ./echo/echo.nix ./keylight/keylight.nix ./system/nvidia.nix ];
+      modules = [ ./system/install.nix ./system/remote.nix ./system/guard.nix ./system/golem.nix ./system/update.nix ./system/truthful.nix ./zones/zones.nix ./realm/desktop.nix ./system/idle.nix ./truth/truth.nix ./panel/panel.nix ./settings/look.nix ./system/selftest.nix ./realm/sand.nix ./editor/editor.nix ./realm/realm.nix ./zones/gate.nix ./zones/browser.nix ./system/optimiser.nix ./echo/echo.nix ./keylight/keylight.nix ./system/nvidia.nix ];
       # Golem installed on a laptop's own disk (system/disk.nix says what differs). golem-install copies it.
       golemDisk = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";

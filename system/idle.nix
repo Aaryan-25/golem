@@ -9,12 +9,15 @@ let
   # Runs when nothing has been touched for the idle time (xss-lock starts it), and ends on the first touch.
   idle = pkgs.writeShellApplication {
     name = "golem-idle";
-    runtimeInputs = with pkgs; [ xprintidle gnused coreutils util-linux systemd procps ];
+    runtimeInputs = with pkgs; [ xprintidle xset gnused coreutils util-linux systemd procps ];
     text = ''
       # Going to sleep (lid): nothing to hold the sleep back for.
       if [ -n "''${XSS_SLEEP_LOCK_FD:-}" ]; then exec {XSS_SLEEP_LOCK_FD}<&-; fi
       logger -t golem "IDLE"
-      if command -v golem-realm >/dev/null; then golem-realm idle || true; fi
+      if [ -e /var/lib/golem/remote-on ]; then
+        # Staying on day and night (guard.nix): the screen goes fully off, nothing moves. Any touch brings it back.
+        xset +dpms; xset dpms force off
+      elif command -v golem-realm >/dev/null; then golem-realm idle || true; fi
       get() { if [ -f /var/lib/golem/settings.conf ]; then sed -n "s/^$1=//p" /var/lib/golem/settings.conf | tail -n1; fi; }
       sl=$(get idle_sleep); sl=''${sl:-30}
       while [ "$(xprintidle)" -gt 1500 ]; do
@@ -23,6 +26,7 @@ let
         fi
         sleep 1
       done
+      if [ -e /var/lib/golem/remote-on ]; then xset dpms force on; xset -dpms; fi
       logger -t golem "AWAKE"
     '';
   };

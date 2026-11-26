@@ -80,6 +80,13 @@ let
       esac
     '';
   };
+  # While remote is on, the battery stops at 60% (kinder to a battery that is always on the charger).
+  battery60 = pkgs.writeShellScript "golem-battery-60" ''
+    for p in /sys/class/power_supply/BAT*/charge_control_end_threshold; do
+      if [ -w "$p" ]; then echo 60 > "$p"; fi
+    done
+    ${pkgs.util-linux}/bin/logger -t golem "Remote: the battery stops at 60% while remote is on"
+  '';
 in
 {
   environment.systemPackages = [ remote screen pkgs.tailscale ];
@@ -93,8 +100,11 @@ in
     serviceConfig = { Type = "oneshot"; ExecStart = "${pkgs.systemd}/bin/systemctl start --no-block tailscaled golem-remote-awake"; };
   };
   # Holds the laptop awake while remote is on: no sleep, and closing the lid does nothing.
+  # (The staying-on guard, guard.nix: while this runs, the battery stops at 60%; my own setting comes back after.)
   systemd.services.golem-remote-awake = {
     description = "Golem: stay awake for remote";
+    serviceConfig.ExecStartPre = "${battery60}";
+    serviceConfig.ExecStopPost = "${pkgs.systemd}/bin/systemctl start --no-block golem-settings";
     serviceConfig.ExecStart = "${pkgs.systemd}/bin/systemd-inhibit --what=sleep:idle:handle-lid-switch --who=golem-remote --why=reachable-from-my-phone --mode=block ${pkgs.coreutils}/bin/sleep infinity";
   };
   # The phone may reach the screen only through the Tailscale link, and my programs may answer only there.

@@ -225,6 +225,12 @@ How one setting travels:
   password. While on, `golem-remote-awake` keeps the laptop from sleeping (also with the lid closed). Every
   connection goes to the truth log (`Remote: ...`).
 
+### 5.11 The staying-on guard (`system/guard.nix`)
+- Always: `golem-heat` (service) watches the processor's temperature: slows it at 85 °C, full speed again under
+  70 °C, shuts down safely at 95 °C; each step in the truth log. `golem-disk-health` (weekly) logs each disk's health.
+- While remote is on: the battery stops at 60% (`golem-remote-awake` in `remote.nix`; my own setting comes back
+  when remote is turned off), and idle turns the screen fully off instead of the moving sand (`idle.nix`).
+
 ---
 
 ## 6. Every command, and where it comes from
@@ -256,6 +262,7 @@ How one setting travels:
 | `golem-selftest` | the self-test | `system/selftest.nix`, `system/selftest.sh` |
 | `golem-echo`, `golem-echo-brain`, `golem-echo-hands`, `golem-echo-train`, `golem-echo-trainer` | Echo | `echo/echo.nix` |
 | `golem-keylight` | keyboard lights | `keylight/keylight.nix`, `keylight/keylight.py` |
+| `golem-heat`, `golem-disk-health` | heat watch; weekly disk health | `system/guard.nix` |
 | `golem-install` | put Golem on a laptop's own disk (from the pendrive) | `system/install.nix` |
 | `golem-remote`, `golem-remote-screen` | reach this laptop from the phone | `system/remote.nix` |
 | `golem-edit`, `golem-edit-open`, `golem-view`, `golem-office`, `golem-preview`, `golem-blocks`, `golem-wires`, `golem-map`, `golem-flow` | the editor and its tools | `editor/editor.nix`, `editor/bin/` |

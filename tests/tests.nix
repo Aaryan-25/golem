@@ -513,6 +513,16 @@ pkgs.testers.runNixOSTest {
         machine.wait_until_succeeds("pgrep -f golem-remote-screen", timeout=30)
         machine.fail("pgrep -x x11vnc")
 
+    with subtest("The staying-on guard: heat watch running, disk health logged, remote holds the laptop awake"):
+        machine.succeed("systemctl is-active golem-heat")
+        machine.succeed("systemctl start golem-disk-health")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'Disk health: /dev/vda'", timeout=60)
+        machine.succeed("systemctl start golem-remote-awake")
+        machine.wait_until_succeeds("golem-truth --text | grep -q 'the battery stops at 60%'", timeout=30)
+        machine.succeed("systemd-inhibit --list | grep -q golem-remote")
+        machine.succeed("systemctl stop golem-remote-awake")
+        machine.fail("systemd-inhibit --list | grep -q golem-remote")
+
     with subtest("The NVIDIA card is only for apps I mark (this virtual laptop has none: nothing breaks)"):
         assert "nvidia=never" in machine.succeed("zone defaults offline")
         machine.succeed("printf '%s\\n' zone=offline nvidia=allowed > /var/lib/golem/apps/true.conf")

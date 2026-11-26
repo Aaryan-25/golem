@@ -174,3 +174,8 @@ Password is now **arise**. First, once: `golem-report setup` (see README), then 
 - [ ] Super+T on the Asus shows "Remote: the screen was opened from ..."
 - [ ] With the lid closed, the phone can still reach it
 - [ ] `golem-remote off`: the phone can't reach it any more
+
+## The staying-on guard (26 Nov 2026)
+- [ ] Super+T a while after starting: no "Hot" lines on a normal day; `golem-disk-health` writes "healthy" for the Asus's disk
+- [ ] With remote on: leave it untouched; the screen turns fully off (no moving sand); a key brings it back
+- [ ] With remote on: `cat /sys/class/power_supply/BAT*/charge_control_end_threshold` says 60; after `golem-remote off`, 80 again
