@@ -51,6 +51,8 @@ The goal: **private, clean, usable.**
 | Reaching them | Tailscale (free) for now; my own server later. Off until I turn it on; password; truth log. |
 | Pendrive | Put aside for now (the "pendrive as a key" plan below is on hold). |
 | Transparency | Everything written so I, or my own AI later, can understand it without Claude (MAP.md, notes in every file). |
+| Claude and the laptops (26 Nov) | Through GitHub only (golem-reports and the golem repo), never Claude running on the laptop. The installer sends its report there. |
+| Demo Echo (26 Nov) | "Golem Remote": invented, calm, professional, plain-spoken; for showing people from my phone (Samsung A17). |
 
 ## Decided on 24 Nov 2026 (the pendrive as a key)
 | Topic | Decision |
