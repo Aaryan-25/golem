@@ -52,8 +52,8 @@ let
           *) echo "Unknown: $1"; exit 2 ;;
         esac
       done
+      touch /var/log/golem-install.log; chmod 644 /var/log/golem-install.log
       exec > >(tee -a /var/log/golem-install.log) 2>&1     # everything shown is also kept, for a report
-      chmod 644 /var/log/golem-install.log
       if [ -n "$want" ]; then
         ok=""; for d in "''${disks[@]}"; do [ "$d" = "''${want#/dev/}" ] && ok=yes; done
         [ -n "$ok" ] || { echo "$want is not a disk Golem may install on. Nothing was changed."; exit 1; }
