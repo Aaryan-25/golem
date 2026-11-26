@@ -237,6 +237,7 @@ let
     for_window [class="(?i)^golem-panel$"] fullscreen enable, focus
     for_window [class="(?i)^golem-echo$"] fullscreen enable, focus
     for_window [class="(?i)^golem-alert$"] fullscreen enable, focus
+    for_window [class="(?i)^golem-install$"] floating enable, move position center, focus
     # The shadow realm (realm.nix): the Start panel at login, Super+Escape, the idle screen, windows as sand
     exec --no-startup-id golem-realm --daemon
     exec --no-startup-id golem-gate ask          # the Gate asks me through this (gate.nix)

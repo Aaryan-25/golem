@@ -76,6 +76,7 @@ let
       golem-truth --text 2>/dev/null | tail -n 400 > "$out/truth-log.txt" || true
       golem-gate rules > "$out/gate-rules.txt" 2>&1 || true
       tail -n 50 ~/golem-updates.txt > "$out/updates.txt" 2>/dev/null || true
+      cp /var/log/golem-install.log "$out/install-log.txt" 2>/dev/null || true     # if Golem was being installed
       if [ "$screen" = yes ] && [ -n "''${DISPLAY:-}" ]; then import -window root "$out/screen.png" 2>/dev/null || true; fi
       git -C "$dir" add -A
       git -C "$dir" -c user.name=golem -c user.email=golem@localhost commit -q -m "Report $when''${note:+: $note}" || true

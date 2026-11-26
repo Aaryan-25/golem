@@ -3,6 +3,10 @@
 #   sudo golem-install          shows the disks, I pick one, I type ERASE, and it installs (no internet needed:
 #                               the installed Golem is already on the pendrive, see "diskSystem" below)
 #   golem-install --list        only shows the disks it could install on
+#   sudo golem-install --disk nvme0n1 --erase [--copy-files yes|no]
+#                               the same, without questions (the visual installer, golem-install-ui, uses this;
+#                               --erase stands for typing ERASE, and the window asks for that first)
+# Everything it prints also goes to /var/log/golem-install.log (golem-report sends that file too).
 #
 # What it does, step by step (each step is printed as it happens, and written to the truth log):
 #   1. refuses to run unless Golem was started from the pendrive
@@ -38,17 +42,36 @@ let
       done
       if [ "''${1:-}" = --list ]; then exit 0; fi
       if [ "$(id -u)" -ne 0 ]; then echo; echo "To install, run it with sudo:  sudo golem-install"; exit 1; fi
-      printf '\nWhich disk? Type its number (or press Enter to stop): '
-      read -r n
-      case "$n" in ""|*[!0-9]*) echo "Stopped. Nothing was changed."; exit 0 ;; esac
-      [ "$n" -ge 1 ] && [ "$n" -le "''${#disks[@]}" ] || { echo "No disk $n. Nothing was changed."; exit 1; }
-      disk="/dev/''${disks[$((n - 1))]}"
-      say "This is on $disk now:"
-      lsblk -o NAME,SIZE,FSTYPE,LABEL "$disk"
-      say "EVERYTHING on $disk will be erased (Windows, files, everything), and Golem put there instead."
-      printf 'To go ahead, type ERASE (anything else stops): '
-      read -r yes
-      [ "$yes" = ERASE ] || { echo "Stopped. Nothing was changed."; exit 0; }
+      # Without questions (from the visual installer): --disk NAME --erase [--copy-files yes|no]
+      want="" erase="" copy=""
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --disk) want="''${2:-}"; shift 2 ;;
+          --erase) erase=yes; shift ;;
+          --copy-files) copy="''${2:-}"; shift 2 ;;
+          *) echo "Unknown: $1"; exit 2 ;;
+        esac
+      done
+      exec > >(tee -a /var/log/golem-install.log) 2>&1     # everything shown is also kept, for a report
+      chmod 644 /var/log/golem-install.log
+      if [ -n "$want" ]; then
+        ok=""; for d in "''${disks[@]}"; do [ "$d" = "''${want#/dev/}" ] && ok=yes; done
+        [ -n "$ok" ] || { echo "$want is not a disk Golem may install on. Nothing was changed."; exit 1; }
+        [ "$erase" = yes ] || { echo "Without --erase nothing is changed."; exit 1; }
+        disk="/dev/''${want#/dev/}"
+      else
+        printf '\nWhich disk? Type its number (or press Enter to stop): '
+        read -r n
+        case "$n" in ""|*[!0-9]*) echo "Stopped. Nothing was changed."; exit 0 ;; esac
+        [ "$n" -ge 1 ] && [ "$n" -le "''${#disks[@]}" ] || { echo "No disk $n. Nothing was changed."; exit 1; }
+        disk="/dev/''${disks[$((n - 1))]}"
+        say "This is on $disk now:"
+        lsblk -o NAME,SIZE,FSTYPE,LABEL "$disk"
+        say "EVERYTHING on $disk will be erased (Windows, files, everything), and Golem put there instead."
+        printf 'To go ahead, type ERASE (anything else stops): '
+        read -r yes
+        [ "$yes" = ERASE ] || { echo "Stopped. Nothing was changed."; exit 0; }
+      fi
       note "erasing $disk ($(lsblk -dn -o SIZE,MODEL "$disk" | xargs)) to install Golem"
 
       say "1/4  Making the two parts: GOLEM-BOOT (start menu) and golem (everything else) ..."
@@ -71,9 +94,11 @@ let
         --root /mnt --no-root-passwd --no-channel-copy
 
       say "4/4  Your files"
-      printf 'Copy your files from the pendrive (home folder: Echo, zones, editor) onto the disk too? [y/N] '
-      read -r copy
-      if [ "$copy" = y ] || [ "$copy" = Y ]; then
+      if [ -z "$copy" ]; then
+        printf 'Copy your files from the pendrive (home folder: Echo, zones, editor) onto the disk too? [y/N] '
+        read -r copy
+      fi
+      if [ "$copy" = y ] || [ "$copy" = Y ] || [ "$copy" = yes ]; then
         mkdir -p "/mnt/home/${s.user}"
         rsync -a --info=progress2 "/home/${s.user}/" "/mnt/home/${s.user}/"
         note "copied my home folder from the pendrive"
@@ -81,13 +106,23 @@ let
       sync
       umount -R /mnt
       note "Golem is installed on $disk"
-      say "Done. Golem is on $disk."
+      say "DONE. Golem is on $disk."
       echo "Shut down (SLUMBER), unplug the pendrive, and start the laptop: Golem starts from its own disk."
       echo "The password is the same: arise."
+    '';
+  };
+  # The visual installer (install_ui.py): the same steps, in a small window in Golem's look.
+  ui = pkgs.writeShellApplication {
+    name = "golem-install-ui";
+    text = ''
+      export GOLEM_THEMES='${builtins.toJSON { shadow = s.theme; }}'
+      exec ${pkgs.python3.withPackages (p: [ p.tkinter ])}/bin/python3 ${./install_ui.py} "$@"
     '';
   };
 in
 {
   # Only the pendrive carries the installer (and the installed Golem, ready to copy).
-  config = lib.mkIf (diskSystem != null) { environment.systemPackages = [ install ]; };
+  config = lib.mkIf (diskSystem != null) {
+    environment.systemPackages = [ install ui ];     # (desktop.nix opens its window floating, in front)
+  };
 }

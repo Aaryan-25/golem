@@ -162,7 +162,8 @@ Password is now **arise**. First, once: `golem-report setup` (see README), then 
 
 ## Installed on the Asus (24 Nov 2026)
 1. Start the Asus from the new pendrive (Esc at the ASUS logo). Open a terminal (Alt+Enter).
-2. `sudo golem-install` (password: arise). Pick the Asus's own disk (the big one, usually nvme0n1), type ERASE.
+2. Super+Escape, then **INSTALL** (the last tab): pick the Asus's disk, type ERASE, your password, INSTALL.
+   (Or in a terminal: `sudo golem-install`, password: arise.) Pick the Asus's own disk (the big one, usually nvme0n1), type ERASE.
    Say y to copy your files from the pendrive. Wait until it says Done.
 3. Shut down, unplug the pendrive, start the Asus.
 - [ ] Golem starts from the Asus's own disk (faster than the pendrive), password still arise

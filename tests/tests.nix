@@ -504,6 +504,17 @@ pkgs.testers.runNixOSTest {
         out = machine.succeed("printf '1\\nno\\n' | golem-install 2>&1")
         assert "Stopped. Nothing was changed." in out, out
         machine.fail("lsblk -no LABEL /dev/vdb | grep -q golem")
+        out = machine.execute("golem-install --disk vda --erase 2>&1")[1]
+        assert "not a disk Golem may install on" in out, out
+        out = machine.execute("golem-install --disk vdb 2>&1")[1]
+        assert "Without --erase nothing is changed" in out, out
+        machine.fail("lsblk -no LABEL /dev/vdb | grep -q golem")
+        machine.succeed("test -s /var/log/golem-install.log")
+        # The visual installer: its window opens, with the disk to choose
+        as_me("DISPLAY=:0 golem-install-ui >/dev/null 2>&1 &")
+        machine.wait_until_succeeds("su - lilgolemwitch -c 'DISPLAY=:0 xdotool search --onlyvisible --name \"INSTALL GOLEM\"'", timeout=60)
+        machine.screenshot("installer")
+        machine.execute("pkill -f install_ui.py")
         assert machine.succeed("cat /etc/golem/config-name").strip() == "golem"
 
     with subtest("Remote is off until I turn it on: Tailscale stopped, the screen shared with no one"):

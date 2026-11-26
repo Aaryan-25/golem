@@ -24,6 +24,8 @@ FONT = os.environ.get("GOLEM_RUNES", "GolemRunes.ttf")
 TABS = [("CONTINUE", "continue"), ("GADA", "golem-launch golem-edit"), ("ECHO", "golem-launch golem-echo"),
         ("FATE", "golem-panel-start"),
         ("SUMMON", "golem-launch"), ("SLUMBER", "slumber")]
+if os.path.exists("/run/current-system/sw/bin/golem-install-ui"):     # only on the pendrive (system/install.nix)
+    TABS.append(("INSTALL", "golem-install-ui"))
 SLUMBER = [("SLEEP", "systemctl suspend"), ("RESTART", "systemctl reboot"), ("SHUT DOWN", "systemctl poweroff"),
            ("BACK", "back")]
 

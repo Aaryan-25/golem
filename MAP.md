@@ -218,7 +218,9 @@ How one setting travels:
 - **`golem-install`** (`system/install.nix`, only on the pendrive): the pendrive carries the installed
   Golem ready-made, so installing needs no internet. It never offers the pendrive itself, shows what's on the
   chosen disk, and does nothing unless the owner types ERASE. Then: two parts, `nixos-install`, optionally
-  the owner's files.
+  the owner's files. **`golem-install-ui`** (`system/install_ui.py`, INSTALL in the Start panel, only on the
+  pendrive) is the same in a small window: disk tiles, type ERASE, password, sand pouring into a bar; its
+  SEND TO CLAUDE button runs `golem-report --screen` (the report includes `/var/log/golem-install.log`).
 - **`golem-remote`** (`system/remote.nix`): off until turned on (`/var/lib/golem/remote-on`).
   Tailscale links the owner's own devices (encrypted); `golem-remote-screen` (started by i3) shares the real
   screen with x11vnc (port 5900) and noVNC in a browser (port 6080), only on the Tailscale link, with a
@@ -263,7 +265,7 @@ How one setting travels:
 | `golem-echo`, `golem-echo-brain`, `golem-echo-hands`, `golem-echo-train`, `golem-echo-trainer` | Echo | `echo/echo.nix` |
 | `golem-keylight` | keyboard lights | `keylight/keylight.nix`, `keylight/keylight.py` |
 | `golem-heat`, `golem-disk-health` | heat watch; weekly disk health | `system/guard.nix` |
-| `golem-install` | put Golem on a laptop's own disk (from the pendrive) | `system/install.nix` |
+| `golem-install`, `golem-install-ui` | put Golem on a laptop's own disk (from the pendrive), typed or in a window | `system/install.nix`, `system/install_ui.py` |
 | `golem-remote`, `golem-remote-screen` | reach this laptop from the phone | `system/remote.nix` |
 | `golem-edit`, `golem-edit-open`, `golem-view`, `golem-office`, `golem-preview`, `golem-blocks`, `golem-wires`, `golem-map`, `golem-flow` | the editor and its tools | `editor/editor.nix`, `editor/bin/` |
 

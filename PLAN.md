@@ -4,6 +4,7 @@
 Golem replaces Windows on both laptops; the Asus first (always online). I mainly work on the Dell; the
 Asus has the power. The phone (and later other devices) reaches a laptop from anywhere.
 1. *(built, 24 Nov)* **golem-install:** from the pendrive onto the laptop's own disk (erases it).
+   *(26 Nov)* also as a small window: INSTALL in the Start panel, with SEND TO CLAUDE (a report to GitHub).
 2. *(built, 24 Nov)* **golem-remote:** the phone sees and uses the screen, through Tailscale (free now; my own
    server later). Off until turned on; every connection in the truth log.
 3. **NOW: testing on the Asus** (TESTS.md, "Installed on the Asus").
